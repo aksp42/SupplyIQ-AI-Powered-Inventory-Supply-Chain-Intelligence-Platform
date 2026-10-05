@@ -327,60 +327,128 @@ jobs:
 
       - name: Every API call is authenticated
         run: |
-          # Checking that the word "Authorization" appears somewhere in a file is
-          # not enough. One fetch() without a header returns 401 and looks like a
-          # broken dashboard, while the file still passes a grep. So enumerate
-          # the actual fetch call sites that talk to the API and require each one
-          # to carry a header, either inline or via the authHeaders() helper.
+          # This used to scan the two page files for inline fetch() call sites and
+          # require each to carry a credential. The pages no longer call fetch()
+          # themselves - every request goes through the centralised wrapper in
+          # frontend/js/api.js - so the scan matched nothing and failed closed with
+          # 'no API fetch calls were found to check'.
+          #
+          # The property that matters is two-sided, and both halves are real:
+          #   1. the wrapper attaches a bearer token, and
+          #   2. no page reaches the backend carrying no credential.
+          # (2) is the half that catches a regression. SupplyShield-AI.html does
+          # call the backend itself, through its own authHeaders() helper, so a
+          # direct call is only a failure when it has no credential at all.
           python3 - <<'PY'
           import re
           import sys
-
-          FILES = [
+          
+          WRAPPER = 'frontend/js/api.js'
+          PAGES = [
               'frontend/SupplyIQ-Grocery-Dashboard.html',
               'frontend/SupplyShield-AI.html',
           ]
-
-          # Both fetch(API + path) and fetch(`${API}/kpis...`) build an /api URL
-          # from a variable, so a plain '/api/' substring search finds nothing.
-          URL_FORMS = [
-              re.compile(r"fetch\(\s*API\s*\+"),
-              re.compile(r"fetch\(\s*[`'\"\${]API\}?"),
-              re.compile(r"fetch\(\s*[`'\"][^`'\"]*/api/"),
-          ]
-
+          
+          # Direct backend calls are the thing to police. authHeaders() is an accepted way
+          # to authenticate them - SupplyShield-AI.html legitimately calls /kpis itself
+          # through that helper - so a direct fetch is only a problem when it carries no
+          # credential at all. The optional quote matters: apiFetch is itself written
+          # fetch(`${API_BASE}${path}`), and a detector that misses its own probe is worse
+          # than no detector.
+          BYPASS = re.compile(r"""fetch\(\s*['"`]?\s*(?:\$\{\s*API\w*\s*\}|API\s*\+|/?api/)""")
+          # Both spellings of an inline credential.
+          CREDENTIAL = re.compile(r'Authorization|authHeaders')
+          
+          WINDOW = 400
+          
+          
+          def audit_wrapper(src):
+              """fetch() sites in the wrapper, and those with no bearer token nearby.
+          
+              The window is symmetric on purpose: apiFetch builds its headers above the
+              call site, the raw-CSV fetch below it.
+              """
+              sites = list(re.finditer(r'fetch\(', src))
+              bad = [src[:m.start()].count('\n') + 1
+                     for m in sites
+                     if 'Authorization' not in src[max(0, m.start() - WINDOW):m.start() + WINDOW]]
+              return sites, bad
+          
+          
+          def audit_page(src):
+              """Direct backend fetches in a page, and those carrying no credential."""
+              sites = list(BYPASS.finditer(src))
+              bad = [src[:m.start()].count('\n') + 1
+                     for m in sites
+                     if not CREDENTIAL.search(src[m.start():m.start() + WINDOW])]
+              return sites, bad
+          
+          
+          wrapper_src = open(WRAPPER, encoding='utf-8').read()
           problems = []
-          checked = 0
-
-          for path in FILES:
+          
+          sites, unauth = audit_wrapper(wrapper_src)
+          for line in unauth:
+              problems.append('{}:{} fetch() sends no Authorization header'.format(WRAPPER, line))
+          
+          direct_total = 0
+          for path in PAGES:
               src = open(path, encoding='utf-8').read()
-              calls = [m for pattern in URL_FORMS for m in pattern.finditer(src)]
-              print('{}: {} API fetch call site(s)'.format(path, len(calls)))
-
-              for match in calls:
-                  checked += 1
-                  line = src[:match.start()].count('\n') + 1
-                  # Headers sit in the options object right after the URL.
-                  window = src[match.start():match.start() + 400]
-                  if 'Authorization' in window or 'authHeaders' in window:
-                      continue
-                  problems.append('{}:{}'.format(path, line))
-
-          # Negative control: this check must reject an unauthenticated fetch.
-          if 'Authorization' in "fetch('/api/orders')" or 'authHeaders' in "fetch('/api/orders')":
-              print('::error::auth check is too lenient to fail a bare fetch')
+              found, bad = audit_page(src)
+              direct_total += len(found)
+              for line in bad:
+                  problems.append('{}:{} calls the backend with no credential'.format(path, line))
+          
+          # --- negative controls: this check must be able to fail ------------------------
+          # 1. every direct-call shape must be detected, including the backtick form
+          for probe in ["fetch(`${API}/kpis`)", "fetch(`${API_BASE}/kpis`)",
+                        "fetch(API + '/kpis')", "fetch('/api/orders')", 'fetch("/api/orders")']:
+              if not BYPASS.search(probe):
+                  print('::error::direct-call detector failed to reject: ' + probe)
+                  sys.exit(1)
+          
+          # 2. a credentialless direct call must be reported
+          _, bad_probe = audit_page("await fetch(`${API}/kpis`)")
+          if not bad_probe:
+              print('::error::page audit failed to reject a credentialless API call')
               sys.exit(1)
-
-          if checked == 0:
-              print('::error::no API fetch calls were found to check; the scan is broken')
+          
+          # 3. a credentialed direct call must NOT be reported
+          for good in ["await fetch(`${API}/kpis`,{headers:authHeaders})",
+                       "await fetch('/api/orders',{headers:{Authorization:'Bearer '+t}})"]:
+              _, bad_good = audit_page(good)
+              if bad_good:
+                  print('::error::page audit false-positives on: ' + good)
+                  sys.exit(1)
+          
+          # 4. the Wikimedia image lookup must not be mistaken for an API call
+          _, bad_wiki = audit_page("fetch('https://commons.wikimedia.org/w/api.php?action=query')")
+          if bad_wiki:
+              print('::error::external image lookup misread as an API call')
               sys.exit(1)
-
+          
+          # 5. a wrapper with no header must be reported; a correct one must not
+          _, unauth_probe = audit_wrapper("async function apiFetch(p){ return fetch(API + p, {}); }")
+          if not unauth_probe:
+              print('::error::wrapper audit failed to reject a headerless fetch')
+              sys.exit(1)
+          _, unauth_ok = audit_wrapper(
+              "async function apiFetch(p){ const h={Authorization:'Bearer '+t}; return fetch(API+p,{headers:h}); }")
+          if unauth_ok:
+              print('::error::wrapper audit false-positives on a correct wrapper')
+              sys.exit(1)
+          
+          if not sites:
+              print('::error::no fetch() found in the API wrapper; the scan is broken')
+              sys.exit(1)
+          
           if problems:
-              for problem in problems:
-                  print('::error::API fetch without an Authorization header -> ' + problem)
+              for p in problems:
+                  print('::error::' + p)
               sys.exit(1)
-
-          print('OK: {} API call(s) all carry a JWT'.format(checked))
+          
+          print('OK: {} wrapper fetch site(s) all send a bearer token; '
+                '{} direct API call(s) in the pages, all credentialed'.format(len(sites), direct_total))
           PY
           grep -q 'Bearer' frontend/public/js/auth.js || { echo "::error::auth.js does not build a Bearer header"; exit 1; }
 
