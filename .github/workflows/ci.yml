@@ -631,6 +631,19 @@ jobs:
       - name: Bring the stack up
         run: docker compose up -d --build
 
+      - name: Run database migrations
+        run: |
+          set -euo pipefail
+          # Wait for MySQL to be ready
+          for i in $(seq 1 30); do
+            if docker compose exec -T mysql mysqladmin ping -h 127.0.0.1 -p"${DB_PASSWORD:-supplyiq_root_pw}" > /dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          # Run migrations inside the backend container
+          docker compose exec -T backend node scripts/migrate.js up
+
       - name: Wait for the stack
         run: |
           set -euo pipefail
