@@ -628,6 +628,11 @@ jobs:
           docker compose config --quiet
           echo "OK: compose file is valid"
 
+      - name: Create Docker Compose .env file
+        run: |
+          chmod +x create-docker-env.sh
+          ./create-docker-env.sh
+
       - name: Bring the stack up
         run: docker compose up -d --build
 
