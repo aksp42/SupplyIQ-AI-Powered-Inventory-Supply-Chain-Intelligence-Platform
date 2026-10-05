@@ -1,0 +1,9 @@
+sku,warehouse_code,quantity,unit_cost,reorder_pt,safety_stock,max_stock,monthly_demand,last_counted_at,note
+GRC-001,MAIN,8,620.00,50,15,500,420,2026-10-01,Physical count at month start
+GRC-002,MAIN,20,165.00,30,9,300,300,2026-10-01,Physical count at month start
+GRC-003,MAIN,64,260.00,30,9,300,220,2026-10-01,Physical count at month start
+GRC-004,MAIN,150,48.00,20,6,200,150,2026-10-01,Physical count at month start
+GRC-005,MAIN,12,280.00,20,6,200,280,2026-10-01,Physical count at month start
+GRC-006,MAIN,60,160.00,25,8,250,190,2026-10-01,Physical count at month start
+GRC-008,MAIN,90,20.00,40,12,300,200,2026-10-01,Physical count at month start
+GRC-011,MAIN,40,120.00,30,9,200,140,2026-10-01,Physical count at month start

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="green">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SupplyShield AI — Delay Predictor · SupplyIQ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+<style>
+:root,[data-theme=green]{--side1:#0b3b34;--side2:#062a24;--sidetx:#b9d6cb;--acc:#0f8a5f;--acc2:#3ddc97;--g:#12a05f;--soft:#eaf5f0;--bd:#dfe9e4;--ink:#0f2a24;--ink2:#61776f;--amb:#e5a11a;--red:#dc4a3f;--blue:#3b82d6;--bg1:#f5f8f7;--bg2:#eaf1ee;--card:#fff;--edge:#eef3f0;--sh:8,50,40}
+[data-theme=dark]{--side1:#0a1a17;--side2:#050e0c;--sidetx:#9dbdb1;--acc:#22b573;--acc2:#3ddc97;--g:#3ddc97;--soft:#173029;--bd:#25423a;--ink:#e8f4ef;--ink2:#8fb0a4;--amb:#f0b429;--red:#f0645a;--blue:#5aa9f0;--bg1:#0a1512;--bg2:#0d1e19;--card:#12251f;--edge:#1b332c;--sh:0,0,0}
+*{box-sizing:border-box;margin:0;padding:0}
+html.tt *{transition:background-color .35s,color .35s,border-color .35s!important}
+body{font:13.5px/1.45 Inter,system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,var(--bg1),var(--bg2)) fixed;min-height:100vh;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;transition:transform .15s,box-shadow .2s,background .2s,filter .2s}
+button:active{transform:scale(.97)}
+svg.i{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+aside{position:fixed;inset:0 auto 0 0;width:208px;background:linear-gradient(180deg,var(--side1),var(--side2));color:var(--sidetx);padding:16px 10px;display:flex;flex-direction:column;z-index:20}
+.logo{display:flex;gap:9px;align-items:center;color:#fff;font-size:20px;font-weight:800;padding:2px 8px 4px;letter-spacing:-.02em}
+.logo b{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--acc2),var(--acc));display:grid;place-items:center;font-size:15px;color:var(--side2)}
+aside small{display:block;padding:0 8px 14px;font-size:10.5px;opacity:.65}
+aside nav a{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;color:var(--sidetx);text-decoration:none;font-weight:500;font-size:13px;margin-bottom:1px;position:relative;transition:.2s}
+aside nav a:hover{background:rgba(255,255,255,.07);color:#fff}
+aside nav a.on{background:rgba(255,255,255,.11);color:#fff}
+aside nav a.on:before{content:'';position:absolute;left:-10px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--acc2)}
+.side-ft{margin-top:auto;font-size:11px;opacity:.6;padding:8px}
+main{margin-left:208px;padding:18px 20px 60px;max-width:1400px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+header h2{font-size:16px;font-weight:800}
+header p{color:var(--ink2);font-size:12px}
+.sp{margin-left:auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;box-shadow:0 1px 2px rgba(var(--sh),.06),0 14px 30px -20px rgba(var(--sh),.45);min-width:0;display:flex;flex-direction:column}
+.h{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.h h3{font-size:13.5px;font-weight:700;letter-spacing:-.005em}
+.h .ic{width:24px;height:24px;border-radius:7px;background:var(--soft);color:var(--acc);display:grid;place-items:center;font-size:14px}
+.h a{margin-left:auto;font-size:12px;color:var(--acc);cursor:pointer;font-weight:600}
+.h a:hover{text-decoration:underline}
+.mut{color:var(--ink2);font-size:12px}
+.g12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;margin-bottom:14px}
+.s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
+.btn{padding:7px 14px;border-radius:8px;font-weight:600;font-size:12.5px;color:#fff;background:var(--acc);display:inline-flex;gap:6px;align-items:center;justify-content:center}
+.btn:hover{filter:brightness(1.1)}
+.btn.ol{background:var(--card);color:var(--ink);border:1px solid var(--bd)}.btn.ol:hover{background:var(--soft)}
+.btn.tn{background:color-mix(in srgb,var(--c) 12%,transparent);color:var(--c);border:1px solid color-mix(in srgb,var(--c) 35%,transparent)}.btn.tn:hover{background:color-mix(in srgb,var(--c) 22%,transparent)}
+.pill{display:inline-flex;gap:5px;align-items:center;padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:600;white-space:nowrap;--c:var(--g);background:color-mix(in srgb,var(--c) 13%,transparent);color:var(--c)}
+.pill:before{content:'';width:6px;height:6px;border-radius:50%;background:var(--c)}
+.p-g{--c:var(--g)}.p-a{--c:var(--amb)}.p-r{--c:var(--red)}.p-b{--c:var(--blue)}
+.risk-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--bd);border-radius:9px;margin-bottom:7px;cursor:pointer;transition:.2s;--c:var(--acc)}
+.risk-row:hover{transform:translateX(3px);border-color:var(--c);background:color-mix(in srgb,var(--c) 5%,var(--card))}
+.risk-row i{width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 18%,transparent);flex:none}
+.risk-row .rb{flex:1;min-width:0}
+.risk-row .rb b{display:block;font-size:13px;font-weight:700}
+.risk-row .rb span{font-size:11.5px;color:var(--ink2)}
+.risk-row.r{--c:var(--red)}.risk-row.a{--c:var(--amb)}.risk-row.gr{--c:var(--g)}
+.bar{height:5px;border-radius:9px;background:var(--edge);overflow:hidden;flex:1;min-width:50px}
+.bar i{display:block;height:100%;border-radius:9px;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.seg{display:flex;background:var(--card);border:1px solid var(--bd);border-radius:9px;padding:2px}
+.seg button{padding:5px 12px;border-radius:7px;font-weight:600;font-size:12.5px;color:var(--ink2)}
+.seg button.on{background:var(--acc);color:#fff;box-shadow:0 2px 8px rgba(var(--sh),.3)}
+.rw{display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid var(--edge);font-size:12.5px}
+.rw:last-child{border:0}.rw b{margin-left:auto}
+.ai-box{font-size:12px;color:var(--ink2);border-left:3px solid var(--acc);background:var(--soft);border-radius:0 8px 8px 0;padding:8px 12px;margin-bottom:10px;line-height:1.6}
+.ai-box b{color:var(--ink)}
+.sc-card{border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:var(--card);transition:transform .2s,box-shadow .2s}
+.sc-card:hover{transform:translateY(-3px);box-shadow:0 16px 30px -14px rgba(var(--sh),.5)}
+.sc-head{padding:12px 14px;background:linear-gradient(120deg,var(--soft),var(--card));border-bottom:1px solid var(--bd)}
+.sc-head h4{font-size:14px;font-weight:700}
+.sc-body{padding:12px 14px}
+.meter{height:10px;border-radius:99px;overflow:hidden;background:var(--edge);margin:8px 0}
+.meter i{display:block;height:100%;border-radius:99px;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+input.f,select.f{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;margin:4px 0 10px;font:inherit;background:var(--card);color:var(--ink)}
+label.lbl{font-size:12px;font-weight:600;color:var(--ink2);margin-top:4px;display:block}
+.fade{animation:fd .35s}@keyframes fd{from{opacity:.3;transform:translateY(5px)}}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:var(--ink2);font-weight:600;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:3px 6px}
+td{padding:6px 6px;border-top:1px solid var(--edge)}
+#toasts{position:fixed;top:14px;right:14px;z-index:99;display:flex;flex-direction:column;gap:8px}
+.t{background:var(--side1);color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 12px 26px rgba(0,0,0,.3);animation:fd .3s;max-width:330px;font-size:12.5px;border-left:3px solid var(--acc2)}
+.ib{width:34px;height:34px;border-radius:9px;background:var(--card);border:1px solid var(--bd);display:grid;place-items:center;font-size:16px;color:var(--ink)}
+.ib:hover{background:var(--soft)}
+.score-big{font-size:42px;font-weight:800;line-height:1;letter-spacing:-.03em}
+.score-ring{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px}
+@media(max-width:900px){aside{display:none}main{margin:0;padding:10px 10px 50px}.s3,.s4,.s5,.s6,.s7,.s8{grid-column:span 12}}
+</style>
+</head>
+<body>
+<aside>
+  <div class="logo"><b>S</b>SupplyIQ</div>
+  <small>AI-Powered Supply Chain Intelligence</small>
+  <nav>
+    <a href="SupplyIQ-Grocery-Dashboard.html">
+      <svg class="i" viewBox="0 0 24 24" width="17" height="17"><path d="M3 11l9-8 9 8v10H3z"/></svg>Dashboard
+    </a>
+    <a href="SupplyShield-AI.html" class="on">
+      <svg class="i" viewBox="0 0 24 24" width="17" height="17"><path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 3 5 3 3 0 0 0 5 1V4a3 3 0 0 0-3 0M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-3 5 3 3 0 0 1-5 1"/></svg>Delay Predictor
+    </a>
+  </nav>
+  <div class="side-ft">v1.0 prototype · demo data</div>
+</aside>
+<main>
+<header>
+  <div>
+    <h2>SupplyShield AI — Delay Predictor</h2>
+    <p>Predict supplier delivery delays before they hit your inventory</p>
+  </div>
+  <div class="seg sp" id="seg"></div>
+  <button class="ib" id="dk" title="Dark / Light"></button>
+  <a class="btn ol" href="SupplyIQ-Grocery-Dashboard.html" style="text-decoration:none;font-size:12.5px">
+    <svg class="i" viewBox="0 0 24 24" width="14" height="14"><path d="M3 11l9-8 9 8v10H3z"/></svg>Back to Dashboard
+  </a>
+</header>
+
+<!-- Overall Risk Score -->
+<div class="g12" id="hero-cards"></div>
+
+<!-- Risk Chart + Supplier table -->
+<div class="g12">
+  <section class="card s8" id="chart-sec"></section>
+  <section class="card s4" id="sup-risk"></section>
+</div>
+
+<!-- Prediction form + route map + history -->
+<div class="g12">
+  <section class="card s4" id="predict-form"></section>
+  <section class="card s8" id="delay-chart"></section>
+</div>
+
+<!-- Recommendations -->
+<section class="card s12" id="reco" style="margin-bottom:14px"></section>
+
+</main>
+<div id="toasts"></div>
+
+<script>
+/* ─── helpers ─── */
+const $=s=>document.querySelector(s);
+const ic=(d,s='')=>`<svg class="i" viewBox="0 0 24 24" ${s}><path d="${d}"/></svg>`;
+const CV=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function toast(t){const d=document.createElement('div');d.className='t';d.textContent=t;$('#toasts').append(d);setTimeout(()=>d.remove(),3200)}
+const P={
+  brain:'M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 3 5 3 3 0 0 0 5 1V4a3 3 0 0 0-3 0M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-3 5 3 3 0 0 1-5 1',
+  shield:'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',
+  truck:'M2 6h12v10H2zM14 9h4l3 3v4h-7M6 19a2 2 0 1 0 0-.1M17 19a2 2 0 1 0 0-.1',
+  warn:'M12 3l10 18H2zM12 10v4M12 17h.01',
+  check:'M20 6L9 17l-5-5',
+  trend:'M3 17l6-6 4 4 8-8M15 7h6v6',
+  users:'M16 20v-2a4 4 0 0 0-8 0v2M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8',
+  list:'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
+  refresh:'M21 12a9 9 0 0 1-15 6.7L3 16M3 12a9 9 0 0 1 15-6.7L21 8M3 21v-5h5M21 3v5h-5',
+  moon:'M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10z',
+  sun:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5',
+  home:'M3 11l9-8 9 8v10H3z',
+  gear:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6M19 12l2-1-2-4-2 1-2-1-1-2H9L8 7 6 8 4 7l-2 4 2 1v2l-2 1 2 4 2-1 2 1 1 2h4l1-2 2-1 2 1 2-4-2-1z',
+  arrow:'M5 12h14M13 6l6 6-6 6',
+};
+
+/* ─── data ─── */
+// storeId comes from the session because the JWT is scoped to a single store.
+const SESSION=(()=>{try{return JSON.parse(localStorage.getItem('siq_session'))||{}}catch{return{}}})();
+if(!SESSION.token){location.replace('public/login.html');throw new Error('no session');}
+const STORE_ID=SESSION.storeId;
+const API = 'http://localhost:4000/api';
+const authHeaders={Authorization:'Bearer '+SESSION.token};
+
+const SUPPLIERS = [
+  { id:'sup1', name:'Krishna Wholesale',   route:'Mumbai → Delhi',    distance:1400, history:[88,74,82,68,90,72,65],  risk:'High',   delays:4, onTime:78, weather:'Clear',  border:false },
+  { id:'sup2', name:'FreshFarm Co.',        route:'Pune → Delhi',      distance:1200, history:[95,98,96,94,97,93,96],  risk:'Low',    delays:0, onTime:96, weather:'Clear',  border:false },
+  { id:'sup3', name:'AgriLink Suppliers',  route:'Nagpur → Delhi',    distance:1100, history:[92,88,90,91,85,89,93],  risk:'Medium', delays:1, onTime:93, weather:'Rain',   border:false },
+  { id:'sup4', name:'Daily Needs Dist.',   route:'Jaipur → Delhi',    distance:280,  history:[86,84,88,90,82,87,84],  risk:'Medium', delays:2, onTime:88, weather:'Fog',    border:false },
+];
+
+const WEEKS = ['W-6','W-5','W-4','W-3','W-2','W-1','This week'];
+let selSup = 'sup1';
+let period = '3M';
+
+/* ─── chart registry ─── */
+const EC={};
+function chart(id){
+  const el=document.getElementById(id);
+  if(!el||!window.echarts)return null;
+  if(EC[id]&&EC[id].getDom()!==el){EC[id].dispose();EC[id]=null}
+  return EC[id]||(EC[id]=echarts.init(el));
+}
+addEventListener('resize',()=>Object.values(EC).forEach(c=>c&&c.resize()));
+const tip=()=>({backgroundColor:CV('--card'),borderColor:CV('--bd'),textStyle:{color:CV('--ink'),fontSize:12},extraCssText:'box-shadow:0 10px 24px rgba(0,0,0,.2);border-radius:8px'});
+const ax=()=>({axisLine:{lineStyle:{color:CV('--bd')}},axisLabel:{color:CV('--ink2'),fontSize:11},axisTick:{show:false}});
+
+/* ─── risk score helper ─── */
+function overallRisk(){
+  const avg = SUPPLIERS.reduce((s,x)=>s+x.onTime,0)/SUPPLIERS.length;
+  const score = Math.round(avg);
+  const cat = score>=92?'Low':score>=85?'Medium':'High';
+  const col = cat==='Low'?'var(--g)':cat==='Medium'?'var(--amb)':'var(--red)';
+  return {score,cat,col};
+}
+
+/* ─── render hero KPI cards ─── */
+function renderHero(){
+  const r=overallRisk();
+  const highRisk=SUPPLIERS.filter(s=>s.risk==='High').length;
+  const avgDelay=+(SUPPLIERS.reduce((s,x)=>s+x.delays,0)/SUPPLIERS.length).toFixed(1);
+  const activeShip=6; // simulated
+  const cards=[
+    {label:'Overall Risk Score',val:`${r.score}%`,sub:'Fleet on-time rate',col:r.col,icon:P.shield},
+    {label:'High-Risk Suppliers',val:highRisk,sub:'Need immediate attention',col:'var(--red)',icon:P.warn},
+    {label:'Avg Delay (days)',val:avgDelay,sub:'Per shipment this week',col:'var(--amb)',icon:P.truck},
+    {label:'Active Shipments',val:activeShip,sub:'In transit right now',col:'var(--blue)',icon:P.list},
+  ];
+  $('#hero-cards').innerHTML=cards.map(c=>`
+    <div class="card s3 fade">
+      <div style="display:flex;align-items:center;gap:8px;color:var(--ink2);font-size:12px;font-weight:600;margin-bottom:4px">
+        <span style="width:26px;height:26px;border-radius:7px;background:var(--soft);color:${c.col};display:grid;place-items:center;font-size:14px">${ic(c.icon)}</span>${c.label}
+      </div>
+      <b style="font-size:28px;font-weight:800;letter-spacing:-.02em;color:${c.col}">${c.val}</b>
+      <span class="mut" style="margin-top:2px">${c.sub}</span>
+    </div>`).join('');
+}
+
+/* ─── supplier risk list ─── */
+function renderSupRisk(){
+  $('#sup-risk').innerHTML=`
+    <div class="h"><span class="ic">${ic(P.users)}</span><h3>Supplier Risk Monitor</h3></div>
+    <div class="ai-box">AI analyses route conditions, weather, historical delays and order urgency to generate live risk scores.</div>
+    ${SUPPLIERS.map(s=>`
+    <div class="risk-row ${s.risk==='High'?'r':s.risk==='Medium'?'a':'gr'} fade" data-sup="${s.id}" onclick="selSup='${s.id}';renderDelayChart();renderPredictForm();highlightSup('${s.id}')">
+      <i></i>
+      <div class="rb">
+        <b>${s.name}</b>
+        <span>${s.route} · ${s.distance} km</span>
+      </div>
+      <div style="text-align:right;min-width:88px">
+        <div style="font-weight:700;font-size:13px">${s.onTime}% on-time</div>
+        <span class="pill ${s.risk==='High'?'p-r':s.risk==='Medium'?'p-a':'p-g'}">${s.risk} risk</span>
+      </div>
+    </div>`).join('')}`;
+}
+function highlightSup(id){
+  document.querySelectorAll('.risk-row').forEach(r=>r.style.background='');
+  const el=document.querySelector(`[data-sup="${id}"]`);
+  if(el)el.style.background='color-mix(in srgb,var(--acc) 8%,var(--card))';
+}
+
+/* ─── main on-time trend chart ─── */
+function renderTrendChart(){
+  $('#chart-sec').innerHTML=`
+    <div class="h"><span class="ic">${ic(P.trend)}</span><h3>On-Time Delivery Trends</h3><span class="mut sp">Last 7 weeks</span></div>
+    <div id="trend-chart" style="height:260px"></div>`;
+  const c=chart('trend-chart');if(!c)return;
+  const colors=['var(--red)','var(--g)','var(--amb)','var(--blue)'];
+  c.setOption({
+    animationDuration:900,
+    grid:{left:38,right:14,top:30,bottom:24},
+    legend:{top:0,right:0,icon:'roundRect',itemWidth:10,itemHeight:5,textStyle:{color:CV('--ink2'),fontSize:11}},
+    tooltip:{...tip(),trigger:'axis'},
+    xAxis:{type:'category',data:WEEKS,...ax()},
+    yAxis:{type:'value',min:55,max:100,axisLabel:{formatter:'{value}%',color:CV('--ink2'),fontSize:11},splitLine:{lineStyle:{color:CV('--edge')}}},
+    series:SUPPLIERS.map((s,i)=>({
+      name:s.name,type:'line',smooth:.35,
+      data:s.history,symbolSize:7,
+      lineStyle:{width:2.5,color:colors[i]},
+      itemStyle:{color:colors[i],borderColor:CV('--card'),borderWidth:2},
+      areaStyle:{color:colors[i].replace(')',',0.07)').replace('var','rgba').replace('(--','#').replace(')','')},
+    })),
+  });
+}
+
+/* ─── delay probability chart for selected supplier ─── */
+function renderDelayChart(){
+  const s=SUPPLIERS.find(x=>x.id===selSup)||SUPPLIERS[0];
+  const future=['D+1','D+2','D+3','D+4','D+5','D+6','D+7'];
+  // Simulated delay probability based on on-time rate
+  const base = (100-s.onTime)/100;
+  const probs = future.map((_,i)=>+(base*(1+i*0.08+Math.sin(i*1.3)*0.06)).toFixed(2)*100);
+  const risk=probs.map(p=>p>40?'var(--red)':p>20?'var(--amb)':'var(--g)');
+  $('#delay-chart').innerHTML=`
+    <div class="h"><span class="ic">${ic(P.brain)}</span><h3>Delay Probability — ${s.name}</h3><span class="mut sp">${s.route}</span></div>
+    <div class="ai-box"><b>AI prediction:</b> Based on ${s.history.length}-week history, route length (${s.distance} km), weather (${s.weather}) and current order backlog. ${s.delays>0?`${s.delays} delay(s) recorded this month.`:'No delays recorded this month.'}</div>
+    <div id="delay-bar" style="height:190px"></div>
+    <table style="margin-top:10px">
+      <tr><th>Day<th>Delay Prob.<th>Risk Level<th>Recommended Action</tr>
+      ${future.map((d,i)=>{const p=probs[i].toFixed(0);const rc=p>40?'Order now, use alternate supplier':p>20?'Monitor closely, prepare buffer stock':'No action needed';return`<tr><td>${d}<td><b>${p}%</b><td><span class="pill ${p>40?'p-r':p>20?'p-a':'p-g'}">${p>40?'High':p>20?'Medium':'Low'}</span><td class="mut">${rc}</td></tr>`}).join('')}
+    </table>`;
+  const c=chart('delay-bar');if(!c)return;
+  c.setOption({
+    animationDuration:800,
+    grid:{left:38,right:14,top:10,bottom:22},
+    tooltip:{...tip(),trigger:'axis',valueFormatter:v=>v.toFixed(1)+'%'},
+    xAxis:{type:'category',data:future,...ax()},
+    yAxis:{type:'value',min:0,max:Math.max(70,Math.max(...probs)+10),axisLabel:{formatter:'{value}%',color:CV('--ink2'),fontSize:11},splitLine:{lineStyle:{color:CV('--edge')}}},
+    series:[{
+      type:'bar',barWidth:'46%',
+      data:probs.map((v,i)=>({value:+v.toFixed(1),itemStyle:{borderRadius:[5,5,0,0],color:risk[i]}})),
+      emphasis:{itemStyle:{shadowBlur:12}},
+    }],
+  });
+}
+
+/* ─── prediction form ─── */
+function renderPredictForm(){
+  const s=SUPPLIERS.find(x=>x.id===selSup)||SUPPLIERS[0];
+  $('#predict-form').innerHTML=`
+    <div class="h"><span class="ic">${ic(P.gear)}</span><h3>Run Custom Prediction</h3></div>
+    <label class="lbl">Supplier</label>
+    <select class="f" id="pf-sup">${SUPPLIERS.map(x=>`<option value="${x.id}" ${x.id===selSup?'selected':''}>${x.name}</option>`).join('')}</select>
+    <label class="lbl">Order Quantity (units)</label>
+    <input class="f" id="pf-qty" type="number" value="200" min="1">
+    <label class="lbl">Delivery Window (days)</label>
+    <input class="f" id="pf-days" type="number" value="7" min="1" max="30">
+    <label class="lbl">Season / Weather Risk</label>
+    <select class="f" id="pf-wx">
+      <option value="clear">Clear — Low risk</option>
+      <option value="rain" ${s.weather==='Rain'?'selected':''}>Rain / Monsoon — Medium risk</option>
+      <option value="fog"  ${s.weather==='Fog'?'selected':''}>Fog / Winter — Medium risk</option>
+      <option value="storm">Storm / Extreme — High risk</option>
+    </select>
+    <label class="lbl">Priority Level</label>
+    <select class="f" id="pf-pri">
+      <option value="normal">Normal</option>
+      <option value="urgent">Urgent</option>
+      <option value="critical" ${s.risk==='High'?'selected':''}>Critical</option>
+    </select>
+    <button class="btn" id="run-pred" style="width:100%;margin-top:4px">${ic(P.brain)} Predict Delay Risk</button>
+    <div id="pred-result" style="margin-top:10px"></div>`;
+  $('#pf-sup').onchange=e=>{selSup=e.target.value;renderDelayChart();renderPredictForm();highlightSup(selSup)};
+  $('#run-pred').onclick=runPrediction;
+}
+
+function runPrediction(){
+  const supId=$('#pf-sup').value;
+  const qty=+$('#pf-qty').value||200;
+  const days=+$('#pf-days').value||7;
+  const wx=$('#pf-wx').value;
+  const pri=$('#pf-pri').value;
+  const s=SUPPLIERS.find(x=>x.id===supId)||SUPPLIERS[0];
+  let score=(100-s.onTime);
+  if(wx==='rain')score+=8;
+  if(wx==='fog')score+=6;
+  if(wx==='storm')score+=20;
+  if(pri==='urgent')score+=4;
+  if(pri==='critical')score+=10;
+  if(s.distance>1000)score+=5;
+  if(qty>500)score+=4;
+  score=Math.min(95,Math.max(2,Math.round(score)));
+  const level=score>=45?'High':score>=22?'Medium':'Low';
+  const col=level==='High'?'var(--red)':level==='Medium'?'var(--amb)':'var(--g)';
+  const advice=level==='High'
+    ?`⚠️ <b>High delay risk!</b> Order <b>${Math.round(qty*1.4)}</b> units now to buffer. Consider alternate supplier.`
+    :level==='Medium'
+    ?`🟡 <b>Moderate risk.</b> Add <b>${Math.round(qty*0.2)}</b> units safety buffer. Monitor weather.`
+    :`✅ <b>Low risk.</b> Proceed with order as planned. Expected delivery within ${days} days.`;
+  const expectedDays=Math.round(s.distance/280*(1+score/200));
+  $('#pred-result').innerHTML=`
+    <div style="border:1px solid ${col};border-radius:9px;padding:10px;background:color-mix(in srgb,${col} 7%,var(--card))">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:${col};margin-bottom:4px">AI Prediction Result</div>
+      <div style="font-size:24px;font-weight:800;color:${col}">${score}% <span style="font-size:14px">delay probability</span></div>
+      <div class="meter"><i style="width:${score}%;background:${col}"></i></div>
+      <div style="font-size:12px;color:var(--ink2)">Expected lead time: <b style="color:var(--ink)">${expectedDays} days</b></div>
+      <div class="ai-box" style="margin:8px 0 0">${advice}</div>
+    </div>`;
+  toast(`Prediction complete: ${level} risk (${score}%)`);
+}
+
+/* ─── recommendations ─── */
+function renderReco(){
+  const ordered=[...SUPPLIERS].sort((a,b)=>a.onTime-b.onTime);
+  const worst=ordered[0];
+  const best=ordered[ordered.length-1];
+  $('#reco').innerHTML=`
+    <div class="h"><span class="ic" style="background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc)">${ic(P.shield)}</span><h3>AI Recommendations</h3><span class="mut sp">Based on current risk analysis</span></div>
+    <div class="g12" style="margin:0">
+      <div class="sc-card s3 fade">
+        <div class="sc-head"><h4>⚠️ Urgent: ${worst.name}</h4><span class="pill p-r">${worst.risk} Risk</span></div>
+        <div class="sc-body">
+          <p class="mut">On-time rate: <b style="color:var(--red)">${worst.onTime}%</b> — ${worst.delays} delays this month</p>
+          <p class="mut" style="margin-top:6px">Route: ${worst.route} (${worst.distance} km). Weather: ${worst.weather}.</p>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn" style="--c:var(--red);background:var(--red)" onclick="toast('Follow-up sent to ${worst.name}')">Send follow-up</button>
+            <button class="btn ol" onclick="selSup='${worst.id}';renderDelayChart();renderPredictForm();highlightSup('${worst.id}');document.getElementById('delay-chart').scrollIntoView({behavior:'smooth'})">View analysis</button>
+          </div>
+        </div>
+      </div>
+      <div class="sc-card s3 fade">
+        <div class="sc-head"><h4>✅ Reliable: ${best.name}</h4><span class="pill p-g">Low Risk</span></div>
+        <div class="sc-body">
+          <p class="mut">On-time rate: <b style="color:var(--g)">${best.onTime}%</b> — perfect this month</p>
+          <p class="mut" style="margin-top:6px">Route: ${best.route} (${best.distance} km). Preferred for urgent orders.</p>
+          <div style="margin-top:10px">
+            <button class="btn" onclick="selSup='${best.id}';renderDelayChart();renderPredictForm();highlightSup('${best.id}');toast('${best.name} selected as priority supplier')">Set as priority</button>
+          </div>
+        </div>
+      </div>
+      <div class="sc-card s3 fade">
+        <div class="sc-head"><h4>📦 Buffer Stock Needed</h4><span class="pill p-a">Action Required</span></div>
+        <div class="sc-body">
+          <p class="mut">AI forecasts possible stockouts if ${worst.name} delays again. Pre-order safety stock.</p>
+          <div style="margin-top:8px">
+            <div class="rw">Basmati Rice<b>+120 units</b></div>
+            <div class="rw">Sunflower Oil<b>+60 units</b></div>
+            <div class="rw">Mustard Oil<b>+40 units</b></div>
+          </div>
+          <button class="btn" style="margin-top:8px;width:100%" onclick="toast('Buffer stock order queued for review')">Queue buffer order</button>
+        </div>
+      </div>
+      <div class="sc-card s3 fade">
+        <div class="sc-head"><h4>📊 Route Optimisation</h4><span class="pill p-b">AI Insight</span></div>
+        <div class="sc-body">
+          <p class="mut">Splitting orders between ${best.name} and ${SUPPLIERS[2].name} reduces risk by an estimated <b>34%</b>.</p>
+          <div style="margin-top:8px">
+            <div class="rw">Risk reduction<b style="color:var(--g)">−34%</b></div>
+            <div class="rw">Extra cost<b style="color:var(--amb)">+2.1%</b></div>
+            <div class="rw">Lead time<b>No change</b></div>
+          </div>
+          <button class="btn" style="margin-top:8px;width:100%" onclick="toast('Split-order strategy saved to plan')">Apply strategy</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ─── period selector ─── */
+$('#seg').innerHTML=[['1M','1 Month'],['3M','3 Months'],['6M','6 Months']].map(x=>`<button data-p="${x[0]}" class="${x[0]==='3M'?'on':''}">${x[1]}</button>`).join('');
+$('#seg').onclick=e=>{const b=e.target.closest('button');if(!b)return;period=b.dataset.p;document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('on',x===b));toast('Showing '+b.textContent+' view')};
+
+/* ─── theme engine ─── */
+const TH=[['green','#3ddc97','#0b3b34'],['dark','#22b573','#0a1a17']];
+let theme='green';
+try{const t=localStorage.getItem('siq-theme');if(t)theme=t}catch(e){}
+function setTheme(t){theme=t;const h=document.documentElement;h.classList.add('tt');h.dataset.theme=t;try{localStorage.setItem('siq-theme',t)}catch(e){}
+  $('#dk').innerHTML=ic(t==='dark'?P.sun:P.moon);
+  setTimeout(()=>h.classList.remove('tt'),450);
+  // re-render charts on theme change
+  setTimeout(()=>{renderTrendChart();renderDelayChart()},460)}
+$('#dk').innerHTML=ic(theme==='dark'?P.sun:P.moon);
+$('#dk').onclick=()=>setTheme(theme==='dark'?'green':'dark');
+document.documentElement.dataset.theme=theme;
+
+/* ─── try to load live supplier data from backend ─── */
+async function loadLiveData(){
+  try{
+    const r=await fetch(`${API}/kpis?storeId=${encodeURIComponent(STORE_ID)}`,{headers:authHeaders});
+    if(r.status===401){toast('⚠️ Session expired — please log in again');return;}
+    if(!r.ok)return;
+    const k=await r.json();
+    if(k.stockoutRisk>2){toast('⚠️ Live DB: '+k.stockoutRisk+' products at risk — supply chain alert')}
+    else{toast('🟢 Live DB connected — risk analysis updated')}
+  }catch(e){toast('🟡 Demo mode — backend offline')}
+}
+
+/* ─── boot ─── */
+renderHero();
+renderTrendChart();
+renderSupRisk();
+renderDelayChart();
+renderPredictForm();
+renderReco();
+highlightSup(selSup);
+loadLiveData();
+</script>
+</body>
+</html>

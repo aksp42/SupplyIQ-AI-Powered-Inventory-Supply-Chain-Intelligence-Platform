@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Create Account · SupplyIQ</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth3d.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK (compat builds) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <!-- Your Firebase config -->
+  <script src="firebase-config.js"></script>
+</head>
+<body class="auth-page auth-3d auth-signup">
+  <canvas id="scene3d" aria-hidden="true"></canvas>
+  <main class="page">
+    <aside class="left">
+      <div class="brand">
+        <svg width="54" height="54" viewbox="0 0 48 48" aria-hidden="true">
+          <defs>
+            <lineargradient id="logoTop" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#eee75a"></stop>
+              <stop offset="1" stop-color="#9bcf3c"></stop>
+            </lineargradient>
+          </defs>
+          <polygon fill="rgba(201,221,69,.08)" points="24,2 43,13 43,35 24,46 5,35 5,13" stroke="#c9dd45" stroke-linejoin="round" stroke-width="2.2"></polygon>
+          <polygon fill="url(#logoTop)" points="24,12 36,19 24,26 12,19"></polygon>
+          <polygon fill="#2f9e58" points="12,19 24,26 24,40 12,33"></polygon>
+          <polygon fill="#8bc53c" points="36,19 24,26 24,40 36,33"></polygon>
+          <path d="M24 26v14" stroke="#0b4030" stroke-width="1.2"></path>
+        </svg>
+        <div>
+          <div class="brand-name">Supply<b>IQ</b></div>
+          <div class="brand-tag">AI-Powered Supply Chain Intelligence</div>
+        </div>
+      </div>
+      <h2 class="hero">Build a Smarter<span>Supply Chain Today</span></h2>
+      <p class="lead">Join SupplyIQ and get real-time insights, AI-powered forecasting and complete control over your supply chain.</p>
+      <ol class="steps" aria-label="How it works">
+        <li class="step"><span class="step-n">1</span><div><h3>Create your workspace</h3><p>Use email, Google or Microsoft.</p></div></li>
+        <li class="step"><span class="step-n">2</span><div><h3>Connect your supply chain data</h3><p>Bring in inventory, suppliers and orders.</p></div></li>
+        <li class="step"><span class="step-n">3</span><div><h3>Let AI do the heavy lifting</h3><p>Forecasts, risk alerts and reorders.</p></div></li>
+      </ol>
+      <div class="features">
+        <div class="feat">
+          <span class="feat-icon" style="color: #d4e045;">
+            <svg viewbox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 3v18h18"></path>
+              <polyline points="7 15 11 11 14 14 20 7"></polyline>
+              <polyline points="15 7 20 7 20 12"></polyline>
+            </svg>
+          </span>
+          <h3>Demand Forecasting</h3>
+          <p>Predict future demand with AI &amp; ML models.</p>
+          <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
+        </div>
+        <div class="feat">
+          <span class="feat-icon" style="color: #54cc86;">
+            <svg viewbox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 8l-9-5-9 5v8l9 5 9-5z"></path>
+              <path d="M3 8l9 5 9-5"></path>
+              <path d="M12 13v8"></path>
+            </svg>
+          </span>
+          <h3>Inventory Insights</h3>
+          <p>Avoid stockouts and reduce overstock.</p>
+          <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
+        </div>
+        <div class="feat">
+          <span class="feat-icon" style="color: #dcd04a;">
+            <svg viewbox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 6h12v10H2z"></path>
+              <path d="M14 9h4l4 4v3h-8z"></path>
+              <circle cx="7" cy="18" r="2"></circle>
+              <circle cx="18" cy="18" r="2"></circle>
+            </svg>
+          </span>
+          <h3>Supplier Risk</h3>
+          <p>Detect risks and ensure seamless supply.</p>
+          <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
+        </div>
+        <div class="feat">
+          <span class="feat-icon" style="color: #54cc86;">
+            <svg viewbox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+              <path d="M3 3v5h5"></path>
+              <path d="M12 7v5l3 2"></path>
+            </svg>
+          </span>
+          <h3>Smart Replenishment</h3>
+          <p>Get automated reorder recommendations.</p>
+          <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
+        </div>
+        <div class="feat">
+          <span class="feat-icon" style="color: #e3c948;">
+            <svg viewbox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3l8 3v6c0 4.6-3.2 7.8-8 9-4.8-1.2-8-4.4-8-9V6z"></path>
+              <path d="M12 3l8 3v6c0 4.6-3.2 7.8-8 9z" fill="currentColor" fill-opacity=".3" stroke="none"></path>
+            </svg>
+          </span>
+          <h3 style="color: #e3d04a;">End-to-End Visibility</h3>
+          <p>Monitor your entire supply chain in real-time.</p>
+          <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
+        </div>
+        <div class="feat">
+          <span class="feat-icon" style="color: #54cc86;">
+            <svg viewbox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect fill="currentColor" height="8" rx="1" stroke="none" width="4" x="4" y="13"></rect>
+              <rect fill="currentColor" height="13" rx="1" stroke="none" width="4" x="10" y="8"></rect>
+              <rect fill="currentColor" height="18" rx="1" stroke="none" width="4" x="16" y="3"></rect>
+            </svg>
+          </span>
+          <h3>Data-Driven Decisions</h3>
+          <p>Turn data into growth opportunities.</p>
+          <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
+        </div>
+      </div>
+      <div class="scene">
+        <svg viewbox="0 0 600 300" preserveaspectratio="xMidYMax slice" aria-hidden="true">
+          <defs>
+            <radialgradient id="sceneGlow" cx="380" cy="175" r="270" gradientunits="userSpaceOnUse">
+              <stop offset="0" stop-color="#f4d04b" stop-opacity=".5"></stop>
+              <stop offset="1" stop-color="#f4d04b" stop-opacity="0"></stop>
+            </radialgradient>
+            <lineargradient id="ground" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#1a4b32"></stop>
+              <stop offset="1" stop-color="#051d16"></stop>
+            </lineargradient>
+            <radialgradient id="headlight">
+              <stop offset="0" stop-color="#fff3b0" stop-opacity=".9"></stop>
+              <stop offset="1" stop-color="#fff3b0" stop-opacity="0"></stop>
+            </radialgradient>
+            <pattern height="10" id="ribs" patternunits="userSpaceOnUse" width="7"><rect fill="#28593c" height="10" width="7"></rect><rect fill="#1b4530" height="10" width="1.6"></rect></pattern>
+            <pattern height="10" id="ribsDark" patternunits="userSpaceOnUse" width="7"><rect fill="#1f4a33" height="10" width="7"></rect><rect fill="#153b28" height="10" width="1.6"></rect></pattern>
+          </defs>
+          <rect fill="url(#sceneGlow)" height="300" width="600"></rect>
+          <g fill="none" stroke="#c9dd45" stroke-dasharray="3 5" stroke-opacity=".28" stroke-width="1.2"><path d="M10 130 Q300 10 590 130"></path><path d="M215 84 Q335 30 450 88"></path><path d="M450 88 Q505 76 533 108"></path></g>
+          <g transform="translate(215 72)"><path d="M0 24C-10 13-11 9-11 4a11 11 0 1 1 22 0c0 5-1 9-11 20z" fill="#b9d43c"></path><circle cx="0" cy="4" fill="#0b3a2b" r="4"></circle></g>
+          <g transform="translate(450 76)"><path d="M0 24C-10 13-11 9-11 4a11 11 0 1 1 22 0c0 5-1 9-11 20z" fill="#b9d43c"></path><circle cx="0" cy="4" fill="#0b3a2b" r="4"></circle></g>
+          <g transform="translate(533 98)"><path d="M0 24C-10 13-11 9-11 4a11 11 0 1 1 22 0c0 5-1 9-11 20z" fill="#b9d43c"></path><circle cx="0" cy="4" fill="#0b3a2b" r="4"></circle></g>
+          <rect fill="#1b4a34" height="84" width="290" x="170" y="150"></rect>
+          <polygon fill="#143c2a" points="160,150 172,138 458,138 470,150"></polygon>
+          <line stroke="#e8cf58" stroke-opacity=".35" x1="170" x2="460" y1="150" y2="150"></line>
+          <g><rect fill="#113627" height="58" width="38" x="190" y="176"></rect><path d="M190 190h38M190 204h38M190 218h38" stroke="#1c4a35" stroke-width="1.5"></path></g>
+          <g><rect fill="#113627" height="58" width="38" x="242" y="176"></rect><path d="M242 190h38M242 204h38M242 218h38" stroke="#1c4a35" stroke-width="1.5"></path></g>
+          <g><rect fill="#113627" height="58" width="38" x="294" y="176"></rect><path d="M294 190h38M294 204h38M294 218h38" stroke="#1c4a35" stroke-width="1.5"></path></g>
+          <g><rect fill="#113627" height="58" width="38" x="346" y="176"></rect><path d="M346 190h38M346 204h38M346 218h38" stroke="#1c4a35" stroke-width="1.5"></path></g>
+          <g><rect fill="#113627" height="58" width="38" x="398" y="176"></rect><path d="M398 190h38M398 204h38M398 218h38" stroke="#1c4a35" stroke-width="1.5"></path></g>
+          <g stroke="#123626" stroke-width="1.2">
+            <rect fill="url(#ribs)" height="64" width="74" x="-4" y="170"></rect>
+            <rect fill="url(#ribsDark)" height="64" width="70" x="70" y="170"></rect>
+            <rect fill="url(#ribsDark)" height="62" width="74" x="10" y="108"></rect>
+            <rect fill="url(#ribs)" height="52" width="52" x="84" y="118"></rect>
+            <rect fill="url(#ribsDark)" height="70" width="134" x="470" y="164"></rect>
+            <rect fill="url(#ribs)" height="62" width="100" x="490" y="102"></rect>
+          </g>
+          <rect fill="url(#ground)" height="68" width="600" x="0" y="232"></rect>
+          <ellipse cx="400" cy="242" fill="#f0d050" fill-opacity=".14" rx="110" ry="8"></ellipse>
+          <rect fill="#7d9a3f" height="36" rx="2" width="56" x="208" y="196"></rect>
+          <rect fill="#a9bb47" height="28" rx="3" width="28" x="266" y="204"></rect>
+          <rect fill="#f3e58c" height="11" rx="1.5" width="12" x="279" y="208"></rect>
+          <circle cx="222" cy="234" fill="#0a231a" r="6" stroke="#2c5a41" stroke-width="1.5"></circle>
+          <circle cx="240" cy="234" fill="#0a231a" r="6" stroke="#2c5a41" stroke-width="1.5"></circle>
+          <circle cx="279" cy="234" fill="#0a231a" r="6" stroke="#2c5a41" stroke-width="1.5"></circle>
+          <rect fill="#5f8039" height="50" rx="2" width="88" x="326" y="182"></rect>
+          <rect fill="#a3b845" height="36" rx="3" width="42" x="416" y="196"></rect>
+          <rect fill="#f6e68e" height="14" rx="2" width="15" x="438" y="201"></rect>
+          <circle cx="462" cy="222" fill="url(#headlight)" r="26"></circle>
+          <circle cx="346" cy="234" fill="#0a231a" r="7" stroke="#2c5a41" stroke-width="1.5"></circle>
+          <circle cx="366" cy="234" fill="#0a231a" r="7" stroke="#2c5a41" stroke-width="1.5"></circle>
+          <circle cx="432" cy="234" fill="#0a231a" r="7" stroke="#2c5a41" stroke-width="1.5"></circle>
+          <circle cx="450" cy="234" fill="#0a231a" r="7" stroke="#2c5a41" stroke-width="1.5"></circle>
+        </svg>
+      </div>
+      <svg class="blob-bl" viewbox="0 0 150 190" aria-hidden="true">
+        <defs>
+          <lineargradient id="blobA" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f3dc3c"></stop>
+            <stop offset="1" stop-color="#a5c93a"></stop>
+          </lineargradient>
+        </defs>
+        <path d="M0 30C62 52 118 108 138 190H0z" fill="url(#blobA)"></path>
+        <path d="M0 92C40 108 76 142 88 190H0z" fill="#7fae3a" fill-opacity=".75"></path>
+        <path d="M0 30C60 70 100 120 118 190" fill="none" stroke="#fff6a8" stroke-opacity=".5" stroke-width="1.2"></path>
+      </svg>
+      <div class="trust">
+        <span><svg aria-hidden="true" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" viewbox="0 0 24 24" width="18"><path d="M12 3l8 3v6c0 4.6-3.2 7.8-8 9-4.8-1.2-8-4.4-8-9V6z"></path><path d="M12 3l8 3v6c0 4.6-3.2 7.8-8 9z" fill="currentColor" fill-opacity=".3" stroke="none"></path></svg> Secure</span>
+        <i></i>
+        <span>Scalable</span>
+        <i></i>
+        <span>Built for the Future</span>
+      </div>
+    </aside>
+
+    <section class="right">
+      <svg class="leaf-tr" viewbox="0 0 260 140" aria-hidden="true">
+        <defs>
+          <lineargradient id="leafTop" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#a9cf3c"></stop>
+            <stop offset="1" stop-color="#f0e04a"></stop>
+          </lineargradient>
+        </defs>
+        <path d="M260 0H70c30 44 110 78 190 70z" fill="#a9cf85" fill-opacity=".35"></path>
+        <path d="M260 0H140c18 30 70 52 120 48z" fill="url(#leafTop)"></path>
+        <path d="M260 0C210 20 170 26 140 0" fill="none" stroke="#fff9b0" stroke-opacity=".6"></path>
+      </svg>
+      <svg class="leaf-br" viewbox="0 0 230 210" aria-hidden="true">
+        <defs>
+          <lineargradient id="leafBottom" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#d5e6b6"></stop>
+            <stop offset="1" stop-color="#9ec97c"></stop>
+          </lineargradient>
+        </defs>
+        <path d="M230 210V18C158 48 96 122 74 210z" fill="url(#leafBottom)" fill-opacity=".8"></path>
+        <path d="M230 210V96c-42 20-84 60-96 114z" fill="#b6d78a" fill-opacity=".8"></path>
+      </svg>
+
+      <div class="card" id="signupCard">
+
+        <h1>Create Your Account</h1>
+        <p class="sub">Join SupplyIQ and start optimizing your supply chain.</p>
+
+        <!-- Sign Up Form -->
+  <form id="signupForm" class="form" novalidate>
+          <div>
+            <label class="lbl" for="signupName">Full Name</label>
+            <div class="input-wrapper" id="nameWrapper">
+              <svg class="input-icon icon-20" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M4 21c0-4 3.6-6 8-6s8 2 8 6" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+              <input
+                type="text"
+                id="signupName"
+                name="name"
+                placeholder="Enter your name"
+                autocomplete="name"
+                required
+                aria-describedby="nameErr">
+            </div>
+            <p class="err-msg" id="nameErr" aria-live="polite"></p>
+          </div>
+
+          <div>
+            <label class="lbl" for="signupEmail">Business Email</label>
+            <div class="input-wrapper" id="emailWrapper">
+              <svg class="input-icon icon-20" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                <polyline points="3 7 12 13 21 7" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+              <input
+                type="email"
+                id="signupEmail"
+                name="email"
+                placeholder="you@company.com"
+                autocomplete="email"
+                required
+                aria-describedby="emailErr">
+            </div>
+            <p class="err-msg" id="emailErr" aria-live="polite"></p>
+          </div>
+
+          <div>
+            <label class="lbl" for="signupPassword">Password</label>
+            <div class="input-wrapper" id="passwordWrapper">
+              <svg class="input-icon icon-20" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+              <input
+                type="password"
+                id="signupPassword"
+                name="password"
+                placeholder="Create a strong password"
+                autocomplete="new-password"
+                required
+                aria-describedby="passwordErr">
+              <button type="button" class="eye-toggle" id="togglePassword" aria-label="Show password">
+                <svg class="icon-20" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7c2 0 3.7.7 5.2 1.6M22 12s-3.6 7-10 7c-2 0-3.7-.7-5.2-1.6" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M3 3l18 18" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+              </button>
+            </div>
+            <p class="err-msg" id="passwordErr" aria-live="polite"></p>
+          </div>
+
+          <div>
+            <label class="lbl" for="signupConfirmPassword">Confirm Password</label>
+            <div class="input-wrapper" id="confirmWrapper">
+              <svg class="input-icon icon-20" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+              <input
+                type="password"
+                id="signupConfirmPassword"
+                name="confirmPassword"
+                placeholder="Confirm your password"
+                autocomplete="new-password"
+                required
+                aria-describedby="confirmErr">
+              <button type="button" class="eye-toggle" id="toggleConfirmPassword" aria-label="Show password">
+                <svg class="icon-20" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7c2 0 3.7.7 5.2 1.6M22 12s-3.6 7-10 7c-2 0-3.7-.7-5.2-1.6" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M3 3l18 18" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+              </button>
+            </div>
+            <p class="err-msg" id="confirmErr" aria-live="polite"></p>
+          </div>
+
+          <div>
+            <label class="lbl" for="signupType">Business Type</label>
+            <div class="input-wrapper" id="typeWrapper">
+              <svg class="input-icon icon-20" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="3" width="14" height="18" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+              <select
+                id="signupType"
+                class="empty"
+                name="type"
+                autocomplete="off"
+                required
+                aria-describedby="typeErr">
+                <option value="" disabled selected>Select your business type</option>
+                <option value="Manufacturer">Manufacturer</option>
+                <option value="Distributor">Distributor</option>
+                <option value="Wholesaler">Wholesaler</option>
+                <option value="Retailer">Retailer</option>
+                <option value="E-commerce brand">E-commerce brand</option>
+                <option value="Logistics / 3PL">Logistics / 3PL</option>
+                <option value="Other">Other</option>
+              </select>
+              <svg class="chevron icon-18" viewBox="0 0 24 24" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <p class="err-msg" id="typeErr" aria-live="polite"></p>
+          </div>
+
+          <!-- Terms Checkbox -->
+          <div class="terms">
+            <label class="check">
+              <input type="checkbox" id="termsCheckbox" required>
+              <span class="box" aria-hidden="true">
+                <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <span>
+                I agree to the
+                <a class="link" href="#" id="termsLink">Terms of Service</a>
+                and
+                <a class="link" href="#" id="privacyLink">Privacy Policy</a>
+              </span>
+            </label>
+            <p class="err-msg" id="termsErr" aria-live="polite"></p>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            Create Account
+            <svg class="icon-20" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </form>
+
+        <div class="divider">or continue with</div>
+
+        <div class="socials">
+          <button type="button" class="social" id="googleButton" aria-label="Continue with Google">
+            <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+
+          <button type="button" class="social" id="microsoftButton" aria-label="Continue with Microsoft">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="2" y="2" width="9.5" height="9.5" fill="#F25022"/>
+              <rect x="12.5" y="2" width="9.5" height="9.5" fill="#7FBA00"/>
+              <rect x="2" y="12.5" width="9.5" height="9.5" fill="#00A4EF"/>
+              <rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#FFB900"/>
+            </svg>
+            <span>Continue with Microsoft</span>
+          </button>
+        </div>
+
+        <p class="switch">
+          Already have an account?
+          <a href="login.html" class="link">Sign In
+            <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </p>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Message (shown as a toast by js) -->
+  <div id="message" class="message" role="alert" aria-live="polite"></div>
+
+  <!-- Floating support widget -->
+  <div class="chat" id="chatWidget">
+    <div class="chat-panel" role="dialog" aria-label="Sign-up help" hidden>
+      <strong>Need a hand signing up?</strong>
+      <p>Pick a shortcut and I'll take you there.</p>
+      <button type="button" data-act="google">Sign up with Google</button>
+      <button type="button" data-act="microsoft">Sign up with Microsoft</button>
+      <button type="button" data-act="login">I already have an account</button>
+    </div>
+    <button type="button" class="chat-toggle" aria-expanded="false" aria-label="Open sign-up help">
+      <span class="chat-orb">AI</span>
+      <span class="chat-text"><strong>TradeSaarthi</strong><span>Your AI Business Guide</span></span>
+      <span class="chat-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span>
+    </button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="js/login-3d.js"></script>
+
+  <script type="module">
+    import { googleSignIn, microsoftSignIn, emailSignUp, onAuthStateChanged } from './js/auth.js?v=2';
+
+    // DOM Elements
+    const messageEl = document.getElementById('message');
+    const signupForm = document.getElementById('signupForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const googleBtn = document.getElementById('googleButton');
+    const microsoftBtn = document.getElementById('microsoftButton');
+    const togglePasswordBtn = document.getElementById('togglePassword');
+    const toggleConfirmPasswordBtn = document.getElementById('toggleConfirmPassword');
+    const termsCheckbox = document.getElementById('termsCheckbox');
+    const typeSelect = document.getElementById('signupType');
+
+    // Input wrappers
+    const nameWrapper = document.getElementById('nameWrapper');
+    const emailWrapper = document.getElementById('emailWrapper');
+    const passwordWrapper = document.getElementById('passwordWrapper');
+    const confirmWrapper = document.getElementById('confirmWrapper');
+    const typeWrapper = document.getElementById('typeWrapper');
+
+    // Error elements
+    const nameErr = document.getElementById('nameErr');
+    const emailErr = document.getElementById('emailErr');
+    const passwordErr = document.getElementById('passwordErr');
+    const confirmErr = document.getElementById('confirmErr');
+    const typeErr = document.getElementById('typeErr');
+    const termsErr = document.getElementById('termsErr');
+
+    let messageTimer = null;
+
+    // ============ Utilities ============
+    function showMessage(text, type) {
+      messageEl.textContent = text;
+      messageEl.className = 'message message-' + type + ' show';
+      clearTimeout(messageTimer);
+      messageTimer = setTimeout(() => {
+        messageEl.classList.remove('show');
+      }, 6000);
+    }
+
+    function setFieldError(wrapper, errorEl, message) {
+      if (message) {
+        wrapper.classList.add('err');
+        errorEl.textContent = message;
+      } else {
+        wrapper.classList.remove('err');
+        errorEl.textContent = '';
+      }
+    }
+
+    function clearAllFieldErrors() {
+      setFieldError(nameWrapper, nameErr, '');
+      setFieldError(emailWrapper, emailErr, '');
+      setFieldError(passwordWrapper, passwordErr, '');
+      setFieldError(confirmWrapper, confirmErr, '');
+      setFieldError(typeWrapper, typeErr, '');
+      setFieldError(termsCheckbox.parentElement, termsErr, '');
+    }
+
+    function setBusy(button, busy, busyText) {
+      if (button.dataset.html === undefined) button.dataset.html = button.innerHTML;
+      button.disabled = busy;
+      button.dataset.busy = busy;
+      button.innerHTML = busy ? busyText : button.dataset.html;
+    }
+
+    function isValidEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    }
+
+    // ============ Password Toggle ============
+    // hidden -> slashed eye, visible -> open eye
+    function createEyeSVG(visible) {
+      if (visible) {
+        return '<svg class="icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+      }
+      return '<svg class="icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7c2 0 3.7.7 5.2 1.6M22 12s-3.6 7-10 7c-2 0-3.7-.7-5.2-1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 3l18 18" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+    }
+
+    function togglePassword(btn, targetId) {
+      const input = document.getElementById(targetId);
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+      btn.innerHTML = createEyeSVG(!showing);
+    }
+
+    // ============ Business type placeholder colour ============
+    function syncTypeColor() {
+      typeSelect.classList.toggle('empty', !typeSelect.value);
+    }
+
+    function getRedirectUrl() {
+      const returnHash = sessionStorage.getItem('supplyiq_return_hash') || '';
+      if (returnHash) sessionStorage.removeItem('supplyiq_return_hash');
+      return 'index.html' + returnHash;
+    }
+
+    // ============ Handlers ============
+    async function handleGoogle() {
+      clearAllFieldErrors();
+      setBusy(googleBtn, true, 'Signing up…');
+      const result = await googleSignIn();
+      setBusy(googleBtn, false, '');
+      if (result.success) {
+        window.location.href = getRedirectUrl();
+      } else {
+        showMessage(result.error, 'error');
+      }
+    }
+
+    async function handleMicrosoft() {
+      clearAllFieldErrors();
+      setBusy(microsoftBtn, true, 'Signing up…');
+      const result = await microsoftSignIn();
+      setBusy(microsoftBtn, false, '');
+      if (result.success) {
+        window.location.href = getRedirectUrl();
+      } else {
+        showMessage(result.error, 'error');
+      }
+    }
+
+    async function handleSignUp(event) {
+      event.preventDefault();
+      clearAllFieldErrors();
+
+      const name = document.getElementById('signupName').value.trim();
+      const email = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      const confirm = document.getElementById('signupConfirmPassword').value;
+      const type = document.getElementById('signupType').value;
+      const terms = document.getElementById('termsCheckbox').checked;
+
+      let hasError = false;
+
+      if (!name) {
+        setFieldError(nameWrapper, nameErr, 'Enter your full name.');
+        hasError = true;
+      }
+      if (!isValidEmail(email)) {
+        setFieldError(emailWrapper, emailErr, 'Enter a valid business email, like you@company.com.');
+        hasError = true;
+      }
+      if (password.length < 8) {
+        setFieldError(passwordWrapper, passwordErr, 'Use at least 8 characters.');
+        hasError = true;
+      }
+      if (confirm !== password || !confirm) {
+        setFieldError(confirmWrapper, confirmErr, 'Passwords don\'t match. Re-enter the same password.');
+        hasError = true;
+      }
+      if (!type) {
+        setFieldError(typeWrapper, typeErr, 'Select your business type.');
+        hasError = true;
+      }
+      if (!terms) {
+        setFieldError(termsCheckbox.parentElement, termsErr, 'Accept the Terms of Service and Privacy Policy to continue.');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      setBusy(submitBtn, true, 'Creating account…');
+      const result = await emailSignUp(email, password, name, type);
+      setBusy(submitBtn, false, '');
+
+      if (result.success) {
+        showMessage('Account created! Redirecting…', 'success');
+        setTimeout(() => { window.location.href = getRedirectUrl(); }, 1200);
+      } else {
+        if (result.error.includes('email') || result.error.includes('already')) {
+          setFieldError(emailWrapper, emailErr, result.error);
+        } else if (result.error.includes('password') || result.error.includes('weak')) {
+          setFieldError(passwordWrapper, passwordErr, result.error);
+        } else {
+          showMessage(result.error, 'error');
+        }
+      }
+    }
+
+    // ============ Auth State ============
+    onAuthStateChanged((state) => {
+      if (state.isAuthenticated) {
+        window.location.replace(getRedirectUrl());
+      }
+    });
+
+    // ============ Event Listeners ============
+    googleBtn.addEventListener('click', handleGoogle);
+    microsoftBtn.addEventListener('click', handleMicrosoft);
+    signupForm.addEventListener('submit', handleSignUp);
+
+    togglePasswordBtn.addEventListener('click', () => togglePassword(togglePasswordBtn, 'signupPassword'));
+    toggleConfirmPasswordBtn.addEventListener('click', () => togglePassword(toggleConfirmPasswordBtn, 'signupConfirmPassword'));
+
+    // Real-time validation clearing
+    [
+      ['signupName', nameWrapper, nameErr],
+      ['signupEmail', emailWrapper, emailErr],
+      ['signupPassword', passwordWrapper, passwordErr],
+      ['signupConfirmPassword', confirmWrapper, confirmErr],
+      ['signupType', typeWrapper, typeErr]
+    ].forEach(([id, wrapper, err]) => {
+      const el = document.getElementById(id);
+      const clear = () => setFieldError(wrapper, err, '');
+      el.addEventListener('input', clear);
+      el.addEventListener('change', clear);
+    });
+
+    typeSelect.addEventListener('change', syncTypeColor);
+    syncTypeColor();
+
+    // Terms checkbox real-time clear
+    termsCheckbox.addEventListener('change', () => {
+      setFieldError(termsCheckbox.parentElement, termsErr, '');
+    });
+
+    // Links for terms/privacy
+    document.getElementById('termsLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      showMessage('Terms of Service would open here.', 'success');
+    });
+    document.getElementById('privacyLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      showMessage('Privacy Policy would open here.', 'success');
+    });
+  </script>
+</body>
+</html>

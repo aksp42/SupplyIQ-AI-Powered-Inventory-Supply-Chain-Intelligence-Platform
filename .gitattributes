@@ -1,0 +1,26 @@
+# Normalize line endings. Without this, a Windows checkout commits CRLF and CI
+# on Linux checks out LF, so the same file differs between machines and shell
+# scripts in the workflow pick up stray carriage returns.
+* text=auto eol=lf
+
+# Anything genuinely binary.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.woff  binary
+*.woff2 binary
+*.pdf  binary
+*.wav  binary
+*.mp3  binary
+*.mp4  binary
+
+# Windows batch files must stay CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Lockfiles and SQL are compared byte for byte in places; keep them LF.
+package-lock.json text eol=lf
+*.sql    text eol=lf

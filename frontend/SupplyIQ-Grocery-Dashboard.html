@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="green">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SupplyIQ – AI Supply Chain Intelligence</title>
+<!-- Inlined so the tab icon resolves however this file is opened (file://, the
+     dev server, or nginx). Without it the browser falls back to /favicon.ico,
+     which does not exist, and every page load logs a 404. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f8a5f'/%3E%3Cpath d='M16 6l9 4.5v11L16 26l-9-4.5v-11L16 6z' fill='none' stroke='%23fff' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M7 10.5l9 4.5 9-4.5M16 15v11' fill='none' stroke='%23fff' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E">
+<!-- STACK: vanilla HTML/CSS/JS (CSS variables theming) + Apache ECharts (interactive charts) + Three.js (3D hero) -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/api.js"></script>
+<style>
+/* ===== THEMES: all colours come from these variables ===== */
+:root,[data-theme=green]{--side1:#0b3b34;--side2:#062a24;--sidetx:#b9d6cb;--acc:#0f8a5f;--acc2:#3ddc97;--g:#12a05f;--soft:#eaf5f0;--bd:#dfe9e4;--ink:#0f2a24;--ink2:#61776f;--amb:#e5a11a;--red:#dc4a3f;--blue:#3b82d6;--bg1:#f5f8f7;--bg2:#eaf1ee;--card:#fff;--edge:#eef3f0;--sh:8,50,40}
+[data-theme=dark]{--side1:#0a1a17;--side2:#050e0c;--sidetx:#9dbdb1;--acc:#22b573;--acc2:#3ddc97;--g:#3ddc97;--soft:#173029;--bd:#25423a;--ink:#e8f4ef;--ink2:#8fb0a4;--amb:#f0b429;--red:#f0645a;--blue:#5aa9f0;--bg1:#0a1512;--bg2:#0d1e19;--card:#12251f;--edge:#1b332c;--sh:0,0,0}
+[data-theme=terracotta]{--side1:#4a2318;--side2:#2e150e;--sidetx:#e6cdbd;--acc:#a24b34;--acc2:#f0b48a;--g:#5f7e52;--soft:#fbeee2;--bd:#e9dccb;--ink:#3a2a22;--ink2:#7a6659;--amb:#d08a4a;--red:#b83a2a;--blue:#6f8f9a;--bg1:#fbf7f1;--bg2:#f3eadd;--card:#fffdf9;--edge:#f2e8da;--sh:74,35,24}
+[data-theme=ocean]{--side1:#0c2a4a;--side2:#071a30;--sidetx:#bcd3ea;--acc:#1f6fd1;--acc2:#7cc4ff;--g:#14a085;--soft:#e8f1fc;--bd:#d9e5f2;--ink:#10263f;--ink2:#5c7690;--amb:#e5a11a;--red:#dc4a5f;--blue:#3b82d6;--bg1:#f4f8fc;--bg2:#e6eef8;--card:#fff;--edge:#ecf2f8;--sh:12,42,74}
+[data-theme=violet]{--side1:#2a1650;--side2:#180b33;--sidetx:#d3c6ee;--acc:#7a3fd1;--acc2:#c8a6ff;--g:#2fa36b;--soft:#f1eafc;--bd:#e4dbf3;--ink:#241640;--ink2:#71648f;--amb:#e5a11a;--red:#dc4570;--blue:#4f8fe0;--bg1:#f8f6fd;--bg2:#eee8f9;--card:#fff;--edge:#f0ebf8;--sh:42,22,80}
+*{box-sizing:border-box;margin:0;padding:0}
+html.tt *{transition:background-color .35s,color .35s,border-color .35s!important}
+body{font:13.5px/1.45 Inter,system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,var(--bg1),var(--bg2)) fixed;min-height:100vh;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;transition:transform .15s,box-shadow .2s,background .2s,filter .2s}
+button:active{transform:scale(.97)}
+svg.i{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* layout */
+aside{position:fixed;inset:0 auto 0 0;width:208px;background:linear-gradient(180deg,var(--side1),var(--side2));color:var(--sidetx);padding:16px 10px;display:flex;flex-direction:column;z-index:20}
+.logo{display:flex;gap:9px;align-items:center;color:#fff;font-size:20px;font-weight:800;padding:2px 8px 4px;letter-spacing:-.02em}
+.logo b{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--acc2),var(--acc));display:grid;place-items:center;font-size:15px;color:var(--side2)}
+aside small{display:block;padding:0 8px 14px;font-size:10.5px;opacity:.65}
+aside nav a{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;color:var(--sidetx);text-decoration:none;font-weight:500;font-size:13px;margin-bottom:1px;position:relative;transition:.2s}
+aside nav a:hover{background:rgba(255,255,255,.07);color:#fff}
+aside nav a.on{background:rgba(255,255,255,.11);color:#fff}aside nav a.on:before{content:'';position:absolute;left:-10px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--acc2)}
+.side-ft{margin-top:auto;font-size:11px;opacity:.6;padding:8px}
+main{margin-left:208px;padding:12px 18px 90px;position:relative;z-index:1;max-width:1560px}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+header h2{font-size:15px;font-weight:700}header p{color:var(--ink2);font-size:12px}
+.sp{margin-left:auto}
+.seg{display:flex;background:var(--card);border:1px solid var(--bd);border-radius:9px;padding:2px}
+.seg button{padding:5px 12px;border-radius:7px;font-weight:600;font-size:12.5px;color:var(--ink2)}
+.seg button.on{background:var(--acc);color:#fff;box-shadow:0 2px 8px rgba(var(--sh),.3)}
+.ib{width:34px;height:34px;border-radius:9px;background:var(--card);border:1px solid var(--bd);display:grid;place-items:center;position:relative;font-size:16px;color:var(--ink)}
+.ib:hover{background:var(--soft)}
+.ib em{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:10px;font-style:normal;border-radius:9px;padding:0 5px}
+.pf{display:flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:9px;padding:2px 10px 2px 2px;text-align:left;font-size:12.5px;line-height:1.2}
+.av{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--acc2),var(--acc));color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px}
+.pop{position:absolute;right:0;top:40px;width:250px;background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 18px 40px rgba(var(--sh),.28);padding:5px;opacity:0;transform:translateY(-6px);pointer-events:none;transition:.18s;z-index:40}
+.pop.on{opacity:1;transform:none;pointer-events:auto}
+.pop div,.pop button{padding:7px 9px;border-radius:7px;font-size:12.5px;display:flex;gap:8px;align-items:center;width:100%;text-align:left}.pop div:hover,.pop button:hover{background:var(--soft)}
+.pop .sw{width:16px;height:16px;border-radius:50%;flex:none;box-shadow:0 0 0 1px var(--bd);background:linear-gradient(135deg,var(--x),var(--y))}
+.pop button.cur{background:var(--soft);font-weight:700}
+.rel{position:relative}
+.g12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
+.kp{grid-template-columns:repeat(5,1fr)}.kp>*{grid-column:auto}
+/* cards (subtle depth) */
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:13px 14px;box-shadow:0 1px 2px rgba(var(--sh),.06),0 14px 30px -20px rgba(var(--sh),.45);transition:transform .25s ease,box-shadow .25s;min-width:0;display:flex;flex-direction:column;will-change:transform}
+.card:hover{box-shadow:0 2px 4px rgba(var(--sh),.08),0 22px 40px -18px rgba(var(--sh),.5)}
+.h{display:flex;align-items:center;gap:8px;margin-bottom:9px}.h h3{font-size:13.5px;font-weight:700;letter-spacing:-.005em}.h .ic{width:24px;height:24px;border-radius:7px;background:var(--soft);color:var(--acc);display:grid;place-items:center;font-size:14px}
+.h a{margin-left:auto;font-size:12px;color:var(--acc);cursor:pointer;font-weight:600}.h a:hover{text-decoration:underline}
+.mut{color:var(--ink2);font-size:12px}
+/* hero + 3D */
+.hero{position:relative;overflow:hidden;padding:0;min-height:158px;background:linear-gradient(115deg,var(--side1) 30%,var(--side2));color:#fff;border:0;flex-direction:row;align-items:stretch}
+.hero .tx{position:relative;z-index:2;padding:18px 22px;max-width:58%;display:flex;flex-direction:column;gap:6px}
+.hero h1{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.15}.hero p{color:var(--sidetx);font-size:13px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.chips span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);padding:4px 10px;border-radius:7px;font-size:12px;backdrop-filter:blur(6px)}.chips b{color:var(--acc2)}
+.hero .btn.ol{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)}
+#h3d{position:absolute;inset:0 0 0 38%;z-index:1}#h3d canvas{width:100%!important;height:100%!important;display:block}
+/* KPI */
+.kpi{gap:2px}.kt{display:flex;align-items:center;gap:8px;color:var(--ink2);font-size:12px;font-weight:600}.kt .ic{width:26px;height:26px;border-radius:7px;background:var(--soft);color:var(--acc);display:grid;place-items:center;font-size:14px}
+.kpi b{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-top:3px}
+.kf{display:flex;align-items:center;justify-content:space-between;gap:6px}.kf small{font-size:11.5px;font-weight:600;display:flex;gap:3px;align-items:center}
+.up{color:var(--g)}.dn{color:var(--red)}
+.fade{animation:fd .4s}@keyframes fd{from{opacity:.3;transform:translateY(5px)}}
+.sk path{stroke-dasharray:1;stroke-dashoffset:1;animation:dr 1.1s ease forwards}@keyframes dr{to{stroke-dashoffset:0}}
+/* attention */
+.att{--c:var(--acc);border:1px solid var(--bd);border-top:3px solid var(--c);border-radius:10px;padding:10px 12px;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 6%,var(--card)),var(--card));display:flex;flex-direction:column;gap:3px;transition:transform .2s,box-shadow .2s}
+.att:hover{transform:translateY(-3px);box-shadow:0 14px 26px -14px rgba(var(--sh),.5)}
+.att.r{--c:var(--red)}.att.a{--c:var(--amb)}.att.b{--c:var(--blue)}.att.o{--c:#e2762a}
+.lb{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--c)}
+.att h4{font-size:14.5px;font-weight:700}.att p{font-size:12px;color:var(--ink2)}
+.btn{padding:6px 12px;border-radius:8px;font-weight:600;font-size:12.5px;color:#fff;background:var(--acc);display:inline-flex;gap:6px;align-items:center;justify-content:center}
+.btn:hover{filter:brightness(1.1);box-shadow:0 6px 14px -4px rgba(var(--sh),.5)}
+.btn.ol{background:var(--card);color:var(--ink);border:1px solid var(--bd)}.btn.ol:hover{background:var(--soft)}
+.btn.tn{background:color-mix(in srgb,var(--c) 12%,transparent);color:var(--c);border:1px solid color-mix(in srgb,var(--c) 35%,transparent);margin-top:auto}.btn.tn:hover{background:color-mix(in srgb,var(--c) 22%,transparent)}
+.w{width:100%}
+/* images: shimmer while loading + 3D tile */
+.pim{border-radius:9px;object-fit:cover;background:linear-gradient(110deg,var(--soft) 30%,var(--edge) 50%,var(--soft) 70%) 0 0/200% 100%;animation:shim 1.3s linear infinite;flex:none;box-shadow:0 1px 2px rgba(var(--sh),.2),0 6px 12px -6px rgba(var(--sh),.5);transition:transform .3s;border:1px solid var(--bd)}
+.pim.ok{animation:none;background:var(--soft)}
+@keyframes shim{to{background-position:-200% 0}}
+.pim.big{border-radius:12px;box-shadow:0 12px 26px -14px rgba(var(--sh),.55)}
+tr:hover .pim,.att:hover .pim{transform:perspective(200px) rotateY(-14deg) scale(1.12)}
+.att .pr-c{gap:13px}.att .pim{border-radius:12px}.att:hover .pim{transform:perspective(300px) rotateY(-10deg) scale(1.05)}
+/* product showcase gallery */
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:14px;margin-top:6px}
+.pc{border:1px solid var(--bd);border-radius:14px;overflow:hidden;background:var(--card);cursor:pointer;display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s,border-color .25s}
+.pc:hover{transform:translateY(-5px);border-color:color-mix(in srgb,var(--acc) 45%,var(--bd));box-shadow:0 22px 36px -18px rgba(var(--sh),.55)}
+.pc .ph{position:relative;aspect-ratio:4/3;overflow:hidden;background:var(--soft)}
+.pc .ph .pim{width:100%;height:100%;border:0;border-radius:0;box-shadow:none;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.pc:hover .ph .pim{transform:scale(1.09)}
+.pc .tag{position:absolute;top:9px;left:9px}
+.pc .tag .pill{background:color-mix(in srgb,var(--c) 14%,var(--card));box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.pc .prt{position:absolute;right:9px;bottom:9px;background:rgba(10,20,17,.72);color:#fff;font-weight:700;font-size:12px;padding:3px 10px;border-radius:99px;backdrop-filter:blur(6px)}
+.pc .bd{padding:11px 12px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
+.pc h4{font-size:14.5px;font-weight:700}
+.mrow{display:flex;justify-content:space-between;gap:6px;font-size:12px;color:var(--ink2)}.mrow b{color:var(--ink)}
+.pr-c{display:flex;gap:9px;align-items:center;font-weight:600}
+/* lists / tables */
+.drop{flex:1;display:grid;place-content:center;gap:2px;border:1.5px dashed var(--bd);border-radius:10px;padding:8px;text-align:center;color:var(--ink2);transition:.2s;font-size:12.5px;margin-bottom:8px;background:var(--soft)}
+.drop.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,var(--card))}
+/* Import feedback: which format was detected, and why a file was refused. Both
+   are permanent rows rather than toasts — a toast disappears before it has been
+   read, and a mis-detected or refused file must stay visible next to the picker
+   that produced it. */
+.imp-note{margin:-2px 0 8px;padding:6px 9px;border-radius:7px;font-size:11.5px;
+  background:color-mix(in srgb,var(--acc) 9%,var(--card));
+  border:1px solid color-mix(in srgb,var(--acc) 26%,var(--card));color:var(--ink2)}
+.imp-note b{color:var(--ink);font-weight:700}
+.ie{padding:9px 11px;border-radius:9px;margin:-2px 0 8px;
+  background:color-mix(in srgb,var(--red) 7%,var(--card));
+  border:1px solid color-mix(in srgb,var(--red) 30%,var(--card))}
+.ie-t{font-weight:700;font-size:12.5px;color:var(--red);margin-bottom:3px}
+.ie-m{font-size:12px;color:var(--ink2);line-height:1.5}
+.ie-a{display:flex;gap:6px;margin-top:8px}
+.btn.sm{padding:4px 10px;font-size:11.5px}
+.btn.oc{background:var(--card);color:var(--ink);border:1px solid var(--bd)}
+.hide{display:none!important}
+.rw{display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid var(--edge);font-size:12.5px;border-radius:6px}.rw:last-child{border:0}.rw b{margin-left:auto}
+.rw.hv:hover,tr.pr:hover,tr.fr:hover{background:var(--soft)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}th{text-align:left;color:var(--ink2);font-weight:600;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:3px 4px}td{padding:5px 4px;border-top:1px solid var(--edge)}
+tr.pr,tr.fr{cursor:pointer}tr.fr.sel{background:var(--soft)}
+.pill{display:inline-flex;gap:5px;align-items:center;padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:600;white-space:nowrap;--c:var(--g);background:color-mix(in srgb,var(--c) 13%,transparent);color:var(--c)}
+.pill:before{content:'';width:6px;height:6px;border-radius:50%;background:var(--c)}
+.p-g{--c:var(--g)}.p-a{--c:var(--amb)}.p-r{--c:var(--red)}.p-b{--c:var(--blue)}
+.ai{font-size:11.5px;color:var(--ink2);border-left:3px solid var(--acc);background:var(--soft);border-radius:0 8px 8px 0;padding:6px 10px;margin-bottom:8px}
+.fc{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px}.fc button{font-size:11.5px;padding:3px 10px;border-radius:99px;border:1px solid var(--bd);color:var(--ink2);font-weight:600}.fc button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.lg{display:flex;flex-direction:column;justify-content:center;flex:1;gap:1px}.lg div{display:flex;gap:7px;align-items:center;font-size:12.5px;padding:3px 6px;border-radius:6px;cursor:pointer}.lg div:hover{background:var(--soft)}.lg i{width:9px;height:9px;border-radius:3px}.lg b{margin-left:auto}
+.bar{height:5px;border-radius:9px;background:var(--edge);overflow:hidden;flex:1}.bar i{display:block;height:100%;border-radius:9px;background:var(--g);transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.al{display:flex;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--bd);border-radius:9px;margin-bottom:6px;--c:var(--acc);transition:.2s}.al:hover{transform:translateX(3px);border-color:var(--c);background:color-mix(in srgb,var(--c) 5%,var(--card))}
+.al i{width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 18%,transparent);flex:none}.al div{flex:1;min-width:0}.al b{display:block;font-size:12.5px}.al span{font-size:11.5px;color:var(--ink2)}
+.al.r{--c:var(--red)}.al.a{--c:var(--amb)}.al.b{--c:var(--blue)}.al.o{--c:#e2762a}
+/* workflow */
+.wfh{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-weight:700;font-size:14px}.wfh .chip{width:28px;height:28px;border-radius:8px;background:var(--soft);color:var(--acc);display:grid;place-items:center;font-size:15px}.wfh .sp{font-size:11.5px;font-weight:500;color:var(--ink2);background:var(--soft);border:1px solid var(--bd);padding:3px 12px;border-radius:99px}
+.flow{display:flex;align-items:flex-start;padding:2px 6px}
+.st{flex:0 0 150px;text-align:center;cursor:pointer}
+.nd{--bc:var(--acc);width:70px;height:70px;border-radius:50%;margin:0 auto 8px;display:grid;place-items:center;font-size:27px;color:var(--bc);position:relative;background:radial-gradient(circle at 32% 25%,var(--card),color-mix(in srgb,var(--bc) 16%,var(--card)));border:1.5px solid color-mix(in srgb,var(--bc) 38%,transparent);box-shadow:0 10px 20px -8px rgba(var(--sh),.5),inset 0 2px 5px rgba(255,255,255,.35);transition:.35s}
+.nd i{position:absolute;top:-3px;right:-5px;width:24px;height:24px;border-radius:50%;background:var(--bc);color:#fff;font:700 12px/24px Inter;font-style:normal;box-shadow:0 0 0 3px var(--card)}
+.st.g .nd{--bc:var(--g)}.st.y .nd{--bc:var(--amb)}
+.st.on .nd,.st:hover .nd{transform:translateY(-4px) scale(1.1);box-shadow:0 0 0 6px color-mix(in srgb,var(--bc) 14%,transparent),0 0 0 14px color-mix(in srgb,var(--bc) 7%,transparent),0 14px 24px -8px rgba(var(--sh),.55)}
+.st h4{font-size:13.5px}.st small{color:var(--ink2);font-size:12px;display:block;padding:0 6px}
+.cn{flex:1;height:70px;min-width:44px;position:relative;display:flex;align-items:center;justify-content:center}
+.cn:before{content:'';position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:repeating-linear-gradient(90deg,var(--acc2) 0 5px,transparent 5px 10px);background-size:10px 2px;animation:mv .5s linear infinite}
+.cn i{position:absolute;left:0;top:50%;margin-top:-4px;width:8px;height:8px;border-radius:50%;background:var(--acc)}
+.cn s{position:absolute;top:50%;margin-top:-4px;width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 10px var(--acc2);animation:tr 2.2s ease-in-out infinite}@keyframes tr{from{left:0;opacity:0}20%{opacity:1}to{left:calc(100% - 8px);opacity:0}}
+.cn u{position:relative;width:28px;height:28px;border-radius:50%;background:var(--acc2);color:#fff;display:grid;place-items:center;font-size:14px;box-shadow:0 0 0 5px color-mix(in srgb,var(--acc2) 25%,transparent);transition:.3s}.cn.on u{transform:scale(1.2);background:var(--acc)}
+@keyframes mv{to{background-position:10px 0}}
+/* assistant */
+#bot{position:fixed;right:20px;bottom:20px;z-index:60}
+#fab{width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--acc2),var(--acc));color:#fff;font-size:24px;display:grid;place-items:center;box-shadow:0 12px 26px -6px rgba(var(--sh),.6)}
+#fab:hover{transform:translateY(-3px) rotate(-4deg)}
+#chat{position:absolute;right:0;bottom:66px;width:350px;max-width:calc(100vw - 30px);height:480px;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 24px 50px -10px rgba(var(--sh),.5);display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translateY(20px) scale(.95);transform-origin:bottom right;pointer-events:none;transition:.28s cubic-bezier(.2,.8,.2,1)}
+#chat.on{opacity:1;transform:none;pointer-events:auto}
+#chat header{background:linear-gradient(120deg,var(--side1),var(--acc));color:#fff;margin:0;padding:12px;gap:9px}#chat header p{color:#fff;opacity:.75;font-size:11px}
+#msgs{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--bg1)}
+.m{max-width:88%;padding:8px 11px;border-radius:10px;font-size:12.5px;animation:fd .3s}.m.u{align-self:flex-end;background:var(--acc);color:#fff;border-bottom-right-radius:3px}.m.b{background:var(--card);border:1px solid var(--bd);border-bottom-left-radius:3px}
+.qq{display:flex;gap:5px;flex-wrap:wrap;padding:7px 10px;border-top:1px solid var(--bd)}.qq button{font-size:11px;padding:4px 9px;border-radius:99px;background:var(--soft);color:var(--acc);font-weight:600}.qq button:hover{background:var(--acc);color:#fff}
+#cf{display:flex;gap:6px;padding:8px;border-top:1px solid var(--bd)}#cf input{flex:1;border:1px solid var(--bd);border-radius:8px;padding:7px 9px;font:inherit;background:var(--card);color:var(--ink)}
+#toasts{position:fixed;top:14px;right:14px;z-index:99;display:flex;flex-direction:column;gap:8px}
+.t{background:var(--side1);color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 12px 26px rgba(0,0,0,.3);animation:fd .3s;max-width:330px;font-size:12.5px;border-left:3px solid var(--acc2)}.t.e{background:var(--red);border-color:#fff}
+#mod{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);display:grid;place-items:center;z-index:80;opacity:0;pointer-events:none;transition:.2s}
+#mod.on{opacity:1;pointer-events:auto}#mod .card{width:min(470px,92vw);max-height:86vh;overflow:auto;transform:scale(.95);transition:.2s;padding:16px}#mod.on .card{transform:none}
+input.f{width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;margin:4px 0 10px;font:inherit;background:var(--card);color:var(--ink)}
+/* Add Stock stacks one field per row: label, then its input, then space. Each
+   field is a block so two labels can never share a line. The gap under a label
+   is deliberately smaller than the gap under its input, so each label reads as
+   belonging to the input below it rather than to the field above. */
+.fl{display:flex;flex-direction:column}
+.fl .fld{display:flex;flex-direction:column;margin:0 0 2px}
+.fl .fld>label{display:block;margin:0 0 5px;font-size:12px}
+.fl .fld>input.f{margin:0 0 14px}
+@media(max-width:1280px){.s3,.s4,.s5,.s6,.s7,.s8{grid-column:span 6}.kp{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){aside{display:none}main{margin:0;padding:10px 10px 90px}.s3,.s4,.s5,.s6,.s7,.s8{grid-column:span 12}.kp{grid-template-columns:1fr 1fr}.hero .tx{max-width:100%}#h3d{opacity:.35;inset:0}.flow{flex-direction:column;align-items:center}.cn{height:34px;min-width:0;flex:none}.cn:before,.cn i,.cn s{display:none}}
+</style>
+</head>
+<body>
+<aside>
+  <div class="logo"><b>S</b>SupplyIQ</div><small>AI-Powered Supply Chain Intelligence</small>
+  <nav id="nav"></nav><div class="side-ft">v1.0 prototype · demo data</div>
+</aside>
+<main>
+<header>
+  <div><h2 id="headerStore">SupplyIQ</h2><p id="dt"></p></div>
+  <div class="seg sp" id="seg"></div>
+  <button class="ib" id="dk" title="Dark / Light"></button>
+  <div class="rel"><button class="ib" id="tb" title="Colour theme"></button><div class="pop" id="thm" style="width:180px"></div></div>
+  <div class="rel"><button class="ib" id="bell"></button><div class="pop" id="notif"></div></div>
+  <div class="rel"><button class="pf" id="pfb"><span class="av" id="headerAv">?</span><span><b id="headerName">Loading…</b><br><small style="color:var(--ink2)">Business Owner</small></span></button><div class="pop" id="pfm" style="width:190px"></div></div>
+</header>
+<section class="card hero g12" style="display:flex">
+  <div class="tx"><h1 id="greet">Good Evening, Akanksha!</h1><p>Here is what needs your attention today.</p><div class="chips" id="hchips"></div>
+    <div style="display:flex;gap:8px;margin-top:6px"><button class="btn" id="addS"></button><button class="btn ol" id="hAsk"></button></div></div>
+  <div id="h3d"></div>
+  </section>
+<div class="g12 kp" id="kpis"></div>
+<section class="card" id="attention" style="margin-bottom:12px"><div class="h" id="attH"></div><div class="g12" style="margin:0" id="att"></div></section>
+<section class="card" id="gallery" style="margin-bottom:12px"></section>
+<div class="g12">
+  <section class="card s5" id="chartc"></section>
+  <section class="card s4" id="best"></section>
+  <section class="card s3" id="upload"></section>
+</div>
+<div class="g12">
+  <section class="card s5" id="stockout"></section>
+  <section class="card s7" id="risks"></section>
+</div>
+<div class="g12">
+  <section class="card s6" id="forecast"></section>
+  <section class="card s3" id="inv"></section>
+  <section class="card s3" id="sup"></section>
+</div>
+<div class="g12">
+  <section class="card s12" id="incoming"></section>
+</div>
+<section class="card" id="flowc"></section>
+</main>
+
+<div id="bot">
+  <div id="chat"><header><span class="av" style="background:var(--acc2);color:var(--side2)">TS</span><div><b>TradeSaarthi</b><p>Your Supply Chain Business Assistant</p></div><button class="sp" id="cx" style="font-size:20px"></button></header>
+  <div id="msgs"></div><div class="qq" id="qq"></div>
+  <form id="cf"><input id="ci" placeholder="Ask about stock, sales, orders..." autocomplete="off"><button class="btn">Send</button></form></div>
+  <button id="fab" aria-label="Open TradeSaarthi"></button>
+</div>
+<div id="toasts"></div><div id="mod"><div class="card" id="modc"></div></div>
+
+<script>
+/* =====================  AUTH GUARD & SESSION (now using siqApi)  ===================== */
+// The siqApi module handles session, token validation, 401/403, and storeId injection.
+const siqApi = window.siqApi;
+const { api, auth, store, kpis, sales, inventory, products, stock, orders, imports, chat, getStoreId, getSession, clearSessionAndRedirect } = siqApi;
+
+let DB_ONLINE = false;
+let STORE_PROFILE = null;
+let STORE_ID = null;
+
+/* Initialize session and storeId from siqApi */
+(async function initSession() {
+  const sess = siqApi.getSession();
+  if (!sess) { window.location.replace('public/login.html'); return; }
+  // siqApi already validates token expiry on each request (401 handling)
+  STORE_ID = siqApi.getStoreId();
+  if (!STORE_ID) { window.location.replace('public/login.html'); return; }
+})();
+
+/* =====================  HELPERS  ===================== */
+const P={bell:'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',home:'M3 11l9-8 9 8v10H3z',box:'M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',trend:'M3 17l6-6 4 4 8-8M15 7h6v6',users:'M16 20v-2a4 4 0 0 0-8 0v2M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8',list:'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',shield:'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',refresh:'M21 12a9 9 0 0 1-15 6.7L3 16M3 12a9 9 0 0 1 15-6.7L21 8M3 21v-5h5M21 3v5h-5',file:'M14 3H6v18h12V7zM14 3v4h4',gear:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6M19 12l2-1-2-4-2 1-2-1-1-2H9L8 7 6 8 4 7l-2 4 2 1v2l-2 1 2 4 2-1 2 1 1 2h4l1-2 2-1 2 1 2-4-2-1z',help:'M12 17h.01M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.7',rupee:'M7 5h10M7 9h10M7 5c6 0 6 8 0 8l7 7',bag:'M6 7h12l1 14H5zM9 7a3 3 0 0 1 6 0',warn:'M12 3l10 18H2zM12 10v4M12 17h.01',truck:'M2 6h12v10H2zM14 9h4l3 3v4h-7M6 19a2 2 0 1 0 0-.1M17 19a2 2 0 1 0 0-.1',up:'M12 19V5M5 12l7-7 7 7',plus:'M12 5v14M5 12h14',upl:'M12 16V4M6 10l6-6 6 6M4 20h16',arrow:'M5 12h14M13 6l6 6-6 6',chat:'M21 12a8 8 0 0 1-12 7l-6 2 2-5a8 8 0 1 1 16-4',x:'M6 6l12 12M18 6L6 18',brain:'M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 3 5 3 3 0 0 0 5 1V4a3 3 0 0 0-3 0M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-3 5 3 3 0 0 1-5 1',palette:'M12 3a9 9 0 1 0 0 18c1.5 0 2-1 1.5-2.2-.5-1.3.3-2.3 1.6-2.3H17a4 4 0 0 0 4-4c0-5-4-8.5-9-8.5M7.5 11h.01M9 7.5h.01M14 7h.01',moon:'M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10z',sun:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5',clip:'M9 4h6v3H9zM7 5H5v16h14V5h-2M9 14l2 2 4-4',gauge:'M4 17a8 8 0 1 1 16 0M12 17l4-5',layers:'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5M3 18l9 5 9-5',shieldc:'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM8.5 12l2.5 2.5 4.5-5',chev:'M9 6l6 6-6 6',down:'M12 5v14M19 12l-7 7-7-7'};
+const ic=(n,s='')=>`<svg class="i" viewBox="0 0 24 24" ${s}><path d="${P[n]}"/></svg>`;
+const _cF=new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:0,maximumFractionDigits:2});
+const fmtCur=n=>{const v=Number(n);return Number.isFinite(v)?_cF.format(v):''};
+const doSignOut=()=>clearSessionAndRedirect();
+const $=s=>document.querySelector(s),R=n=>fmtCur(n),sum=a=>a.reduce((x,y)=>x+y,0);
+const CV=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const esc=s=>String(s).replace(/"/g,'&quot;');
+function toast(t,e){const d=document.createElement('div');d.className='t'+(e?' e':'');d.textContent=t;$('#toasts').append(d);setTimeout(()=>d.remove(),3600)}
+function modal(html){$('#modc').innerHTML=html;$('#mod').classList.add('on')}
+const closeM=()=>$('#mod').classList.remove('on'),go=id=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'});
+$('#mod').onclick=e=>{if(e.target.id==='mod'||e.target.dataset.close)closeM()};
+/* ── Fill header from session ── */
+(function(){
+  const sess=getSession();
+  // userName is the account that logged in; storeName is the shop it belongs to.
+  const person=sess?.userName||sess?.ownerName||sess?.email?.split('@')[0]||'User';
+  const shop=sess?.storeName||'Store';
+  const initials=person.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()||'??';
+  const H=new Date().getHours();
+  const greet=(H<12?'Good Morning':H<17?'Good Afternoon':'Good Evening');
+  document.getElementById('headerStore').textContent=shop;
+  document.getElementById('headerName').textContent=person;
+  document.getElementById('headerAv').textContent=initials;
+  $('#greet').textContent=greet+', '+person.split(' ')[0]+'!';
+})();
+const H=new Date().getHours();
+$('#dt').textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+$('#bell').innerHTML=ic('bell')+'<em id="nc">3</em>';$('#fab').innerHTML=ic('chat');$('#cx').innerHTML=ic('x');$('#tb').innerHTML=ic('palette');
+// The hero Add Stock button is #addS. It was #hAdd once; the id moved to #addS
+// when the button became the page's only Add Stock trigger, and this line was
+// left pointing at the old name. #hAdd does not exist, so the assignment threw a
+// TypeError during boot and killed every statement after it — which is why the
+// dashboard rendered blank with no visible error of its own.
+$('#addS').innerHTML=ic('plus')+' Add Stock';$('#hAsk').innerHTML=ic('chat')+' Ask TradeSaarthi';
+
+/* =====================  PRODUCT IMAGES  =====================
+   order: 1) your own file images/<name>.jpg  2) Unsplash  3) Wikimedia Commons  4) keyword photo  5) studio-render illustration (offline) */
+const UN={};
+const CQ={'Basmati Rice':'basmati rice','Sunflower Oil':'sunflower oil bottle','Wheat Atta':'wheat flour','Sugar':'sugar','Tea Powder':'black tea leaves','Toor Dal':'pigeon pea dal','Olive Oil':'olive oil bottle'};
+const KW={'Basmati Rice':'rice,basmati','Sunflower Oil':'sunflower,oil','Wheat Atta':'flour,wheat','Sugar':'sugar','Tea Powder':'tea,leaves','Toor Dal':'lentils,dal','Olive Oil':'olive,oil'};
+/* --- offline pack-shot illustrations (always work, no internet needed) --- */
+const GD=(id,a,b)=>`<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
+const SVGDEFS=`<defs><radialGradient id="bg" cx="50%" cy="35%" r="80%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#e3e9d8"/></radialGradient>${GD('mr','#b8323a','#6d151b')}${GD('go','#ffe27a','#f2b705')}${GD('wh','#ffffff','#dde7f0')}${GD('tr','#c9342b','#7a1712')}${GD('yl','#fbd25a','#e0a015')}${GD('gn','#4f7a2a','#24401a')}${GD('wt','#f6e6bd','#d9b56a')}${GD('or','#ee7b3a','#c4501a')}${GD('br','#d8b98a','#a98356')}<filter id="bl" x="-30%" y="-100%" width="160%" height="300%"><feGaussianBlur stdDeviation="3.2"/></filter></defs>`;
+const SH=(cx,rx,cy=129)=>`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="7" fill="#0b1f2a" opacity=".2" filter="url(#bl)"/>`;
+const TX=(y,t,sz,c='#fff',x=100)=>`<text x="${x}" y="${y}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="${sz}" fill="${c}">${t}</text>`;
+const POUCH=(g,x=58,w=84)=>`<path d="M${x} 40H${x+w}L${x+w+6} 122Q100 131 ${x-6} 122Z" fill="url(#${g})"/><rect x="${x}" y="30" width="${w}" height="11" rx="2" fill="url(#${g})"/><path d="M${x+3} 34H${x+w-3}M${x+3} 37H${x+w-3}" stroke="#000" stroke-opacity=".22" stroke-width=".8" stroke-dasharray="1.6 1.6"/><path d="M${x+7} 46L${x+4} 116" stroke="#fff" stroke-opacity=".28" stroke-width="5" stroke-linecap="round"/>`;
+const ART={
+'Basmati Rice':SH(100,52)+POUCH('mr')+TX(57,'5 kg',7,'#ffe27a')+'<rect x="66" y="62" width="68" height="48" rx="6" fill="#fbf3dc"/>'+TX(78,'BASMATI',11,'#7a1712')+TX(90,'RICE',9,'#a3282f')+'<g fill="#efe1b0" stroke="#b79a4b" stroke-width=".4"><ellipse cx="86" cy="102" rx="6" ry="1.8"/><ellipse cx="100" cy="99" rx="6" ry="1.8"/><ellipse cx="114" cy="102" rx="6" ry="1.8"/></g>',
+'Sunflower Oil':SH(100,34)+'<rect x="91" y="20" width="18" height="11" rx="2.5" fill="#d1401f"/><rect x="94" y="30" width="12" height="11" fill="#f5c518"/><path d="M94 40Q94 48 80 55Q69 60 69 74V118Q69 127 78 127H122Q131 127 131 118V74Q131 60 120 55Q106 48 106 40Z" fill="url(#go)" stroke="#c98f00" stroke-width=".8"/><rect x="73" y="76" width="54" height="36" rx="5" fill="#fff"/><g transform="translate(100 88)"><g fill="#f5b800">'+[0,45,90,135].map(a=>`<ellipse rx="9" ry="2.6" transform="rotate(${a})"/>`).join('')+'</g><circle r="3.6" fill="#6b3f12"/></g>'+TX(105,'SUNFLOWER OIL',6.3,'#8a5a00')+'<path d="M75 62Q72 66 72 76" stroke="#fff" stroke-opacity=".7" stroke-width="3" stroke-linecap="round" fill="none"/>',
+'Wheat Atta':SH(100,52)+POUCH('wt')+'<rect x="60" y="68" width="80" height="34" rx="4" fill="url(#or)"/>'+TX(90,'ATTA',18)+TX(99,'WHOLE WHEAT',6)+'<g fill="#c99a3f" stroke="#a67c2e" stroke-width=".5"><path d="M100 62V47" fill="none" stroke-width="1.2"/><ellipse cx="96" cy="50" rx="2.2" ry="4" transform="rotate(-20 96 50)"/><ellipse cx="104" cy="50" rx="2.2" ry="4" transform="rotate(20 104 50)"/><ellipse cx="96" cy="57" rx="2.2" ry="4" transform="rotate(-20 96 57)"/><ellipse cx="104" cy="57" rx="2.2" ry="4" transform="rotate(20 104 57)"/><ellipse cx="100" cy="44" rx="2.2" ry="4"/></g>'+TX(114,'5 kg',7,'#7a5a1c'),
+'Sugar':SH(100,48)+POUCH('wh',62,76)+'<rect x="62" y="70" width="76" height="30" rx="4" fill="#1f6fd1"/>'+TX(90,'SUGAR',16)+TX(98,'REFINED',5.5,'#cfe4ff')+'<g fill="#fff" stroke="#b9c8d6" stroke-width=".5"><rect x="76" y="54" width="6" height="6" rx="1" transform="rotate(20 79 57)"/><rect x="90" y="50" width="6" height="6" rx="1" transform="rotate(-15 93 53)"/><rect x="110" y="54" width="6" height="6" rx="1" transform="rotate(25 113 57)"/><rect x="123" y="58" width="5" height="5" rx="1"/></g>'+TX(114,'1 kg',7,'#1f6fd1'),
+'Tea Powder':SH(100,44)+'<rect x="64" y="34" width="72" height="92" rx="5" fill="url(#tr)"/><rect x="64" y="34" width="72" height="10" rx="4" fill="#5a0f0a" opacity=".6"/><circle cx="100" cy="72" r="20" fill="#fbf3dc"/><path d="M100 88C86 76 88 58 104 54C112 66 110 80 100 88Z" fill="#3f8f3f"/><path d="M100 88L102 62" stroke="#dff2d0" stroke-width="1"/>'+TX(106,'TEA',12,'#ffe27a')+TX(117,'500 g',7,'#ffd9a8')+'<path d="M69 40V120" stroke="#fff" stroke-opacity=".22" stroke-width="4"/>',
+'Toor Dal':SH(100,52)+POUCH('yl')+'<rect x="64" y="64" width="72" height="46" rx="8" fill="#fff"/><g fill="#e0a015" stroke="#b47a0a" stroke-width=".5">'+[[80,76],[92,74],[104,76],[116,74],[86,84],[98,83],[110,84]].map(p=>`<ellipse cx="${p[0]}" cy="${p[1]}" rx="4.6" ry="3.4"/>`).join('')+'</g>'+TX(98,'TOOR DAL',9.5,'#8a5a00')+TX(106,'1 kg',6,'#b47a0a'),
+'Olive Oil':SH(100,32)+'<rect x="95" y="18" width="10" height="9" rx="2" fill="#c9a227"/><path d="M96 26H104V44Q104 50 116 56Q128 62 128 76V118Q128 127 119 127H81Q72 127 72 118V76Q72 62 84 56Q96 50 96 44Z" fill="url(#gn)" stroke="#1b3212" stroke-width=".8"/><rect x="76" y="78" width="48" height="34" rx="4" fill="#f6f0d8"/><path d="M100 94C92 89 93 83 101 82C105 87 104 91 100 94Z" fill="#6b8e23"/>'+TX(104,'OLIVE OIL',7.5,'#24401a')+'<path d="M78 62Q75 66 75 76" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-linecap="round" fill="none"/>'};
+const BOX=SH(100,48)+'<path d="M64 52H136L132 124H68Z" fill="url(#br)" stroke="#8b6a3f" stroke-width=".8"/><path d="M84 52Q84 38 100 38Q116 38 116 52" fill="none" stroke="#8b6a3f" stroke-width="3"/><circle cx="82" cy="46" r="9" fill="#d1401f"/><circle cx="114" cy="45" r="8" fill="#f5b800"/><path d="M96 48Q100 30 108 34Q104 46 96 48Z" fill="#4f8f2a"/>'+TX(94,'GROCERY',10,'#5b4326');
+const draw=n=>'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" preserveAspectRatio="xMidYMid slice">${SVGDEFS}<rect width="200" height="150" fill="url(#bg)"/>${ART[n]||BOX}</svg>`);
+/* --- real photo chain: 1) images/<name>.jpg  2) Unsplash  3) Wikimedia Commons (live search)  4) keyword photo  5) render above --- */
+const slug=n=>n.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+let CUS={};try{CUS=JSON.parse(localStorage.getItem('siq-img')||'{}')}catch(e){}
+const srcs=n=>[CUS[n],`images/${slug(n)}.jpg`,UN[n]&&`https://unsplash.com/photos/${UN[n]}/download?force=true&w=640`,'@commons',`https://loremflickr.com/640/480/${KW[n]||'package,box'}/all?lock=${n.length*7}`].filter(Boolean);
+const CM={},good={...CUS};
+function commons(n){return CM[n]||(CM[n]=fetch('https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url|mime|size&iiurlwidth=640&gsrsearch='+encodeURIComponent((CQ[n]||n)+' filetype:bitmap'))
+ .then(r=>r.json()).then(j=>Object.values((j.query||{}).pages||{}).filter(x=>x.imageinfo&&/jpe?g/.test(x.imageinfo[0].mime)&&x.imageinfo[0].width>=600&&!/logo|icon|diagram|map|flag|screenshot/i.test(x.title)).sort((a,b)=>a.index-b.index)[0])
+ .then(p=>p?p.imageinfo[0].thumburl:null).catch(()=>null))}
+function imgErr(i){const l=srcs(i.alt);let k=+i.dataset.k;
+ const next=()=>{k++;i.dataset.k=k;const s=l[k];
+  if(s===undefined){i.onerror=null;i.src=draw(i.alt);i.classList.add('ok');return}
+  if(s==='@commons'){commons(i.alt).then(u=>u?(i.src=u):next());return}
+  i.src=s};
+ next()}
+function imgOk(i){i.classList.add('ok');if(!/^data:/.test(i.src))good[i.alt]=i.src}
+const pimg=(n,z=34)=>{const num=typeof z=='number';return `<img class="pim" data-k="0" style="width:${num?z+'px':z};height:${num?z+'px':'100%'}" loading="lazy" alt="${n}" src="${good[n]||srcs(n)[0]}" onload="imgOk(this)" onerror="imgErr(this)">`};
+const bigimg=(n,h=200)=>`<img class="pim big" data-k="0" style="width:100%;height:${h}px" alt="${n}" src="${good[n]||srcs(n)[0]}" onload="imgOk(this)" onerror="imgErr(this)">`;
+
+/* =====================  STATE / DATA  ===================== */
+// S.prod is populated from API; start empty so nothing is hardcoded
+const S={per:'1D',sel:'',recv:0,extraVal:0,slowVal:0,prod:{},
+ inc:[],cnt:{Healthy:0,'Low Stock':0,Critical:0,Overstock:0,'Slow Moving':0},
+ ups:[{n:'Inventory_upload.csv',t:'Waiting for data…'}]};
+const D={'1D':{l:['9 AM','12 PM','3 PM','6 PM','9 PM'],s:[0,0,0,0,0],p:[0,0,0,0,0],sold:0,out:0,rec:0,dl:[0,0,0,0,0],m:1},
+'1W':{l:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],s:[0,0,0,0,0,0,0],p:[0,0,0,0,0,0,0],sold:0,out:0,rec:0,dl:[0,0,0,0,0],m:7},
+'15D':{l:['D1-3','D4-6','D7-9','D10-12','D13-15'],s:[0,0,0,0,0],p:[0,0,0,0,0],sold:0,out:0,rec:0,dl:[0,0,0,0,0],m:15},
+'1M':{l:['Wk 1','Wk 2','Wk 3','Wk 4'],s:[0,0,0,0],p:[0,0,0,0],sold:0,out:0,rec:0,dl:[0,0,0,0,0],m:30}};
+const lab={'1D':'yesterday','1W':'last week','15D':'prev 15 days','1M':'last month'};
+const invTotal=()=>sum(Object.values(S.cnt)),invVal=()=>S.extraVal;
+const low=()=>Object.entries(S.prod).filter(([n,p])=>p.st<p.fd[1]*2);
+
+/* =====================  CHART REGISTRY (ECharts)  ===================== */
+const EC={},HAS=!!window.echarts;
+function chart(id){const el=document.getElementById(id);if(!el||!HAS)return null;if(EC[id]&&EC[id].getDom()!==el){EC[id].dispose();EC[id]=null}return EC[id]||(EC[id]=echarts.init(el))}
+addEventListener('resize',()=>Object.values(EC).forEach(c=>c&&c.resize()));
+const tip=()=>({backgroundColor:CV('--card'),borderColor:CV('--bd'),textStyle:{color:CV('--ink'),fontSize:12},extraCssText:'box-shadow:0 10px 24px rgba(0,0,0,.2);border-radius:8px'});
+const ax=()=>({axisLine:{lineStyle:{color:CV('--bd')}},axisLabel:{color:CV('--ink2'),fontSize:11},axisTick:{show:false}});
+const noChart=id=>{const e=document.getElementById(id);if(e&&!HAS)e.innerHTML='<p class="mut" style="padding:20px;text-align:center">Charts need internet access (ECharts CDN).</p>'};
+
+/* =====================  DATA LOADERS (using siqApi)  ===================== */
+
+async function loadStoreProfile() {
+  try {
+    STORE_PROFILE = await store.get(STORE_ID);
+    const sess = siqApi.getSession();
+    const nameEl = document.querySelector('header h2');
+    if (nameEl) nameEl.textContent = STORE_PROFILE.name;
+    const avEl = document.querySelector('.av');
+    if (avEl) avEl.textContent = STORE_PROFILE.owner_initials || STORE_PROFILE.ownerInitials || 'SI';
+    const ownerEl = document.querySelector('.pf b');
+    if (ownerEl) ownerEl.textContent = sess?.userName || sess?.ownerName || STORE_PROFILE.owner_name || sess?.email || '';
+    if (STORE_PROFILE.theme) setTheme(STORE_PROFILE.theme);
+    return STORE_PROFILE;
+  } catch { return null; }
+}
+
+// Label map for the detected-format note. Fetched in the background on first
+// load: if it has not arrived, the raw type name is shown, which is still
+// accurate. Failures are ignored because this only affects wording.
+async function loadImportLabels(){
+  if(window.IMPORT_LABELS || _impLabelsTried) return;
+  _impLabelsTried = true;
+  try{
+    const types = await imports.types();
+    if(types && types.length) window.IMPORT_LABELS = Object.fromEntries(types.map(t=>[t.type, t.label]));
+  }catch{}
+}
+let _impLabelsTried = false;
+
+// Recorded daily sales for the selected product, from the movement ledger.
+// Goes through api.js so the auth header and store scope are handled in one
+// place rather than being re-derived at each call site.
+async function fcHistory(sku, days=30){
+  return forecast.history(sku, days);
+}
+
+async function loadKpis() {
+  try {
+    const k = await kpis.get();
+    DB_ONLINE = true;
+    loadImportLabels();
+    D['1D'].s    = [k.todaySales   || D['1D'].s[0],   ...D['1D'].s.slice(1)];
+    D['1D'].p    = [k.todayProfit  || D['1D'].p[0],   ...D['1D'].p.slice(1)];
+    D['1D'].sold = k.todayUnitsSold || D['1D'].sold;
+    D['1D'].out  = k.runningOut     || D['1D'].out;
+    D['1D'].rec  = k.stockReceived  || D['1D'].rec;
+    S.extraVal   = k.inventoryValue || 0;
+    updateLiveIndicator(true);
+    return k;
+  } catch { DB_ONLINE = false; updateLiveIndicator(false); return null; }
+}
+
+async function loadInventory() {
+  try {
+    const items = await inventory.get();
+    S.prod = {};
+items.forEach(i => {
+        // A forecast band is only shown when the backend says there is enough
+        // recorded history to support one. The old `|| 5` / `|| 15` fallback
+        // invented a 5–15 range for every product that had none, which rendered
+        // as a confident prediction on a product that had never sold.
+        const band = (i.forecast_low != null && i.forecast_high != null)
+          ? [i.forecast_low, i.forecast_high] : [0, 0];
+        S.prod[i.name] = {
+          st:  i.quantity,
+          // Prefer the run rate derived from actual sales over the hand-entered
+          // monthly figure: for products created by a CSV import that column is
+          // zero, and every product then looked like an equal seller at 100.
+          dem: i.monthly_demand_est || i.monthly_demand || 100,
+          fd:  band,
+          // ok = the band is real; basis = where it came from, shown in the table
+          // so a monthly-average estimate is never read as a learned forecast.
+          ok:  !!i.forecast_sufficient && i.forecast_low != null,
+          basis: i.forecast_basis || null,
+          obs: i.forecast_observed_days || 0,
+          mid: i.forecast_level,
+          note: i.forecast_note || null,
+          pr:  i.unit_cost || 100,
+          sz:  i.pack_size || i.size || '',
+          sku: i.sku,
+          cat: i.category || '',
+          sup:  i.supplier || '',
+          status: i.status,
+        };
+    });
+
+    // The donut, the KPI chips and the risk alerts all read from S.cnt, so the
+    // buckets are derived from the same backend status the rest of the page
+    // uses. computeStatus() only ever emits Critical / Low / Overstock / OK,
+    // which is why 'Low' has to be filed under the "Low Stock" label here.
+    S.cnt = { Healthy: 0, 'Low Stock': 0, Critical: 0, Overstock: 0, 'Slow Moving': 0 };
+    for (const i of items) {
+      if (i.status === 'Critical')        S.cnt.Critical++;
+      else if (i.status === 'Low')        S.cnt['Low Stock']++;
+      else if (i.status === 'Overstock')  S.cnt.Overstock++;
+      else if (i.status === 'Slow Moving') S.cnt['Slow Moving']++;
+      else                                S.cnt.Healthy++;
+    }
+    return items;
+  } catch { return null; }
+}
+
+function renderStockOut(){
+  $('#stockout').innerHTML=
+    '<div class="h"><span class="ic">'+ic('truck')+'</span><h3>Stock Out</h3></div>'
+  + '<div class="mut" style="margin-bottom:8px">Record items leaving your inventory</div>'
+  + '<div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">'
+  +   '<button class="btn" id="soManual">'+ic('plus')+' Manual Entry</button>'
+  +   '<button class="btn ol" id="soUp">'+ic('upl')+' Upload CSV</button>'
+  +   '<button class="btn ol" id="soTpl">'+ic('file')+' CSV template</button>'
+  +   '<input type="file" id="soFi" accept=".csv" hidden>'
+  + '</div>'
+  + '<div id="soImpNote" class="imp-note hide"></div>'
+  + '<div id="soImpErr" class="hide"></div>';
+
+  $('#soManual').onclick=()=>{
+    const prodNames = Object.keys(S.prod);
+    const dlist = (id, items) => items.length
+      ? '<datalist id="'+id+'">'+items.map(v=>'<option value="'+esc(v)+'"></option>').join('')+'</datalist>' : '';
+    const field = (id, label, input) =>
+      '<div class="fld"><label class="mut" for="'+id+'">'+label+'</label>'+input+'</div>';
+    modal(
+      '<div class="h"><h3>Stock Out</h3><a data-close="1">Close</a></div>'
+      + '<p class="mut" style="margin:-2px 0 12px;font-size:12px">Record items leaving your inventory</p>'
+      + '<div class="fl">'
+      + field('sop', 'Product *', '<input class="f" id="sop" list="sol" autocomplete="off" placeholder="Select/Search Product">'+dlist('sol',prodNames))
+      + field('sod', 'Date *', '<input class="f" id="sod" type="date">')
+      + field('soq', 'Quantity *', '<input class="f" id="soq" type="number" min="0" step="any" placeholder="0" inputmode="decimal">')
+      + field('sor', 'Reason', '<select class="f" id="sor"><option value="sale">Sale</option><option value="damage">Damage</option><option value="expiry">Expired</option><option value="lost">Lost</option><option value="adjustment">Other</option></select>')
+      + field('soi', 'Invoice No.', '<input class="f" id="soi" placeholder="Optional" autocomplete="off">')
+      + '</div>'
+      + '<button class="btn w" id="soGo" style="margin-top:4px">Stock Out</button>'
+    );
+    const collect=()=>{
+      const num=id=>{const v=$('#'+id).value.trim();return v===''?undefined:Number(v)};
+      const txt=id=>{const v=$('#'+id).value.trim();return v===''?undefined:v};
+      return { name:txt('sop'), quantity:num('soq'), reason:txt('sor'), date:txt('sod'), invoiceNo:txt('soi') };
+    };
+    // The product box is a name picker, but POST /api/stock/out is keyed on sku
+    // (stock.findBySku), so the name has to be resolved to the catalogue record
+    // before anything is posted. Sending the name straight through looks right
+    // and fails with a 404 for every product whose name differs from its sku.
+    // Matched case-insensitively and trimmed, because this is a typed box.
+    const resolve=(name)=>{
+      const key=Object.keys(S.prod).find(n=>n.trim().toLowerCase()===String(name||'').trim().toLowerCase());
+      return key ? S.prod[key] : null;
+    };
+    const validate=(f)=>{
+      if(!f.name) return 'Select a product.';
+      if(!f.date) return 'Pick a date.';
+      if(!(Number(f.quantity) > 0)) return 'Enter a quantity greater than zero.';
+      const item=resolve(f.name);
+      if(!item) return 'That product is not in your inventory.';
+      if(!item.sku) return 'That product has no SKU, so stock cannot be recorded against it.';
+      if(Number(f.quantity) > Number(item.st)) return 'Insufficient stock. Available quantity: '+Number(item.st);
+      return null;
+    };
+    $('#soGo').onclick=async()=>{
+      const btn=$('#soGo');
+      const f=collect();
+      const problem=validate(f);
+      if(problem){ toast(problem,1); return; }
+      const item=resolve(f.name);
+      btn.disabled=true; btn.textContent='Saving...';
+      try {
+        const res = await stock.outRecord(item.sku, f.quantity, f.reason, f.date, f.invoiceNo);
+        toast('Stock out recorded: '+f.quantity+' x '+f.name+'. '+res.newQuantity+' left.');
+        closeM();
+        await loadInventory();
+        refreshStock();
+        renderInv();
+        if (typeof renderStockOutHistory==='function') renderStockOutHistory();
+      } catch (err) {
+        const msg = String(err.message);
+        if (msg.includes('Not enough stock') || msg.includes('Insufficient')) toast(msg, 1);
+        else toast('Stock out failed: ' + msg, 1);
+      } finally { btn.disabled=false; btn.textContent='Stock Out'; }
+    };
+  };
+
+  $('#soUp').onclick=()=>$('#soFi').click();
+  $('#soTpl').onclick=async()=>{
+    try {
+      const text = await imports.template('ledger');
+      const url = URL.createObjectURL(new Blob([text], { type: 'text/csv' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'stock-out-template.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) { toast(e.message, true); }
+  };
+  $('#soFi').onchange=e=>handleFileUpload(e.target.files[0]);
+}
+
+async function loadSalesChart(period) {
+  try {
+    const data = await sales.get(period);
+    if (!data || !data.length) return false;
+    const labels   = data.map(d => new Date(d.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }));
+    D[period].l    = labels;
+    D[period].s    = data.map(d => d.sales);
+    D[period].p    = data.map(d => d.profit);
+    D[period].sold = data.reduce((s, d) => s + (d.units_sold || 0), 0);
+    return true;
+  } catch { return false; }
+}
+
+async function loadOrders() {
+  try {
+    const ords = await orders.list();
+    S.inc = ords.map(o => ({ p: o.product, q: o.quantity, s: o.supplier, st: o.status, no: o.order_no }));
+    return ords;
+  } catch { return null; }
+}
+
+async function apiStockIn(sku, qty, note, unitCost, reason) {
+  // unitCost and reason are forwarded rather than dropped: the cost decides what
+  // the movement is valued at, and the backend defaults a missing reason to
+  // "adjustment" so callers that only pass three arguments still behave.
+  return stock.in(sku, qty, note, unitCost, reason);
+}
+async function apiStockOut(sku, qty, note) {
+  return stock.out(sku, qty, note);
+}
+async function apiPlaceOrder(supplier, sku, product, qty, unitCost) {
+  return orders.create(supplier, sku, product, qty, qty * (unitCost || 0));
+}
+async function apiReceiveOrder(order_no) {
+  return orders.receive(order_no);
+}
+
+async function apiChat(message) {
+  try {
+    const r = await chat.send(message);
+    DB_ONLINE = true;
+    return r.reply || '';
+  } catch { DB_ONLINE = false; return null; }
+}
+
+function updateLiveIndicator(online) {
+  let el = document.getElementById('liveInd');
+  if (!el) {
+    el = document.createElement('span');
+    el.id = 'liveInd';
+    el.style.cssText = 'font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;margin-left:4px;display:inline-flex;align-items:center;gap:4px';
+    const h = document.querySelector('header');
+    if (h) h.insertBefore(el, h.firstChild.nextSibling);
+  }
+  el.style.background = online ? 'rgba(63,180,120,.15)' : 'rgba(180,100,60,.12)';
+  el.style.color = online ? 'var(--g)' : 'var(--amb)';
+  el.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:${online?'var(--g)':'var(--amb)'};${online?'animation:pulse 1.5s infinite':''}"></span>${online?'Live DB':'Demo'}`;
+}
+
+/* =====================  HEADER / NAV / POPUPS  ===================== */
+const NAV=[['Dashboard','home','kpis'],['Products','bag','gallery'],['Inventory','box','inv'],['Demand Forecasting','trend','forecast'],['Suppliers','users','sup'],['Orders','list','incoming'],['Risk & Alerts','shield','risks'],['Replenishment','refresh','attention'],['Reports','file','chartc'],['Settings','gear',''],['Help & Support','help','']];
+$('#nav').innerHTML=NAV.map((n,i)=>`<a href="#" data-t="${n[2]}" class="${i?'':'on'}">${ic(n[1],'width="17" height="17"')}${n[0]}</a>`).join('')+`<a href="SupplyShield-AI.html" target="_blank">${ic('brain','width="17" height="17"')}Delay Predictor</a>`;
+$('#nav').onclick=e=>{const a=e.target.closest('a');if(!a||a.getAttribute('href')!=='#')return;e.preventDefault();document.querySelectorAll('#nav a').forEach(x=>x.classList.remove('on'));a.classList.add('on');a.dataset.t?go(a.dataset.t):toast('Available in the full product')};
+$('#seg').innerHTML=[['1D','1 Day'],['1W','1 Week'],['15D','15 Days'],['1M','1 Month']].map(x=>`<button data-p="${x[0]}" class="${x[0]=='1D'?'on':''}">${x[1]}</button>`).join('');
+$('#seg').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.per=b.dataset.p;document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('on',x===b));renderPeriod();toast('Showing '+b.textContent)};
+// Notifications updated after inventory loads (see buildNotifs)
+$('#notif').innerHTML='<div class="mut" style="padding:8px">Loading…</div>';
+$('#pfm').innerHTML='<div>Business Profile</div><div data-sw="1">Switch Store</div><div data-so="1" style="color:var(--red)">Sign out</div>';
+$('#pfm').onclick=e=>{
+  if(e.target.dataset.so){ doSignOut(); }
+  if(e.target.dataset.sw){ showStoreSwitcher(); }
+};
+function buildNotifs(){
+  const crit=Object.entries(S.prod).filter(([,p])=>p.status==='Critical');
+  const over=Object.entries(S.prod).filter(([,p])=>p.status==='Overstock');
+  const sup=STORE_PROFILE?.suppliers?.[0];
+  const items=[
+    ...crit.slice(0,2).map(([n,p])=>`<div><b>Stockout risk</b>&nbsp;${n}: ${p.st} left</div>`),
+    sup ? `<div><b>Supplier alert</b>&nbsp;${sup} — check delivery</div>` : `<div><b>Supplier alert</b>&nbsp;No supplier data yet</div>`,
+    ...over.slice(0,1).map(([n,p])=>`<div><b>Overstock</b>&nbsp;${n}: ${p.st} units</div>`),
+  ];
+  $('#notif').innerHTML=items.join('')||'<div class="mut" style="padding:8px">All clear ✅</div>';
+  const nc=$('#nc');if(nc)nc.textContent=crit.length+over.length;
+}
+// Each JWT is scoped to a single store, so there is nothing to switch between —
+// the panel just confirms which account/store the session belongs to.
+function showStoreSwitcher(){
+  const sess = getSession() || {};
+  const name = (STORE_PROFILE && STORE_PROFILE.name) || sess.storeName || sess.storeId || STORE_ID;
+  const email = sess.email || '';
+  modal(`<div class="h"><h3>Your Store</h3><a data-close="1">Close</a></div>
+  <div class="rw">${ic('bag')} ${name} <small class="mut">${email}</small></div>
+  <div class="rw"><small class="mut">This session is scoped to this store only. Sign in with a different account to view another store.</small></div>`);
+}
+[['bell','notif'],['pfb','pfm'],['tb','thm']].forEach(([b,p])=>$('#'+b).onclick=e=>{e.stopPropagation();const o=$('#'+p).classList.contains('on');document.querySelectorAll('.pop').forEach(x=>x.classList.remove('on'));if(!o)$('#'+p).classList.add('on');if(b=='bell'&&$('#nc'))$('#nc').remove()});
+document.onclick=e=>{if(!e.target.closest('.pop'))document.querySelectorAll('.pop').forEach(x=>x.classList.remove('on'))};
+
+/* =====================  KPIs / SALES CHART / BEST SELLERS  ===================== */
+function countUp(el,to,f){const t0=performance.now();(function s(t){const k=Math.min(1,(t-t0)/600),e=1-Math.pow(1-k,3);el.textContent=f(to*e);if(k<1)requestAnimationFrame(s)})(t0)}
+function spark(a,col){const w=76,h=26,mx=Math.max(...a),mn=Math.min(...a),pts=a.map((v,i)=>[i/(a.length-1)*w,h-3-(v-mn)/(mx-mn||1)*(h-8)]);const d='M'+pts.map(p=>p.map(x=>x.toFixed(1)).join(' ')).join('L');return`<svg class="sk" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><path d="${d}L${w} ${h}L0 ${h}Z" fill="${col}" opacity=".12" style="stroke:none;animation:none;stroke-dasharray:0"/><path d="${d}" pathLength="1" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round"/></svg>`}
+function chartCard(){$('#chartc').innerHTML=`<div class="h"><span class="ic">${ic('trend')}</span><h3 id="ct">Sales &amp; Profit</h3><span class="mut sp" id="cs"></span></div><div style="display:flex;gap:22px;margin-bottom:4px" id="cst"></div><div id="cvs" style="flex:1;min-height:230px"></div>`;noChart('cvs')}
+function renderPeriod(){const d=D[S.per],sales=sum(d.s),pf=sum(d.p),mg=(pf/sales*100).toFixed(1);
+ const K=[['Sales','rupee',sales,R,d.s],['Profit','trend',pf,R,d.p],['Products Sold','bag',d.sold,x=>Math.round(x),d.s],['Running Out of Stock','warn',d.out,x=>Math.round(x),[3,4,4,5,4,5]],['Stock Received','truck',d.rec+S.recv,x=>Math.round(x)+' units',d.p]];
+ $('#kpis').innerHTML=K.map((k,i)=>{const bad=i==3,c=bad?CV('--red'):CV('--g');return`<div class="card kpi fade"><div class="kt"><span class="ic">${ic(k[1])}</span>${k[0]}</div><b>0</b><div class="kf"><small class="${bad?'dn':'up'}">${ic(bad?'up':'up','width="12" height="12"')}${d.dl[i]}% vs ${lab[S.per]}</small>${spark(k[4],c)}</div></div>`}).join('');
+ document.querySelectorAll('#kpis b').forEach((b,i)=>countUp(b,K[i][2],K[i][3]));
+ $('#cs').textContent=({'1D':'Today, hourly','1W':'This week, daily','15D':'Last 15 days','1M':'This month, weekly'})[S.per];
+ $('#cst').innerHTML=[['Sales',R(sales)],['Profit',R(pf)],['Margin',mg+'%']].map(x=>`<div><span class="mut">${x[0]}</span><br><b style="font-size:17px">${x[1]}</b></div>`).join('');
+ const c=chart('cvs');if(c){const acc=CV('--acc'),amb=CV('--amb'),g=CV('--g'),m=d.s.map((v,i)=>+(d.p[i]/v*100).toFixed(1));
+  c.setOption({animationDuration:800,animationEasing:'cubicOut',grid:{left:44,right:38,top:34,bottom:22},legend:{top:0,left:0,icon:'roundRect',itemWidth:10,itemHeight:6,textStyle:{color:CV('--ink2'),fontSize:11.5}},
+   tooltip:{...tip(),trigger:'axis',axisPointer:{type:'shadow',shadowStyle:{color:acc+'14'}},valueFormatter:v=>v},toolbox:{right:0,top:-2,itemSize:13,iconStyle:{borderColor:CV('--ink2')},feature:{saveAsImage:{title:'Save PNG',name:'supplyiq-sales'}}},
+   xAxis:{type:'category',data:d.l,...ax()},yAxis:[{type:'value',axisLabel:{color:CV('--ink2'),fontSize:11,formatter:v=>v>=1000?v/1000+'k':v},splitLine:{lineStyle:{color:CV('--edge')}}},{type:'value',min:0,max:40,axisLabel:{color:CV('--ink2'),fontSize:11,formatter:'{value}%'},splitLine:{show:false}}],
+   series:[{name:'Sales',type:'bar',barWidth:'46%',data:d.s,itemStyle:{borderRadius:[6,6,0,0],color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:acc},{offset:1,color:acc+'40'}])},emphasis:{itemStyle:{shadowBlur:14,shadowColor:acc+'88'}}},
+    {name:'Profit',type:'line',smooth:.4,data:d.p,symbolSize:8,lineStyle:{width:3,color:amb,shadowBlur:10,shadowColor:amb+'99',shadowOffsetY:4},itemStyle:{color:amb,borderColor:CV('--card'),borderWidth:2},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:amb+'40'},{offset:1,color:amb+'00'}])}},
+    {name:'Margin %',type:'line',yAxisIndex:1,smooth:.4,data:m,symbol:'circle',symbolSize:5,lineStyle:{width:2,type:'dashed',color:g},itemStyle:{color:g}}]});
+  c.off('click');c.on('click',p=>{const i=p.dataIndex;modal(`<div class="h"><h3>${d.l[i]} breakdown</h3><a data-close="1">Close</a></div><div class="rw">Sales<b>${R(d.s[i])}</b></div><div class="rw">Profit<b>${R(d.p[i])}</b></div><div class="rw">Margin<b>${(d.p[i]/d.s[i]*100).toFixed(1)}%</b></div><div class="rw">Share of period<b>${(d.s[i]/sales*100).toFixed(0)}%</b></div>`)})}
+ renderBest();hero()}
+function renderBest(){
+  const prods=Object.entries(S.prod).sort((a,b)=>b[1].dem-a[1].dem).slice(0,5);
+  const mx=prods[0]?prods[0][1].dem:1;const m=D[S.per].m;
+  $('#best').innerHTML=`<div class="h"><span class="ic">${ic('bag')}</span><h3>Best Selling Products</h3><a data-v="best">View all</a></div><table class="fade"><tr><th>Product<th>Demand<th>Value<th>Status</tr>${prods.map(([n,p])=>{const hot=p.dem>mx*.6;return`<tr class="pr" data-p="${n}"><td><div class="pr-c">${pimg(n,54)}<div>${n}<div class="bar" style="width:70px;margin-top:3px"><i style="width:${p.dem/mx*100}%"></i></div></div></div><td><b>${p.dem}</b>/mo<td>${R(p.pr*p.dem/30*m)}<td><span class="pill ${hot?'p-g':'p-b'}">${hot?'Hot':'Steady'}</span></tr>`}).join('')}</table>`}
+function hero(){const d=D[S.per],pend=S.inc.filter(x=>x.st==='Pending'||x.st==='Ordered').length;$('#hchips').innerHTML=`<span><b>${low().length}</b> products below cover</span><span><b>${pend}</b> orders pending</span><span>Margin <b>${sum(d.s)?((sum(d.p)/sum(d.s))*100).toFixed(1):0}%</b></span><span><b>${D[S.per].out}</b> running out</span>`;
+// The hero buttons live in static markup, but they are wired from here rather
+// than once at load: hero() runs on every period switch and 60s refresh, so a
+// single top-level binding could only ever be correct for the very first render.
+$('#addS').onclick=openAddStockModal;$('#hAsk').onclick=()=>tog(true);}
+
+function openAddStockModal(){
+    const supNames = (STORE_PROFILE?.suppliers||[]).map(s=>s.name).filter(Boolean);
+    const prodNames = Object.keys(S.prod);
+    const dlist = (id, items) => items.length
+      ? `<datalist id="${id}">${items.map(v=>`<option value="${esc(v)}"></option>`).join('')}</datalist>` : '';
+    const field = (id, label, input) =>
+      `<div class="fld"><label class="mut" for="${id}">${label}</label>${input}</div>`;
+    modal(`<div class="h"><h3>Add Stock</h3><a data-close="1">Close</a></div>
+      <p class="mut" style="margin:-2px 0 12px;font-size:12px">Receive new stock into inventory</p>
+      <div class="fl">
+        ${field('ap',  'Product *',               `<input class="f" id="ap"  list="pl" autocomplete="off" placeholder="Select/Search Product">${dlist('pl',prodNames)}`)}
+        ${field('asup','Supplier *',             `<input class="f" id="asup" list="sl" autocomplete="off" placeholder="Select/Search Supplier">${dlist('sl',supNames)}`)}
+        ${field('adate','Date *',                `<input class="f" id="adate" type="date">`)}
+        ${field('aq',  'Quantity *',             `<input class="f" id="aq"  type="number" min="0" step="any" placeholder="0" inputmode="decimal">`)}
+        ${field('auc', 'Purchase Price / Unit *',`<input class="f" id="auc" type="number" min="0" step="any" placeholder="₹0.00" inputmode="decimal">`)}
+        ${field('asp', 'Selling Price / Unit *', `<input class="f" id="asp" type="number" min="0" step="any" placeholder="₹0.00" inputmode="decimal">`)}
+        ${field('ainv','Invoice No.',            `<input class="f" id="ainv" placeholder="Optional" autocomplete="off">`)}
+      </div>
+      <button class="btn w" id="addGo" style="margin-top:4px">Add Stock</button>
+      <p class="mut" style="font-size:11.5px;margin:8px 0 0">A product that is not in your catalogue yet is created automatically and saved to this store.</p>`);
+
+    const collect=()=>{
+      const num=id=>{const v=$('#'+id).value.trim();return v===''?undefined:Number(v)};
+      const txt=id=>{const v=$('#'+id).value.trim();return v===''?undefined:v};
+      return { name:txt('ap'), supplier:txt('asup'), quantity:num('aq'), unitCost:num('auc'), sellPrice:num('asp'), date:txt('adate'), invoiceNo:txt('ainv') };
+    };
+    const validate=(f)=>{
+      if(!f.name) return 'Select a product.';
+      if(!f.supplier) return 'Select a supplier.';
+      if(!f.date) return 'Pick a date.';
+      if(!(Number(f.quantity) > 0)) return 'Enter a quantity greater than zero.';
+      if(f.unitCost === undefined) return 'Enter the purchase price.';
+      if(f.sellPrice === undefined) return 'Enter the selling price.';
+      return null;
+    };
+    $('#addGo').onclick=async()=>{
+      const btn=$('#addGo');
+      const f=collect();
+      const problem=validate(f);
+      if(problem){ toast(problem,1); return; }
+      btn.disabled=true; btn.textContent='Saving…';
+      const ok=await addStock(f, false);
+      if(ok) closeM();
+      else { btn.disabled=false; btn.textContent='Add Stock'; }
+    };
+  }
+
+/* =====================  ACTIONS (delegated)  ===================== */
+function reorder(p,q){
+  closeM();q=+q||100;
+  const prod=S.prod[p];
+  const sup=prod?.sup || STORE_PROFILE?.suppliers?.[0];
+  if(!sup){ toast('No supplier available for this product', 1); return; }
+  const sku=prod?.sku||'';
+  if(DB_ONLINE&&sku){apiPlaceOrder(sup,sku,p,q,prod?.pr).then(()=>loadOrders().then(()=>renderInc())).catch(()=>{})}
+  else{S.inc.unshift({p,q,s:sup,st:'Ordered'})}
+  renderInc();renderFc();toast(`Purchase order placed: ${q} × ${p}`)}
+function placeAll(list){
+  const sup=STORE_PROFILE?.suppliers?.[0];
+  if(!sup){ toast('No suppliers available for bulk order', 1); return; }
+  list.forEach(o=>{
+    const prod=S.prod[o[0]];const sku=prod?.sku||'';
+    if(DB_ONLINE&&sku)apiPlaceOrder(sup,sku,o[0],o[1],prod?.pr).catch(()=>{});
+    else S.inc.unshift({p:o[0],q:o[1],s:sup,st:'Ordered'});
+  });closeM();renderInc();renderFc();toast(list.length+' purchase orders placed')}
+document.addEventListener('click',e=>{
+ const a=e.target.closest('[data-act]');if(a){const d=a.dataset;if(d.act=='reorder')reorder(d.p,d.q);if(d.act=='placeall')placeAll(JSON.parse(d.list));if(d.act=='clear'){S.slowVal=Math.round(S.slowVal*.5);closeM();renderAtt();toast('20% clearance offer activated')}if(d.act=='msg'){closeM();toast(d.m)}if(d.act=='recv'){recvStock(+d.i);closeM()}return}
+ const r=e.target.closest('tr.pr,.pc');if(r){openProd(r.dataset.p);return}
+ const f=e.target.closest('tr.fr');if(f&&!e.target.closest('button')){S.sel=f.dataset.p;S.fcHist=null;renderFc();loadFcHistory();return}
+ const v=e.target.dataset.v;if(v)modal(`<div class="h"><h3>All ${v}</h3><a data-close="1">Close</a></div>`+Object.entries(S.prod).map(([n,p])=>`<div class="rw hv">${pimg(n,44)}${n}<b>${p.st} in stock</b></div>`).join(''))});
+
+/* =====================  PRODUCT SHOWCASE (big images)  ===================== */
+function renderGal(){const rows=Object.entries(S.prod),f=S.gf||'all',isLow=p=>p.st<p.fd[1]*2;
+ const list=rows.filter(([n,p])=>f=='all'||(f=='low'?isLow(p):!isLow(p)));
+ $('#gallery').innerHTML=`<div class="h"><span class="ic">${ic('bag')}</span><h3>Product Showcase</h3><span class="mut sp">${rows.length} products · tap a card for details</span></div><div class="fc">${[['all','All'],['low','Needs reorder'],['ok','Well stocked']].map(x=>`<button data-gf="${x[0]}" class="${x[0]==f?'on':''}">${x[1]}</button>`).join('')}</div><div class="gal">${list.map(([n,p])=>{const lo=isLow(p),lv=p.fd[1]*2,pc=Math.min(100,p.st/lv*100),col=pc<50?'red':pc<100?'amb':'g',q=Math.max(50,p.fd[1]*10-p.st);
+  return`<div class="pc fade" data-p="${n}"><div class="ph">${pimg(n,'100%')}<span class="tag"><span class="pill ${lo?'p-a':'p-g'}">${lo?'Reorder soon':'Well stocked'}</span></span><span class="prt">${R(p.pr)}</span></div><div class="bd"><h4>${n}</h4>${p.sz?`<span class="mut" style="margin-top:-4px">${p.sz}</span>`:''}<div class="mrow"><span>In stock</span><b>${p.st} units</b></div><div class="bar" style="flex:none"><i style="width:${pc}%;background:var(--${col})"></i></div><div class="mrow"><span>Monthly demand</span><b>${p.dem}</b></div><div class="mrow"><span>Tomorrow</span><b>${p.fd[0]}–${p.fd[1]}</b></div>${lo?`<button class="btn tn" style="--c:var(--acc);margin-top:4px;padding:5px 10px" data-act="reorder" data-p="${n}" data-q="${q}">Reorder ${q} units</button>`:''}</div></div>`}).join('')||'<p class="mut" style="padding:14px">No products in this filter.</p>'}</div>`;
+ document.querySelectorAll('[data-gf]').forEach(b=>b.onclick=()=>{S.gf=b.dataset.gf;renderGal()})}
+function openProd(n){const p=S.prod[n];if(!p)return;const lo=p.st<p.fd[1]*2,q=Math.max(100,p.dem-p.st);
+ modal(`${bigimg(n,230)}<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><label class="btn ol" style="cursor:pointer">Change photo<input type="file" accept="image/*" hidden data-imgf="${n}"></label><button class="btn ol" data-imgurl="${n}">Paste image URL</button>${CUS[n]?`<button class="btn ol" data-imgreset="${n}">Reset</button>`:''}</div><div class="h" style="margin:12px 0 8px"><h3 style="font-size:17px">${n}</h3><span class="pill ${lo?'p-a':'p-g'}">${lo?'Reorder soon':'Well stocked'}</span><a data-close="1">Close</a></div>${p.sz?`<div class="rw">Pack size<b>${p.sz}</b></div>`:''}<div class="rw">In stock<b>${p.st} units</b></div><div class="rw">Monthly demand<b>${p.dem} units</b></div><div class="rw">Unit price<b>${R(p.pr)}</b></div><div class="rw">Stock value<b>${R(p.st*p.pr)}</b></div><div class="rw">Tomorrow's forecast<b>${p.fd[0]}–${p.fd[1]} units</b></div><button class="btn w" style="margin-top:10px" data-act="reorder" data-p="${n}" data-q="${q}">Reorder ${q} units</button>`)}
+
+function setImg(n,u){if(u){CUS[n]=u;good[n]=u}else{delete CUS[n];delete good[n]}
+ try{localStorage.setItem('siq-img',JSON.stringify(CUS))}catch(e){toast('Photo applied, but browser storage is full',1)}
+ renderGal();renderPeriod();renderInc();renderFc();renderAtt();openProd(n);toast(u?'Photo updated: '+n:'Photo reset: '+n)}
+function shrink(f,cb){const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,800/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.85))};i.onerror=()=>toast('Could not read that image',1);i.src=r.result};r.readAsDataURL(f)}
+document.addEventListener('change',e=>{const n=e.target.dataset&&e.target.dataset.imgf;if(n&&e.target.files[0])shrink(e.target.files[0],u=>setImg(n,u))});
+document.addEventListener('click',e=>{const t=e.target.closest('[data-imgurl],[data-imgreset]');if(!t)return;
+ if(t.dataset.imgreset)return setImg(t.dataset.imgreset,null);
+ const u=prompt('Paste image link (https://...)');if(u&&/^https?:\/\//i.test(u.trim()))setImg(t.dataset.imgurl,u.trim())});
+
+/* =====================  ATTENTION  ===================== */
+function renderAtt(){
+ $('#attH').innerHTML=`<span class="ic" style="background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red)">${ic('warn')}</span><h3>What Needs Your Attention?</h3><a data-v="attention">View all</a>`;
+ const criticals=Object.entries(S.prod).filter(([,p])=>p.status==='Critical');
+ const overstocks=Object.entries(S.prod).filter(([,p])=>p.status==='Overstock');
+ const lows=Object.entries(S.prod).filter(([,p])=>p.status==='Low');
+const needOrder=[...criticals,...lows].slice(0,3);
+  const topCrit=criticals[0]||lows[0];
+  const topOver=overstocks[0];
+  const sup0=STORE_PROFILE?.suppliers?.[0];
+  const supplierName = sup0 || 'No supplier data';
+  const supplierNote = sup0 ? 'Monitor delivery times. Use Delay Predictor for risk analysis.' : 'Import a ledger CSV with supplier data to enable supplier monitoring.';
+  $('#att').innerHTML=`
+  ${topCrit?`<div class="att r s3"><span class="lb">Stockout Risk</span><div class="pr-c">${pimg(topCrit[0],84)}<div><h4>${topCrit[0]}</h4><b class="dn">Only ${topCrit[1].st} units left</b></div></div><p>Monthly demand: ${topCrit[1].dem} units<br>Recommended: order ${Math.max(50,topCrit[1].dem-topCrit[1].st)} units</p><button class="btn tn" id="a1">Plan Order ${ic('arrow')}</button></div>`:''}
+  ${topOver?`<div class="att a s3"><span class="lb">Slow Moving / Overstock</span><div class="pr-c">${pimg(topOver[0],84)}<div><h4>${topOver[0]}</h4><b>${topOver[1].st} units · overstock</b></div></div><p>Value tied up: ${R(topOver[1].st*topOver[1].pr)}<br>Recommended: 20% clearance offer</p><button class="btn tn" id="a2">View Old Stock ${ic('arrow')}</button></div>`:''}
+  ${needOrder.length?`<div class="att b s3"><span class="lb">Order Tomorrow</span><h4>${needOrder.length} product${needOrder.length>1?'s':''} to order</h4><p>${needOrder.map(([n,p])=>`${n} · ${Math.max(30,p.dem-p.st)} units`).join('<br>')}</p><button class="btn tn" id="a3">Review Order ${ic('arrow')}</button></div>`:''}
+  <div class="att o s3"><span class="lb">Supplier Alert</span><h4>${supplierName}</h4><b>${sup0 ? 'Monitor delivery times' : 'No supplier data'}</b><p>${supplierNote}</p><button class="btn tn" id="a4">${sup0 ? 'View Supplier' : 'Add Suppliers'} ${ic('arrow')}</button></div>`;
+  if(topCrit){const [cn,cp]=topCrit;const oq=Math.max(50,cp.dem-cp.st);$('#a1')?.addEventListener('click',()=>modal(`${bigimg(cn,190)}<div class="h" style="margin-top:12px"><h3>Plan Order – ${cn}</h3><a data-close="1">Close</a></div><p class="mut">AI suggests <b>${oq} units</b> to cover monthly demand.</p><label class="mut">Quantity</label><input class="f" id="oq" type="number" value="${oq}"><button class="btn w" onclick="reorder('${cn}',document.getElementById('oq').value)">Confirm Order</button>`))}
+  if(topOver){const [on2,op]=topOver;$('#a2')?.addEventListener('click',()=>modal(`${bigimg(on2,190)}<div class="h" style="margin-top:12px"><h3>${on2} – Overstock</h3><a data-close="1">Close</a></div><p class="mut">${op.st} units. ${R(op.st*op.pr)} tied up.</p><button class="btn w" style="margin-top:10px" data-act="clear">Apply 20% clearance</button>`))}
+  if(needOrder.length){const OL=needOrder.map(([n,p])=>[n,Math.max(30,p.dem-p.st)]);$('#a3')?.addEventListener('click',()=>modal(`<div class="h"><h3>Review Order</h3><a data-close="1">Close</a></div>${OL.map(o=>`<div class="rw">${pimg(o[0],44)}${o[0]}<b>${o[1]} units</b></div>`).join('')}<button class="btn w" style="margin-top:10px" data-act="placeall" data-list="${esc(JSON.stringify(OL))}">Place all orders</button>`))}
+  $('#a4')?.addEventListener('click',()=>modal(`<div class="h"><h3>${supplierName}</h3><a data-close="1">Close</a></div><p class="mut">${supplierNote}</p><div style="display:flex;gap:8px;margin-top:10px">${sup0 ? `<button class="btn" data-act="msg" data-m="Follow-up email sent to ${sup0}">Send follow-up</button><a class="btn ol" href="SupplyShield-AI.html" target="_blank" style="text-decoration:none">Run delay predictor</a>` : '<span class="mut">Import a ledger CSV with supplier information first.</span>'}</div>`))}
+
+/* =====================  UPLOAD (using siqApi imports)  ===================== */
+function renderUp(){
+$('#upload').innerHTML=`<div class="h"><span class="ic">${ic('upl')}</span><h3>Upload Stock Data</h3></div>
+  <div class="drop" id="dz">${ic('upl','width="22" height="22" style="margin:auto"')}<b style="color:var(--ink)">Drop CSV here</b><span>one file is enough &mdash; products, stock and sales together</span></div>
+  <div style="display:flex;gap:6px;margin-bottom:8px">
+  <button class="btn" id="upB">Upload CSV</button>
+  <button class="btn ol" id="tplB">${ic('file')} CSV format guide</button>
+  <input type="file" id="fi" accept=".csv" hidden>
+  </div>
+  <div id="impTypeNote" class="imp-note hide"></div>
+  <div id="impErr" class="hide"></div>
+  <span class="mut" style="font-weight:600">Recent uploads</span>${S.ups.slice(0,3).map(u=>`<div class="rw">${ic('file')}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.n}</span><b class="mut" style="font-weight:500;font-size:11px;white-space:nowrap">${u.t}</b></div>`).join('')}`;
+
+  $('#upB').onclick=()=>$('#fi').click();
+  $('#tplB').onclick=showCsvGuide;
+  $('#fi').onchange=e=>handleFileUpload(e.target.files[0]);
+  const z=$('#dz');
+  ['dragover','dragenter'].forEach(v=>z.addEventListener(v,e=>{e.preventDefault();z.classList.add('on')}));
+  ['dragleave','drop'].forEach(v=>z.addEventListener(v,e=>{e.preventDefault();z.classList.remove('on')}));
+z.addEventListener('drop',e=>{e.preventDefault();handleFileUpload(e.dataTransfer.files[0])});
+}
+
+async function showCsvGuide(){
+  modal(`<div class="h"><h3>CSV format guide</h3><a data-close="1">Close</a></div>
+    <div class="mut" style="margin-bottom:10px">First row must be the column names. Download a ready-made file and edit it in Excel or Google Sheets.</div>
+    <div id="tg"><p class="mut" style="padding:10px">Loading…</p></div>`);
+  const box=$('#tg');
+  let types;
+  try{ types=await imports.types(); }
+  catch(e){ box.innerHTML=`<p class="mut" style="padding:10px">Could not load the format list: ${esc(e.message||e)}</p>`; return; }
+  if(!types||!types.length){ box.innerHTML='<p class="mut" style="padding:10px">No import formats available.</p>'; return; }
+  const col=c=>`<code style="background:var(--soft);border:1px solid var(--bd);border-radius:4px;padding:1px 5px;font-size:11.5px">${esc(c)}</code>`;
+  // The ledger format is the one that fills the whole dashboard, so it is shown
+  // first with an explanation; the rest stay available below it.
+  const order=t=>t==='ledger'?0:1;
+  const sorted=[...types].sort((a,b)=>order(a.type)-order(b.type));
+  // Mirrors the backend's own labels so the detected-format note reads the same
+  // way as the guide, without a second request.
+  window.IMPORT_LABELS=Object.fromEntries(types.map(t=>[t.type,t.label]));
+  box.innerHTML=`
+    <div style="border:1.5px solid var(--acc);border-radius:9px;padding:11px;margin-bottom:12px;background:var(--soft)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap">
+        <b style="font-size:14.5px">Start here</b>
+        <span class="pill p-g">One file does everything</span>
+        <button class="btn" style="padding:4px 11px;font-size:12.5px" data-tpl="ledger">Download the full example</button>
+      </div>
+      <div class="mut" style="font-size:12.5px">Every row is one thing that happened — stock arrived, or stock sold. Fill in <code>date</code>, <code>sku</code>, <code>direction</code> (IN/OUT) and <code>quantity</code>, and add <code>supplier</code>, <code>unit_cost</code> and <code>unit_price</code> when you know them. Products and suppliers are created for you, so this single file brings inventory, sales, suppliers and the demand forecast to life.</div>
+    </div>`+sorted.map(t=>`<div style="border:1px solid var(--bd);border-radius:8px;padding:10px;margin-bottom:8px${t.type==='ledger'?';display:none':''}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <b style="font-size:14px">${esc(t.label||t.type)}</b>
+        <button class="btn ol" style="padding:3px 9px;font-size:12px" data-tpl="${esc(t.type)}">Download ${esc(t.type)}.csv</button>
+      </div>
+      <div style="margin-bottom:5px"><small style="font-weight:700;color:var(--red)">Required</small><div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">${(t.required_columns||[]).map(col).join('')||'<span class="mut">none</span>'}</div></div>
+      <div><small style="font-weight:700;color:var(--ink2)">Optional</small><div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">${(t.optional_columns||[]).map(col).join('')||'<span class="mut">none</span>'}</div></div>
+    </div>`).join('');
+  box.querySelectorAll('[data-tpl]').forEach(b=>b.onclick=async()=>{
+    const t=b.dataset.tpl, old=b.textContent;
+    b.disabled=true; b.textContent='Downloading…';
+    try{
+      const text=await imports.template(t);
+      const url=URL.createObjectURL(new Blob(['\uFEFF'+text],{type:'text/csv;charset=utf-8'}));
+      const a=document.createElement('a');
+      a.href=url; a.download=t+'.csv'; document.body.append(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),4000);
+      toast('Downloaded '+t+'.csv');
+    }catch(e){ toast('Download failed: '+(e.message||e),true); }
+    b.disabled=false; b.textContent=old;
+  });
+}
+
+async function handleFileUpload(f){
+  if(!f) return;
+  if(!/\.csv$/i.test(f.name)){
+    toast(`${f.name}: Please export as CSV`, 1);
+    return;
+  }
+  const r=new FileReader();
+  r.onerror=()=>toast('Could not read file',1);
+  r.onload=()=>{
+    const text = r.result;
+    // The import type is decided by the backend from the column headers, not
+    // chosen here. Naming it in this handler is what let a full transaction
+    // ledger be committed as a stock-level file: `stock_levels` only needs
+    // sku,quantity, which a ledger also has, so it validated cleanly and then
+    // wrote every row as an opening balance.
+    // A file the backend cannot place is refused there with an explanation,
+    // which is surfaced here rather than swallowed by a generic toast.
+    imports.validate('auto', f.name, text)
+      .then(async job => {
+        showImportTypeBanner(job.type);
+        if(job.errorCount > 0 || job.valid > 0){
+          // Validation only returns summary; fetch full job with preview data
+          try {
+            const fullJob = await imports.get(job.id);
+            showImportPreview(fullJob, text);
+          } catch(err) {
+            console.warn('Could not fetch import preview:', err);
+            showImportPreview(job, text);
+          }
+        } else {
+          toast('No valid rows in file', 1);
+        }
+      })
+      .catch(err => {
+        // 400 = the columns are not a format we know; 409 = this exact file has
+        // already been imported; 413 = the file exceeded the upload limit. All
+        // three need the message shown, not just a red toast.
+        if(err.status===400 || err.status===409 || err.status===413){
+          showImportFormatError(err.message, err.status);
+        } else {
+          toast('Validation failed: ' + err.message, 1);
+        }
+      });
+  };
+  r.readAsText(f);
+  $('#fi').value='';
+}
+
+// Confirm out loud which format was detected. A silent guess is indistinguishable
+// from a correct one until the numbers are wrong, so the chosen type is always
+// stated before the preview.
+let _impTypeNote=null;
+function showImportTypeBanner(type){
+  const el=$('#impTypeNote');
+  if(!el) return;
+  if(!type){ el.innerHTML=''; el.classList.add('hide'); _impTypeNote=null; return; }
+  const label=(window.IMPORT_LABELS&&window.IMPORT_LABELS[type])||type;
+  const txt=`Detected format: <b>${label}</b>`;
+  if(_impTypeNote!==txt){ el.innerHTML=txt; el.classList.remove('hide'); _impTypeNote=txt; }
+}
+
+// A column/format/size problem is not a transient toast: it needs the reason and
+// a route to the guide, because retrying the same file will never work. The
+// text comes from the server, so it is escaped rather than injected as HTML.
+const IMPORT_ERROR_TITLES = {
+  400: "This file's format wasn't recognised",
+  409: 'This file was already imported',
+  413: 'This file is too large to upload',
+};
+function showImportFormatError(message, status){
+  const el=$('#impErr');
+  if(!el) return;
+  el.innerHTML=`<div class="ie">
+    <div class="ie-t">${esc(IMPORT_ERROR_TITLES[status] || 'This file could not be imported')}</div>
+    <div class="ie-m">${esc(String(message || 'No further detail was given.'))}</div>
+    <div class="ie-a"><button class="btn sm" onclick="$('#impErr').classList.add('hide')">Dismiss</button>
+      <button class="btn sm oc" onclick="showCsvGuide()">CSV format guide</button></div>
+  </div>`;
+  el.classList.remove('hide');
+}
+
+function showImportPreview(job, csvText){
+  // Validation returns a summary ({ total, valid, errorCount, warningCount });
+  // GET /api/imports/:id returns the full job ({ total_rows, valid_rows,
+  // error_rows, errors, can_commit }). Both reach this function, so the two shapes
+  // are normalised here first.
+  //
+  // Reading one shape while being handed the other is what made CSV upload look
+  // broken: `job.valid` was undefined on the detail response, so
+  // `job.valid > 0` was false and the Import button was never rendered at all —
+  // the preview opened with "undefined valid" and no way to commit.
+  const num = (...vals) => { for (const v of vals) if (v !== undefined && v !== null) return Number(v) || 0; return 0; };
+  const errors     = Array.isArray(job.errors) ? job.errors : [];
+  const detail     = job.preview || { rows: [], warnings: [] };
+  const total      = num(job.total_rows, job.total);
+  const valid      = num(job.valid_rows, job.valid);
+  const errorCount = num(job.errorCount, errors.length, job.error_rows);
+  const warningCount = num(job.warningCount, detail.warnings.length);
+  const canCommit  = job.can_commit !== undefined ? !!job.can_commit : valid > 0;
+  const html = `
+    <div class="h"><h3>Import Preview</h3><a data-close="1">Close</a></div>
+    <div class="mut" style="margin-bottom:8px">
+      ${total} row(s) in file · ${valid} valid · ${errorCount} error(s) · ${warningCount} warning(s)
+    </div>
+    ${errorCount ? `<div style="margin-bottom:8px;padding:8px;background:var(--soft);border-radius:8px">
+      <b>${errorCount} row(s) will be skipped:</b>
+      <ul style="margin:4px 0 0 18px;max-height:120px;overflow:auto">${errors.map(e =>
+        `<li>Line ${e.row_no}${e.column_name ? ' · ' + esc(e.column_name) : ''}${e.raw_value !== null && e.raw_value !== undefined && e.raw_value !== '' ? ' · value "' + esc(String(e.raw_value)) + '"' : ''} — ${esc(e.error_message || e.error_code || '')}</li>`).join('')}</ul>
+    </div>` : ''}
+    ${detail.warnings.length ? `
+      <div style="margin-bottom:8px;padding:8px;background:var(--soft);border-radius:8px">
+        <b>Warnings:</b>
+        <ul style="margin:4px 0 0 18px">${detail.warnings.map(w => `<li>Line ${w.row_no}: ${esc(w.error_message || '')}</li>`).join('')}</ul>
+      </div>` : ''}
+    ${detail.rows.length ? `
+      <div style="max-height:200px;overflow:auto;border:1px solid var(--bd);border-radius:8px">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:var(--soft)"><th style="padding:4px 8px;text-align:left">Line</th><th style="padding:4px 8px;text-align:left">Product</th><th style="padding:4px 8px;text-align:right">Qty</th><th style="padding:4px 8px;text-align:right">Unit Cost</th></tr></thead>
+          <tbody>
+            ${detail.rows.slice(0, 20).map(r => `
+              <tr>
+                <td style="padding:4px 8px;border-top:1px solid var(--edge)">${r.line}</td>
+                <td style="padding:4px 8px;border-top:1px solid var(--edge)">${esc(r.data.name || '')}</td>
+                <td style="padding:4px 8px;border-top:1px solid var(--edge);text-align:right">${r.data.quantity}</td>
+                <td style="padding:4px 8px;border-top:1px solid var(--edge);text-align:right">${r.data.unit_cost || ''}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      ${detail.rows.length > 20 ? `<p class="mut" style="margin-top:4px">Showing first 20 of ${detail.rows.length} valid rows</p>` : ''}
+    ` : '<p class="mut" style="padding:14px">No valid rows to import</p>'}
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;align-items:center">
+      <button class="btn ol" data-close="1">Cancel</button>
+      ${canCommit && valid > 0 ? `<button class="btn w" onclick="commitImport(${job.id})">Import ${valid} row(s)${errorCount ? `, skip ${errorCount}` : ''}</button>` : ''}
+    </div>
+  `;
+  modal(html);
+}
+
+async function commitImport(jobId){
+  closeM();
+  toast('Importing…');
+  try {
+    const result = await imports.commit(jobId);
+    toast(`Imported ${result.created} new and updated ${result.updated} row(s)`);
+    S.ups.unshift({n:`Import #${jobId}`, t:'Just now'});
+    await loadInventory();
+      await loadKpis();
+      refreshStock();
+      renderUp();
+      // The ledger just changed, so the recorded history behind the forecast
+      // chart is stale. Drop it and re-read rather than leaving the pre-import
+      // series on screen.
+      S.sel = Object.keys(S.prod)[0] || '';
+      S.fcHist = null;
+      loadFcHistory();
+  } catch(err) {
+    toast('Import failed: ' + err.message, 1);
+  }
+}
+
+// Adds stock by hand from the "Add Stock" button.
+//
+// This used to be the reason stock "did not add": a name typed into the box that
+// was not already in the catalogue was pushed into S.prod as a local-only row
+// with an empty SKU, and the API call below was guarded on a SKU being present.
+// The guard failed, no request was ever sent, and a success toast still fired —
+// so the quantity lived in the tab and disappeared on refresh.
+//
+// Now a name that is not in the catalogue is created on the server first
+// (products.create), and the quantity is part of that same call. The saved
+// values are then re-read from the database rather than trusted from local
+// state, so what the screen shows is what was actually written.
+async function addStock(fields, quiet) {
+  // Takes the whole form as an object rather than a name and a quantity, because
+  // the products endpoint stores all of these and any field the form collects but
+  // drops here is a field the shopkeeper silently typed for nothing.
+  const f = Object.assign({}, fields || {});
+  const n = String(f.name == null ? '' : f.name).trim();
+  const q = Number(f.quantity);
+  f.name = n;
+  if (!n || !(q > 0)) { toast('Enter a valid product and quantity', 1); return false; }
+
+  const existing = Object.keys(S.prod).find(x => x.toLowerCase() === n.toLowerCase());
+
+  if (DB_ONLINE && !existing) {
+    try {
+      // The create call carries the opening quantity and every master field, so a
+      // product added here is indistinguishable from one that arrived by import.
+      const made = await products.create(Object.assign({}, f, { quantity: q }));
+      toast(`Added ${q} units of ${made.name || n} (SKU ${made.sku})`);
+      await loadInventory();
+      await loadKpis();
+      refreshStock();
+      renderPeriod();
+      return true;
+    } catch (err) {
+      // A 409 means the product is already there under this name, so fall
+      // through and add the quantity to it instead of failing the whole entry.
+      if (err.status !== 409) {
+        toast('Could not save: ' + (err.message || 'unknown error'), 1);
+        return false;
+      }
+    }
+  }
+
+  const k = existing || n;
+  if (!S.prod[k]) { S.prod[k] = { st: 0, dem: 0, fd: [0, 0], pr: 0, sku: '', sup: '' }; S.cnt.Healthy++; }
+  const was = S.prod[k].st; S.prod[k].st += q;
+  if (was < 20 && S.prod[k].st >= 20 && S.cnt['Low Stock'] > 0) { S.cnt['Low Stock']--; S.cnt.Healthy++; }
+  S.extraVal += q * S.prod[k].pr;
+
+  if (DB_ONLINE && S.prod[k].sku) {
+    try {
+      // The movement carries the cost that was typed in, so stock is valued at
+      // what it actually cost rather than at the stale local price.
+      await apiStockIn(S.prod[k].sku, q, 'Manual add', f.unitCost);
+      await loadInventory();
+      await loadKpis();
+    } catch (err) {
+      // The server rejected the movement, so the optimistic local bump above is
+      // rolled back rather than left showing stock that was never received.
+      S.prod[k].st = was;
+      S.extraVal -= q * S.prod[k].pr;
+      if (was < 20 && S.prod[k].st + q >= 20 && S.cnt['Low Stock'] > 0) { S.cnt['Low Stock']++; S.cnt.Healthy--; }
+      toast('Could not add stock: ' + (err.message || 'unknown error'), 1);
+      return false;
+    }
+  }
+
+  if (!quiet) { refreshStock(); toast(`Added ${q} units of ${k}`); }
+  return true;
+}
+
+function refreshStock(){ renderGal();renderInv();renderFc();renderAtt();renderRisk();hero(); }
+
+/* =====================  INVENTORY (donut)  ===================== */
+function renderInv(){const c=S.cnt,cols=[CV('--g'),CV('--amb'),CV('--red'),CV('--blue'),CV('--ink2')],keys=Object.keys(c);
+ $('#inv').innerHTML=`<div class="h"><span class="ic">${ic('box')}</span><h3>Inventory Overview</h3><a data-v="inventory">View all</a></div><div style="display:flex;gap:6px;align-items:center;flex:1"><div id="dn" style="width:130px;height:130px;flex:none"></div><div class="lg">${keys.map((k,i)=>`<div data-i="${i}"><i style="background:${cols[i]}"></i>${k}<b>${c[k]}</b></div>`).join('')}</div></div><div style="display:flex;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--edge)"><span class="mut">Inventory value<br><b style="font-size:19px;color:var(--ink)">${R(invVal())}</b></span></div>`;
+ noChart('dn');const ch=chart('dn');if(!ch)return;
+ ch.setOption({animationDuration:900,tooltip:{...tip(),trigger:'item',formatter:'{b}: <b>{c}</b> ({d}%)'},title:{text:invTotal(),subtext:'Products',left:'center',top:'34%',textStyle:{fontSize:22,fontWeight:800,color:CV('--ink')},subtextStyle:{color:CV('--ink2'),fontSize:11}},
+  series:[{type:'pie',radius:['62%','86%'],startAngle:100,itemStyle:{borderRadius:6,borderColor:CV('--card'),borderWidth:3},label:{show:false},emphasis:{scaleSize:7,itemStyle:{shadowBlur:16,shadowColor:'rgba(0,0,0,.3)'}},data:keys.map((k,i)=>({name:k,value:c[k],itemStyle:{color:cols[i]}}))}]},true);
+ ch.off('click');ch.on('click',p=>modal(`<div class="h"><h3>${p.name}</h3><a data-close="1">Close</a></div><div class="rw">Products<b>${p.value}</b></div><div class="rw">Share of inventory<b>${p.percent}%</b></div><p class="mut" style="margin-top:8px">${({Healthy:'Stock cover is within the ideal range.','Low Stock':'Below safety level – reorder soon.',Critical:'Will run out within days – order now.',Overstock:'More than 90 days of cover – pause purchasing.','Slow Moving':'Little or no sales recently – consider clearance.'})[p.name]}</p>`));
+ document.querySelectorAll('#inv .lg div').forEach(el=>{el.onmouseenter=()=>ch.dispatchAction({type:'highlight',dataIndex:+el.dataset.i});el.onmouseleave=()=>ch.dispatchAction({type:'downplay',dataIndex:+el.dataset.i});el.onclick=()=>ch.dispatchAction({type:'select',dataIndex:+el.dataset.i})})}
+
+/* =====================  INCOMING STOCK  ===================== */
+function renderInc(){$('#incoming').innerHTML=`<div class="h"><span class="ic">${ic('truck')}</span><h3>Stock Coming In</h3><a data-v="orders">View all</a></div><table><tr><th>Product<th>Qty<th>Supplier<th>Status</tr>${S.inc.slice(0,6).map((x,i)=>`<tr><td><div class="pr-c">${pimg(x.p,40)}${x.p}</div><td>${x.q}<td class="mut">${x.s}<td>${x.st=='Received'?'<span class="pill p-g">Received</span>':`<button class="pill p-a" data-act="recv" data-i="${i}" title="Mark as received">${x.st}</button>`}</tr>`).join('')}</table><button class="btn" id="rcv" style="margin-top:auto;align-self:flex-start">${ic('plus')} Add Received Stock</button>`;
+ $('#rcv').onclick=()=>{const pend=S.inc.map((x,i)=>[x,i]).filter(a=>a[0].st!='Received');modal(`<div class="h"><h3>Add Received Stock</h3><a data-close="1">Close</a></div>${pend.length?pend.map(([x,i])=>`<div class="rw">${pimg(x.p,40)}${x.p} · ${x.q} units<button class="btn" style="margin-left:auto" data-act="recv" data-i="${i}">Receive</button></div>`).join(''):'<p class="mut">No pending shipments.</p>'}`)}}
+function recvStock(i){
+  const x=S.inc[i];if(!x||x.st=='Received')return;
+  x.st='Received';S.recv+=x.q;
+  const prod=S.prod[x.p];const sku=prod?.sku;
+  if(DB_ONLINE&&sku&&x.no){apiReceiveOrder(x.no).then(()=>loadInventory().then(()=>{refreshStock();renderPeriod()})).catch(()=>{})}
+  else{addStock({name:x.p,quantity:x.q},true)}
+  renderInc();toast(`Received ${x.q} × ${x.p} – stock updated`)}
+
+/* ============  DEMAND FORECAST (real history + honest limits)  ============ */
+// The chart's "Actual" line is read from the movement ledger via
+// /api/forecast/history. It used to be generated from Math.sin(), which drew a
+// plausible curve that was never sold and changed between renders.
+//
+// The forward line is only drawn when the product has enough recorded selling
+// days for a band to mean anything. Where it does not, the panel says so instead
+// of showing a number.
+const FC_DAYS=30;
+async function loadFcHistory(){
+  const sku=S.prod[S.sel]?.sku;
+  const el=$('#fchState');
+  if(!DB_ONLINE||!sku){ if(el) el.textContent='Sign in to load history.'; return; }
+  try{
+    const h=await fcHistory(sku, FC_DAYS);
+    if(!h || h.error){ if(el) el.textContent='Could not load history.'; return; }
+    S.fcHist=h; renderFc();
+  }catch(e){ if(el) el.textContent='Could not load history.'; }
+}
+
+// Series for the chart: real past days, then a flat projection of the observed
+// mean across the horizon. The backend already returns the expected range, so
+// the "AI" line here is only the midpoint walk — no new numbers are invented.
+function fcSeries(n){
+  const p=S.prod[n], hist=(S.fcHist&&S.fcHist.sku===p.sku)?S.fcHist:null;
+  const actual=(hist&&hist.points)?hist.points.map(x=>x.sold):[];
+  const labels=(hist&&hist.points)?hist.points.map((x,i)=>i===hist.points.length-1?'Today':x.date.slice(5)):[];
+  const mean=actual.length?actual.reduce((s,v)=>s+v,0)/actual.length:0;
+  const enough=!!(hist&&hist.sufficient)&&p.ok;
+  const fwd=7;
+  const f=enough?Array.from({length:fwd},()=>Math.round(p.mid||mean)):new Array(fwd).fill(null);
+  const lo=enough?Array.from({length:fwd},()=>p.fd[0]):new Array(fwd).fill(null);
+  const hi=enough?Array.from({length:fwd},()=>p.fd[1]):new Array(fwd).fill(null);
+  const pad=Array(Math.max(0,actual.length-1)).fill(null);
+  const lb=[...labels,...Array.from({length:fwd},(_,i)=>i===0?'Next day':`+${i}d`)];
+  return{a:actual.concat(Array(fwd).fill(null)),f:[...pad,f],lo:[...pad,lo],hi:[...pad,hi],lb,enough,
+         mid:actual.length?actual[actual.length-1]:mean};
+}
+function renderFc(){const rows=Object.entries(S.prod);if(!S.prod[S.sel])S.sel=(rows[0]||[])[0]||'';
+ if(!rows.length){$('#forecast').innerHTML=`<div class="h"><span class="ic">${ic('brain')}</span><h3>Demand Forecast</h3></div><div class="mut" style="padding:14px 2px">No products yet. Upload your CSV to see demand history and forecasts here.</div>`;return;}
+ $('#forecast').innerHTML=`<div class="h"><span class="ic">${ic('brain')}</span><h3>Demand Forecast</h3><a data-v="forecast">View all</a></div>
+  <div class="ai">Demand history comes from your recorded sales. A forecast range is shown once a product has enough trading days to base one on.</div>
+  <div class="fc">${rows.map(([n])=>`<button data-fp="${n}" class="${n==S.sel?'on':''}">${n}</button>`).join('')}</div>
+  <div id="fch" style="height:170px"></div><div id="fchState" class="mut" style="margin:2px 0 6px;font-size:11.5px"></div>
+  <table><tr><th>Product<th>Expected<th>Basis<th>Stock<th>Status<th>Recommendation</tr>${rows.map(([n,p])=>{
+   const lo=p.ok&&p.st<p.fd[1]*2, q=Math.max(50,p.fd[1]*10-p.st);
+   const exp=p.ok?`${p.fd[0]}–${p.fd[1]}`:'<span class="mut" style="font-weight:500">Not enough history</span>';
+   const bas=p.ok?(p.basis==='history'?`${p.obs||0} days recorded`:'Monthly demand'):'—';
+   return`<tr class="fr ${n==S.sel?'sel':''}" data-p="${n}"><td><div class="pr-c">${pimg(n,34)}${n}</div><td>${exp}<td><span class="mut" style="font-size:11.5px">${bas}</span><td>${p.st}<td><span class="pill ${lo?'p-a':'p-g'}">${lo?'Reorder':'Sufficient'}</span><td>${lo?`<button class="btn tn" style="--c:var(--acc);padding:3px 9px;margin:0" data-act="reorder" data-p="${n}" data-q="${q}">Order ${q}</button>`:'<span class="mut">No action</span>'}</tr>`}).join('')}</table>`;
+ document.querySelectorAll('[data-fp]').forEach(b=>b.onclick=()=>{S.sel=b.dataset.fp;S.fcHist=null;renderFc();loadFcHistory()});
+ const st=$('#fchState'), hist=(S.fcHist&&S.fcHist.sku===S.prod[S.sel]?.sku)?S.fcHist:null;
+ if(st) st.textContent = hist
+   ? (hist.sufficient ? `${hist.observedDays} selling days recorded over the last ${hist.days} days.`
+                      : (hist.observedDays?`Only ${hist.observedDays} selling day${hist.observedDays===1?'':'s'} recorded — import more trading days for a forecast.`
+                                          :'No recorded sales yet for this product.'))
+   : (DB_ONLINE?'Loading history…':'Sign in to load history.');
+ noChart('fch');const c=chart('fch');if(!c||!S.sel)return;const s=fcSeries(S.sel),acc=CV('--acc'),amb=CV('--amb');
+ const hasActual=hist&&hist.points&&hist.points.some(x=>x.sold>0);
+ c.setOption({animationDuration:800,grid:{left:34,right:12,top:22,bottom:20},legend:{top:0,right:0,icon:'roundRect',itemWidth:10,itemHeight:5,textStyle:{color:CV('--ink2'),fontSize:11},data:hasActual?['Units sold','Expected demand']:[]},tooltip:{...tip(),trigger:'axis'},
+  xAxis:{type:'category',data:s.lb,boundaryGap:false,...ax(),axisLabel:{color:CV('--ink2'),fontSize:10,interval:1}},yAxis:{type:'value',splitLine:{lineStyle:{color:CV('--edge')}},axisLabel:{color:CV('--ink2'),fontSize:10}},
+  series:[{name:'Units sold',type:'line',smooth:.25,data:s.a,symbolSize:5,lineStyle:{width:2.5,color:acc},itemStyle:{color:acc},areaStyle:{color:acc+'22'}},
+   {name:'Low',type:'line',stack:'b',data:[...s.lo.slice(0,s.lo.length-s.f.filter(x=>x!==null).length).map(()=>null),s.a[s.a.length-s.f.length]||null,...s.lo.slice(s.lo.length-s.f.length)],symbol:'none',lineStyle:{opacity:0},tooltip:{show:false},silent:true},
+   {name:'Confidence',type:'line',stack:'b',data:[...s.a.slice(0,s.a.length-s.f.length).map(()=>null),0,...s.hi.slice(s.hi.length-s.f.length).map((h,i)=>h-s.lo[s.lo.length-s.f.length+i])],symbol:'none',lineStyle:{opacity:0},areaStyle:{color:amb+'2e'},tooltip:{show:false},silent:true},
+   {name:'Expected demand',type:'line',smooth:.25,data:s.f,symbolSize:6,lineStyle:{width:2.5,type:'dashed',color:amb},itemStyle:{color:amb},connectNulls:false}]},true)}
+
+/* =====================  SUPPLIERS  ===================== */
+function renderSup(){
+  // STORE_PROFILE.suppliers may be an empty array [] for a new workspace.
+  // Empty array is truthy, so || fallback doesn't work - check length explicitly.
+  // NO hardcoded fallback - show real empty state instead.
+  const sups = STORE_PROFILE?.suppliers || [];
+  if(!sups.length){
+    $('#sup').innerHTML=`<div class="h"><span class="ic">${ic('users')}</span><h3>Supplier Overview</h3></div><p class="mut" style="padding:16px;text-align:center">No supplier data yet. Import a ledger CSV with supplier information to populate this panel.</p>`;
+    noChart('rg'); return;
+  }
+  // Real suppliers from the ledger import
+  const rates = sups.map(() => 90); // Placeholder - would come from shipment data in production
+  const cols = sups.map(() => 'g');
+  const avg = (rates.reduce((a,b)=>a+b,0)/rates.length).toFixed(1);
+  const SP = sups.map((s,i)=>[s, rates[i], cols[i]]);
+  $('#sup').innerHTML=`<div class="h"><span class="ic">${ic('users')}</span><h3>Supplier Overview</h3><a data-v="suppliers">View all</a></div><div style="display:flex;gap:12px;align-items:center;margin-bottom:8px"><div id="rg" style="width:96px;height:96px;flex:none"></div><div class="lg"><div style="cursor:default"><i style="background:var(--g)"></i>Healthy<b>${SP.filter(s=>s[1]>=90).length}</b></div><div style="cursor:default"><i style="background:var(--amb)"></i>Need attention<b>${SP.filter(s=>s[1]>=80&&s[1]<90).length}</b></div><div style="cursor:default"><i style="background:var(--red)"></i>At risk<b>${SP.filter(s=>s[1]<80).length}</b></div></div></div>${SP.map(s=>`<div class="rw hv" style="gap:8px"><span style="width:104px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s[0]}</span><div class="bar"><i style="width:${s[1]}%;background:var(--${s[2]=='g'?'g':s[2]=='a'?'amb':'red'})"></i></div><b style="font-size:11.5px">${s[1]}%</b></div>`).join('')}<button class="btn tn" id="svb" style="--c:var(--red);margin-top:8px">Top alert: ${SP[0][0]} ${ic('arrow')}</button>`;
+  $('#svb').onclick=()=>$('#a4').click();
+  noChart('rg');const c=chart('rg');if(!c)return;
+  const ok=SP.filter(s=>s[1]>=90).length/SP.length*100;const warn=SP.filter(s=>s[1]>=80&&s[1]<90).length/SP.length*100;const bad=100-ok-warn;
+  c.setOption({animationDuration:1000,title:{text:avg+'%',subtext:'On-time',left:'center',top:'32%',textStyle:{fontSize:15,fontWeight:800,color:CV('--ink')},subtextStyle:{fontSize:10,color:CV('--ink2')}},series:[{type:'pie',radius:['70%','92%'],silent:true,label:{show:false},itemStyle:{borderColor:CV('--card'),borderWidth:2,borderRadius:4},data:[{value:ok,itemStyle:{color:CV('--g')}},{value:warn,itemStyle:{color:CV('--amb')}},{value:bad,itemStyle:{color:CV('--red')}}]}]},true)}
+
+/* =====================  RISKS  ===================== */
+function renderRisk(){
+  const crits=Object.entries(S.prod).filter(([,p])=>p.status==='Critical');
+  const overs=Object.entries(S.prod).filter(([,p])=>p.status==='Overstock');
+  const topDem=Object.entries(S.prod).sort((a,b)=>b[1].dem-a[1].dem)[0];
+  const sup0=STORE_PROFILE?.suppliers?.[0];
+  const supplierAlertMsg = sup0 ? `${sup0} · monitor on-time delivery` : 'No supplier data · import a ledger CSV with suppliers';
+  const A=[];
+  crits.slice(0,2).forEach(([n,p])=>A.push(['Stockout Risk',`${n} · ${p.st} units left`,'r',()=>$('#a1')?.click()]));
+  if(topDem)A.push(['Demand Spike',`${topDem[0]} · top seller — monitor stock`,'b',()=>modal(`<div class="h"><h3>${topDem[0]} demand</h3><a data-close="1">Close</a></div><p class="mut">This is your highest-demand product. Consider extra stock buffer.</p><button class="btn w" style="margin-top:10px" data-act="reorder" data-p="${topDem[0]}" data-q="${Math.round(topDem[1].dem/4)}">Order ${Math.round(topDem[1].dem/4)} units</button>`)]);
+  A.push(['Supplier Alert',supplierAlertMsg,'o',()=>$('#a4')?.click()]);
+  overs.slice(0,1).forEach(([n,p])=>A.push(['Overstock',`${n} · ${p.st} units, consider clearance`,'a',()=>modal(`<div class="h"><h3>${n} Overstock</h3><a data-close="1">Close</a></div><p class="mut">${p.st} units. Consider a 20% clearance offer to move stock.</p><button class="btn w" data-act="clear">Apply 20% clearance</button>`)]));
+  window.RA=A;
+  $('#risks').innerHTML=`<div class="h"><span class="ic">${ic('shield')}</span><h3>Risk & Alerts</h3><span class="sp" style="display:flex;gap:6px"><span class="pill p-r">${crits.length} Critical</span><span class="pill p-a">${overs.length} Overstock</span></span></div>${A.map((a,i)=>`<div class="al ${a[2]}"><i></i><div><b>${a[0]}</b><span>${a[1]}</span></div><button class="btn tn" style="--c:var(--${a[2]=='r'?'red':a[2]=='a'?'amb':a[2]=='b'?'blue':'acc'});margin:0" data-ra="${i}">Take Action</button></div>`).join('')}`;
+  document.querySelectorAll('[data-ra]').forEach(b=>b.onclick=()=>RA[b.dataset.ra][3]())}
+
+/* =====================  WORKFLOW  ===================== */
+const FL=[['clip','Your Business Data','Sales, inventory and orders captured',''],['layers','SupplyIQ Understands','What is selling, what is not, what changed','g'],['brain','Predicts Problems','Stockouts, delays and demand spikes','y'],['gauge','Recommends Action','What to buy, how much, from whom','g'],['shieldc','Helps Protect Profit','Less stockout, less waste, better decisions','']];
+$('#flowc').innerHTML=`<div class="wfh"><span class="chip">${ic('layers')}</span>How SupplyIQ Helps Your Business<span class="sp">From business data to protected profit</span></div><div class="flow">${FL.map((f,i)=>`<div class="st ${f[3]}" data-i="${i}"><div class="nd">${ic(f[0],'stroke-width="1.6"')}<i>${i+1}</i></div><h4>${f[1]}</h4><small>${f[2]}</small></div>${i<4?`<div class="cn"><i></i><s style="animation-delay:${i*.4}s"></s><u>${ic('chev')}</u></div>`:''}`).join('')}</div>`;
+let fi=0;const stepOn=i=>{document.querySelectorAll('.st').forEach((x,k)=>x.classList.toggle('on',k==i));document.querySelectorAll('.cn').forEach((x,k)=>x.classList.toggle('on',k==i-1||k==i))};
+$('#flowc').onclick=e=>{const t=e.target.closest('.st');if(t){fi=+t.dataset.i;stepOn(fi);toast(FL[fi][1]+': '+FL[fi][2])}};
+setInterval(()=>{stepOn(fi);fi=(fi+1)%5},1500);
+
+/* =====================  TRADESAARTHI  ===================== */
+const Q=['Which product will run out soon?','What should I order tomorrow?','Which product sold the most?','How much profit did I make?','Which stock is moving slowly?'];
+$('#qq').innerHTML=Q.map(q=>`<button>${q}</button>`).join('');
+function say(t,c){const d=document.createElement('div');d.className='m '+c;d.textContent=t;$('#msgs').append(d);$('#msgs').scrollTop=1e9}
+function answer(q){
+  q=q.toLowerCase();const d=D[S.per];
+  const crits=Object.entries(S.prod).filter(([,p])=>p.status==='Critical');
+  const overs=Object.entries(S.prod).filter(([,p])=>p.status==='Overstock');
+  const topSell=Object.entries(S.prod).sort((a,b)=>b[1].dem-a[1].dem)[0];
+  const sup0=STORE_PROFILE?.suppliers?.[0];
+  const stName=STORE_PROFILE?.name||'your store';
+  if(/run out|running out|stockout|low/.test(q)){
+    if(!crits.length)return`Good news! No critical stockouts right now for ${stName}. ${low().length} products are in low territory.`;
+    return`⚠️ ${crits.length} product(s) near stockout: ${crits.map(([n,p])=>`${n} (${p.st} units)`).join(', ')}. Reorder immediately to avoid disruption.`}
+  if(/order|buy|purchase/.test(q)){
+    const needs=Object.entries(S.prod).filter(([,p])=>['Critical','Low'].includes(p.status));
+    if(!needs.length)return`All products at ${stName} are well stocked. No urgent orders needed right now.`;
+    return`Tomorrow's order plan:\n${needs.slice(0,4).map(([n,p])=>`• ${n}: ${Math.max(30,p.dem-p.st)} units from ${p.sup||'supplier'}`).join('\n')}`}
+  if(/sold|sell|best|top/.test(q)){
+    if(!topSell)return'No sales data available yet.';
+    return`🏆 Top seller: ${topSell[0]} with ${topSell[1].dem} units/month demand. Value: ${R(topSell[1].pr*topSell[1].dem/30)}/day.`}
+  if(/profit|margin/.test(q))return sum(d.s)?`💰 ${S.per} period: ${R(sum(d.p))} profit on ${R(sum(d.s))} sales (${(sum(d.p)/sum(d.s)*100).toFixed(1)}% margin).`:'No sales data loaded yet. Connect the backend for live figures.';
+  if(/slow|stuck|overstock/.test(q)){
+    if(!overs.length)return'No overstocked items currently.';
+    return`🐌 Overstock: ${overs.map(([n,p])=>`${n} (${p.st} units, ${R(p.st*p.pr)} tied up)`).join('; ')}. Consider a 20% clearance offer.`}
+  if(/supplier|delay/.test(q)){
+    if(sup0) return `🏭 ${sup0} is your primary supplier. Monitor delivery performance via the Supplier Overview panel.`;
+    return 'No supplier data yet. Import a ledger CSV with supplier information to enable supplier monitoring.';
+  }
+  return`I'm TradeSaarthi for ${stName}. Ask me about stockouts, what to order, best sellers, profit, or slow stock.`}
+function ask(q){if(!q.trim())return;say(q,'u');setTimeout(()=>say('Analysing your data…','b'),150);
+ if(DB_ONLINE){
+  apiChat(q).then(r=>{if($('#msgs').lastChild)$('#msgs').lastChild.remove();say(r||answer(q),'b')}).catch(()=>{if($('#msgs').lastChild)$('#msgs').lastChild.remove();say(answer(q),'b')});
+ } else {
+  setTimeout(()=>{$('#msgs').lastChild.remove();say(answer(q),'b')},800);
+ }
+}
+const tog=o=>{$('#chat').classList.toggle('on',o);if(o&&!$('#msgs').children.length)say('Namaste Rajesh! I am TradeSaarthi, your supply chain assistant. Ask me what is running out, what to order, or how your profit looks.','b')};
+$('#fab').onclick=()=>tog(!$('#chat').classList.contains('on'));$('#cx').onclick=()=>tog(false);
+$('#qq').onclick=e=>{if(e.target.tagName=='BUTTON')ask(e.target.textContent)};
+$('#cf').onsubmit=e=>{e.preventDefault();ask($('#ci').value);$('#ci').value=''};
+
+/* =====================  3D HERO (Three.js): warehouse, crates, moving truck  ===================== */
+let T3=null;
+function init3D(){const el=$('#h3d');if(!window.THREE||!el)return;let r;try{r=new THREE.WebGLRenderer({antialias:true,alpha:true})}catch(e){return}
+ r.setPixelRatio(Math.min(devicePixelRatio,2));el.append(r.domElement);
+ const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(32,1,.1,100);cam.position.set(8,6.5,10);cam.lookAt(0,.7,0);
+ sc.add(new THREE.AmbientLight(0xffffff,.75));const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(5,10,6);sc.add(dl);
+ const g=new THREE.Group(),M={};sc.add(g);const mat=k=>M[k]=new THREE.MeshStandardMaterial({roughness:.5,metalness:.1});
+ const grid=new THREE.GridHelper(16,16,0xffffff,0xffffff);grid.material.transparent=true;grid.material.opacity=.14;g.add(grid);
+ const box=(w,h,d,m,x,y,z)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);g.add(b);return b};
+ mat('wall');mat('roof');mat('a');mat('b');mat('c');mat('dark');
+ box(3.4,1.5,2.2,M.wall,-2,.75,-1.2);box(3.6,.18,2.4,M.roof,-2,1.59,-1.2);box(.9,.9,.05,M.dark,-2,.45,-.08);
+ [[.2,.3,1.4],[.2,.3,2.1],[.9,.3,1.9],[.9,.9,1.9],[1.6,.3,1.2],[-4.2,.3,.6],[-4.2,.9,.6],[-3.4,.3,1.3]].forEach((p,i)=>box(.6,.6,.6,[M.a,M.b,M.c][i%3],p[0]+1.3,p[1],p[2]));
+ const fl=[[1,2.4,-2.5],[-0.5,3,1.6],[3,2.8,-.5],[-3.5,2.6,1.2]].map((p,i)=>({m:box(.5,.5,.5,[M.a,M.c][i%2],p[0],p[1],p[2]),y:p[1],o:i}));
+ const tk=new THREE.Group();g.add(tk);const tb=(w,h,d,m,x,y,z)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);tk.add(b)};
+ tb(1.6,.8,.8,M.wall,0,.65,0);tb(.6,.6,.8,M.a,1.1,.55,0);[[-.5],[.5],[1.1]].forEach(w=>{const c=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.9,14),M.dark);c.rotation.x=Math.PI/2;c.position.set(w[0],.2,0);tk.add(c)});tk.position.z=3.4;
+ T3={r,sc,cam,g,M,tk,fl,mx:0,my:0,run:true,recolor(){const c=CV('--acc2'),a=CV('--acc');M.wall.color.set('#f2f6f5');M.roof.color.set(a);M.a.color.set(c);M.b.color.set('#dfe7e4');M.c.color.set(a);M.dark.color.set('#22302c');grid.material.color.set(c)}};
+ T3.recolor();
+ const rs=()=>{const w=el.clientWidth,h=el.clientHeight;if(w&&h){r.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()}};new ResizeObserver(rs).observe(el);rs();
+ $('.hero').addEventListener('mousemove',e=>{const b=el.getBoundingClientRect();T3.mx=((e.clientX-b.left)/b.width-.5);T3.my=((e.clientY-b.top)/b.height-.5)});
+ new IntersectionObserver(a=>T3.run=a[0].isIntersecting).observe(el);
+ (function loop(t){requestAnimationFrame(loop);if(!T3.run||document.hidden)return;const s=t/1000;g.rotation.y+=((-.5+T3.mx*.7+Math.sin(s*.25)*.12)-g.rotation.y)*.05;g.rotation.x+=((T3.my*.12)-g.rotation.x)*.05;
+  fl.forEach(f=>{f.m.position.y=f.y+Math.sin(s*1.4+f.o)*.25;f.m.rotation.y=s*.6+f.o});tk.position.x=((s*1.1)%14)-7;r.render(sc,cam)})(0)}
+
+/* =====================  THEME ENGINE  ===================== */
+const TH=[['green','Green','#3ddc97','#0b3b34'],['dark','Dark','#22b573','#0a1a17'],['terracotta','Terracotta','#f0b48a','#a24b34'],['ocean','Ocean','#7cc4ff','#1f6fd1'],['violet','Violet','#c8a6ff','#7a3fd1']];
+let theme='green',lastLight='green',booted=false;
+function setTheme(t){theme=t;if(t!='dark')lastLight=t;const h=document.documentElement;h.classList.add('tt');h.dataset.theme=t;try{localStorage.setItem('siq-theme',t)}catch(e){}
+ $('#thm').innerHTML=TH.map(x=>`<button data-t="${x[0]}" class="${x[0]==t?'cur':''}"><span class="sw" style="--x:${x[2]};--y:${x[3]}"></span>${x[1]}</button>`).join('');
+ $('#dk').innerHTML=ic(t=='dark'?'sun':'moon');
+ if(booted){renderPeriod();renderInv();renderFc();renderSup();if(T3)T3.recolor();toast(TH.find(x=>x[0]==t)[1]+' theme applied')}
+ setTimeout(()=>h.classList.remove('tt'),450)}
+$('#thm').onclick=e=>{const b=e.target.closest('button');if(b)setTheme(b.dataset.t)};
+$('#dk').onclick=()=>setTheme(theme=='dark'?lastLight:'dark');
+try{const t=localStorage.getItem('siq-theme');if(TH.some(x=>x[0]==t))theme=t}catch(e){}
+setTheme(theme);
+
+/* =====================  BOOT  ===================== */
+// Render static shell first (empty state), then load all live data
+chartCard();renderUp();renderAtt();renderGal();renderPeriod();renderInv();renderInc();renderFc();renderSup();renderRisk();renderStockOut();init3D();booted=true;
+
+/* ── Live database boot (non-blocking) ── */
+(async()=>{
+  updateLiveIndicator(false);
+
+  // 1. Load store profile (name, theme, suppliers, owner)
+  await loadStoreProfile();
+
+  // 2. Load inventory — replaces S.prod entirely
+  const inv = await loadInventory();
+  if(inv){
+    S.sel = Object.keys(S.prod)[0] || '';
+    renderGal();renderInv();renderAtt();renderFc();renderRisk();renderSup();buildNotifs();hero();
+    // 2b. Real recorded sales history for the selected product's chart.
+    loadFcHistory();
+  } else if(inv && !inv.length){
+    // A new workspace with nothing uploaded yet: show empty states, not the
+    // placeholder catalogue numbers the seed data used to provide.
+    renderFc();
+  }
+
+  // 3. Load live orders into S.inc
+  await loadOrders();
+  renderInc();
+
+  // 4. Load KPIs + sales chart
+  const kpi = await loadKpis();
+  if(kpi){
+    await loadSalesChart(S.per);
+    renderPeriod();renderInv();
+    toast('🟢 Live database connected · ' + (STORE_PROFILE?.name || STORE_ID));
+  } else {
+    toast('🟡 Demo mode — start backend for live data');
+  }
+
+  // 5. Auto-refresh every 60 seconds
+  setInterval(async()=>{
+    await loadInventory();
+    await loadOrders();
+    await loadKpis();
+    if(booted){renderGal();renderInv();renderAtt();renderRisk();renderInc();buildNotifs();hero()}
+  }, 60000);
+})();
+</script>
+</body>
+</html>
+

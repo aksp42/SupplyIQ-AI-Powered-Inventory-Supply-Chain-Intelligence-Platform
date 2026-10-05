@@ -1,0 +1,79 @@
+services:
+  # ── Database (MySQL) ─────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: supplyiq-mysql
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-supplyiq_root_pw}
+      - MYSQL_DATABASE=${DB_NAME:-supplyiq}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Applied only on first boot, when the data directory is empty.
+      - ./backend/supplyiq_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${DB_PASSWORD:-supplyiq_root_pw}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # ── Backend API (Express + MySQL) ────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: supplyiq-backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - PORT=4000
+      - NODE_ENV=production
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=${DB_PASSWORD:-supplyiq_root_pw}
+      - DB_NAME=${DB_NAME:-supplyiq}
+      # Signs every JWT. Override it in your shell or a .env file — do not reuse
+      # the default anywhere real, or anyone can mint valid sessions.
+      - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET before starting, e.g. via .env}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - BCRYPT_ROUNDS=${BCRYPT_ROUNDS:-10}
+      - FIREBASE_API_KEY=${FIREBASE_API_KEY:-}
+      # Password reset is Firebase's job (sendPasswordResetEmail), so the backend
+      # holds no mail credentials. The EMAIL_*/OTP_* variables were removed with
+      # the custom OTP mailer.
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Static file server (nginx) ────────────────────────────────────────────────
+  frontend:
+    image: nginx:alpine
+    container_name: supplyiq-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      # The whole frontend/ tree, so the URL layout matches frontend/serve.js
+      # exactly. The app links between pages using real paths - the dashboard
+      # redirects to public/login.html, and public/login.html loads js/auth.js
+      # relative to itself. Mounting files individually into the nginx root broke
+      # those links in Docker while local dev kept working, which is exactly the
+      # kind of drift that only shows up once it is deployed.
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

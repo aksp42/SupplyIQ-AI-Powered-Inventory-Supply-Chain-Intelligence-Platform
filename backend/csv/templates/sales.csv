@@ -1,0 +1,6 @@
+date,sku,quantity,unit_price,discount,channel,notes
+2026-10-01,GRC-006,25,205.00,0.00,store,Counter sale
+2026-10-01,GRC-002,8,210.00,0.00,store,Counter sale
+2026-10-01,GRC-001,6,780.00,50.00,store,Weekend bulk
+2026-10-02,GRC-005,12,355.00,0.00,store,Regular
+2026-10-02,GRC-003,9,330.00,0.00,store,Regular

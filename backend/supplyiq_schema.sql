@@ -1,0 +1,37 @@
+-- ============================================================================
+-- SupplyIQ — schema pointer. This file intentionally contains NO DDL.
+-- ============================================================================
+--
+-- The database schema used to live here as a single hand-maintained script. It
+-- has moved into versioned migrations, because a single flat file cannot be
+-- upgraded once it is running anywhere: there is no ordering, no record of what
+-- has already been applied, and no way to roll one change back.
+--
+-- The old contents described the legacy design — including `orders` and
+-- `transactions` tables and a `stores.suppliers` JSON column, none of which
+-- exist now. Running this file would have created a schema that no longer
+-- matches the backend.
+--
+-- Use the migration runner instead:
+--
+--     node backend/scripts/migrate.js status      what is applied
+--     node backend/scripts/migrate.js up          apply everything pending
+--     node backend/scripts/migrate.js up 002      apply up to a named version
+--     node backend/scripts/migrate.js down 1      roll back the last migration
+--     node backend/scripts/migrate.js fresh       drop and rebuild (typed confirmation)
+--
+-- Verify afterwards:
+--
+--     node backend/scripts/verify-schema.js      table/column/FK/CHECK shape
+--     node backend/scripts/verify-sample.js      data integrity, after seeding
+--
+-- Load the one demo tenant with:
+--
+--     node backend/scripts/seed-sample.js
+--
+-- Migration files:
+--     backend/migrations/001_core_schema.sql
+--     backend/migrations/002_reference_data.sql
+--     backend/migrations/rollback/001_down.sql
+--     backend/migrations/rollback/002_down.sql
+-- ============================================================================
