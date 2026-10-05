@@ -225,8 +225,10 @@ jobs:
         working-directory: backend
         run: npm ci
 
-      - name: Load schema
-        run: mysql -h 127.0.0.1 -u root -pci_test_pw < backend/supplyiq_schema.sql
+      - name: Run migrations
+        run: |
+          cd backend
+          node scripts/migrate.js up
 
       - name: Seed data and demo owner
         working-directory: backend
@@ -339,7 +341,7 @@ jobs:
           # (2) is the half that catches a regression. SupplyShield-AI.html does
           # call the backend itself, through its own authHeaders() helper, so a
           # direct call is only a failure when it has no credential at all.
-          python3 - <<'PY'
+          python - <<'PY'
           import re
           import sys
           
