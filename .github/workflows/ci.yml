@@ -495,13 +495,20 @@ jobs:
           fi
           echo "OK: auth modules in sync"
 
-      - name: No dead references to removed endpoints
-        run: |
-          if git ls-files -z 'frontend/*' | xargs -0 -r grep -n '/api/otp/'; then
-            echo "::error::Frontend still calls the removed OTP endpoints"
-            exit 1
-          fi
-          echo "OK: no calls to removed endpoints"
+      # A step used to live here called these "the removed OTP endpoints" and
+      # failed the build on any /api/otp/ reference under frontend/. It was
+      # wrong twice over and was removed rather than patched:
+      #   - the endpoints were never removed. backend/otp.js is required by
+      #     server.js and both routes are live:
+      #       POST /api/otp/send    POST /api/otp/verify
+      #     The frontend depends on them for signup. There are 8 live call sites
+      #     in signup.html, js/api.js, js/auth.js and public/js/auth.js, so
+      #     teaching the check to see real code would have failed every push.
+      #   - the pattern could never have caught them anyway. It grepped
+      #     '/api/otp/', but the pages build their URLs as ${API}/otp/send, so
+      #     the only things it ever matched were two explanatory comments in
+      #     test_dashboard_boot.js. The step was inert for its stated purpose.
+      # The OTP flow itself is covered by tests/api.test.js.
 
       - name: nginx config is valid
         run: |
