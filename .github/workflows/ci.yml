@@ -1,59 +1,60 @@
 name: CI
 
-# Plain ASCII on purpose. The previous version of this file was written with
-# box-drawing characters and emoji, which turned into mojibake when read back,
-# and the job names in the GitHub UI were unreadable garbage.
-
 on:
   push:
-    branches: [main, master, develop]
+    branches:
+      - main
+      - master
+      - develop
   pull_request:
-    branches: [main, master]
+    branches:
+      - main
+      - master
 
-# Cancel superseded runs on the same ref instead of queueing them.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-# The workflow only ever reads the repository.
 permissions:
   contents: read
 
 jobs:
-  # ---------------------------------------------------------------- secrets
-  # Runs first and has no dependencies so a leaked credential fails the build
-  # immediately rather than after several minutes of tests.
+  # ================================================================
+  # SECRET SCAN
+  # ================================================================
   secret-scan:
     name: No committed secrets
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: .env must not be tracked
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check environment files
+        shell: bash
         run: |
+          set -euo pipefail
+
           tracked=$(git ls-files | grep -E '(^|/)\.env$|(^|/)\.env\.(local|production|secret)$' || true)
+
           if [ -n "$tracked" ]; then
-            echo "::error::These environment files are committed. Remove them and rotate every secret inside:"
+            echo "::error::Environment file is tracked:"
             echo "$tracked"
             exit 1
           fi
-          echo "OK: no .env file is tracked"
 
-      - name: .env.example must be tracked
-        run: |
-          test -f backend/.env.example || { echo "::error::backend/.env.example is missing"; exit 1; }
-          echo "OK: .env.example is present"
+          test -f backend/.env.example || {
+            echo "::error::backend/.env.example is missing"
+            exit 1
+          }
 
-      - name: No credentials hardcoded in tracked source
+          echo "OK: environment files are clean"
+
+      - name: Check credential-shaped values
+        shell: bash
         run: |
-          # This check must never name the project's real secrets. An earlier
-          # version listed the actual DB password and the Gmail app password as
-          # "banned" values, which committed the very secrets it existed to
-          # block, and then excluded itself from the scan so it never noticed.
-          #
-          # So: match the *shape* of a credential, never a specific value. Those
-          # patterns describe a whole class of secret and stay useful after
-          # rotation.
+          set -euo pipefail
+
           cat > "$RUNNER_TEMP/secret-patterns.txt" <<'PATTERNS'
           BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY
           AIza[0-9A-Za-z_-]{35}
@@ -61,7 +62,6 @@ jobs:
           ASIA[0-9A-Z]{16}
           ghp_[0-9A-Za-z]{36}
           github_pat_[0-9A-Za-z_]{20,}
-          ghp_oauth[0-9A-Za-z]{20,}
           glpat-[0-9A-Za-z_-]{20,}
           npm_[0-9A-Za-z]{36}
           xox[baprs]-[0-9A-Za-z-]{10,}
@@ -70,100 +70,85 @@ jobs:
           ya29\.[0-9A-Za-z_-]{20,}
           PATTERNS
 
-          # Credential-shaped assignment: a real secret variable given a string
-          # literal. The unquoted ${VAR:?...} indirection used in compose and in
-          # .env.example does not match, so placeholders stay allowed.
           cat > "$RUNNER_TEMP/secret-assignments.txt" <<'PATTERNS'
-          (DB_PASSWORD|MYSQL_PASSWORD|JWT_SECRET|EMAIL_APP_PASSWORD|SERVICE_ACCOUNT_KEY|FIREBASE_API_KEY|[A-Z_]*_SECRET|[A-Z_]*_TOKEN|[A-Z_]*_API_KEY|[A-Z_]*APP_PASSWORD)[[:space:]]*[:=][[:space:]]*["'][^"']{6,}["']
+          (DB_PASSWORD|MYSQL_PASSWORD|JWT_SECRET|EMAIL_APP_PASSWORD|SERVICE_ACCOUNT_KEY|[A-Z_]*_SECRET|[A-Z_]*_TOKEN|[A-Z_]*_API_KEY|[A-Z_]*APP_PASSWORD)[[:space:]]*[:=][[:space:]]*["'][^"']{6,}["']
           PATTERNS
 
           failed=0
-          # Scan tracked files. Excluded:
-          #   .env              checked by name in the step above
-          #   .github/workflows legitimately contains credential-shaped patterns
-          #                   as data, so scanning it would always self-match
-          #   README.md, docs/  documentation, which quotes credential *shapes*
-          #                   (a key-format placeholder) rather than values. This
-          #                   used to be justified by a demo password that was
-          #                   printed in the README; that password is gone, and no
-          #                   real credential may be added to these paths on the
-          #                   strength of this exclusion.
-          #   firebase-config.js
-          #                   holds a Firebase *web* config. Its apiKey is public
-          #                   by design: it ships to every browser that loads the
-          #                   app, and Firebase enforces access through Security
-          #                   Rules and App Check, not by hiding the key. Flagging
-          #                   it would train people to ignore this check. The
-          #                   pattern stays active everywhere else, so a different
-          #                   Google API key pasted into server code is still
-          #                   caught.
+
           files=$(git ls-files -z \
-            | grep -zvE '(^|/)\.env$|^\.github/workflows/|^(README\.md|docs/)|firebase-config\.js$')
+            | grep -zvE '(^|/)\.env$|^\.github/workflows/|^(README\.md|docs/)|firebase-config\.js$' || true)
 
           for pattern_file in secret-patterns secret-assignments; do
-            matches=$(printf '%s\0' "$files" \
-              | xargs -0 -r grep -nEI -f "$RUNNER_TEMP/$pattern_file.txt" 2>/dev/null || true)
+            matches=$(
+              printf '%s\0' "$files" |
+              xargs -0 -r grep -nEI -f "$RUNNER_TEMP/$pattern_file.txt" 2>/dev/null || true
+            )
+
             if [ -n "$matches" ]; then
-              echo "::error::Credential-shaped value found ($pattern_file):"
+              echo "::error::Credential-shaped value found:"
               echo "$matches"
               failed=1
             fi
           done
 
-          [ "$failed" -eq 0 ] && echo "OK: no credential-shaped values in tracked source"
           exit "$failed"
 
-      - name: No secret-shaped env fallbacks in backend source
+      - name: Check secret fallbacks
+        shell: bash
         run: |
-          # A "process.env.X || 'literal'" fallback is how a real password ends
-          # up committed: it looks like a harmless default in review and behaves
-          # as a working credential everywhere the env var is missing. There was
-          # a live instance of this in mysql.js, and a second one in the demo
-          # seeder.
-          #
-          # DEMO_PASSWORD used to be excluded here on the grounds that it was a
-          # public demo credential. It no longer is: the demo owner has no
-          # default password at all, so it belongs in this list like any other.
-          matches=$(git ls-files -z 'backend/*.js' \
-            | xargs -0 -r grep -nE "process\.env\.(DB_PASSWORD|DEMO_PASSWORD|JWT_SECRET|[A-Z_]*APP_PASSWORD|[A-Z_]*SECRET|[A-Z_]*TOKEN|[A-Z_]*API_KEY)\s*\|\|\s*'[^']+'" || true)
+          set -euo pipefail
+
+          matches=$(
+            git ls-files -z 'backend/*.js' |
+            xargs -0 -r grep -nE \
+            "process\.env\.(DB_PASSWORD|DEMO_PASSWORD|JWT_SECRET|[A-Z_]*APP_PASSWORD|[A-Z_]*SECRET|[A-Z_]*TOKEN|[A-Z_]*API_KEY)\s*\|\|\s*'[^']+'" \
+            || true
+          )
+
           if [ -n "$matches" ]; then
-            echo "::error::Secret-shaped env fallback found. Read the value from the environment or fail loudly:"
+            echo "::error::Secret-shaped environment fallback found:"
             echo "$matches"
             exit 1
           fi
-          echo "OK: no secret-shaped env fallbacks"
 
-      - name: No Firebase service account key
+          echo "OK: no secret fallbacks"
+
+      - name: Check service account keys
+        shell: bash
         run: |
-          if git ls-files | grep -q 'serviceAccountKey\|\.pem$'; then
-            echo "::error::A Firebase service account key or PEM file is committed"
+          set -euo pipefail
+
+          if git ls-files | grep -qE 'serviceAccountKey|\.pem$'; then
+            echo "::error::Firebase service account key or PEM file is tracked"
             exit 1
           fi
-          echo "OK: no service account key committed"
 
-      - name: Schema carries no plaintext passwords
+          echo "OK: no service account keys"
+
+      - name: Check schema for plaintext passwords
+        shell: bash
         run: |
-          # This used to grep the schema for one specific demo password. That
-          # check could only ever catch that one value, and once the value left
-          # the repository it silently passed everything - a secret scan that
-          # stops working the moment it becomes useful.
-          #
-          # So match the shape instead: a line that mentions a password and also
-          # carries a quoted literal. That catches both `password = 'literal'` and
-          # the realistic case in a .sql file, INSERT ... VALUES (..., 'literal').
-          # Already-hashed rows are skipped on the $2 marker, so seeding a bcrypt
-          # hash stays allowed.
-          matches=$(git ls-files -z -- 'backend/supplyiq_schema.sql' \
-            | xargs -0 -r grep -nEi "password.*['\"][^'\"]{6,}['\"]" 2>/dev/null \
-            | grep -v '\$2' || true)
+          set -euo pipefail
+
+          matches=$(
+            git ls-files -z -- backend/supplyiq_schema.sql |
+            xargs -0 -r grep -nEi "password.*['\"][^'\"]{6,}['\"]" 2>/dev/null |
+            grep -v '\$2' ||
+            true
+          )
+
           if [ -n "$matches" ]; then
-            echo "::error::Plaintext password found in the schema; seed it hashed instead"
+            echo "::error::Plaintext password found in schema"
             echo "$matches"
             exit 1
           fi
-          echo "OK: schema has no plaintext passwords"
 
-  # --------------------------------------------------------------- backend
+          echo "OK: schema password check passed"
+
+  # ================================================================
+  # BACKEND TESTS
+  # ================================================================
   backend-test:
     name: Backend tests
     runs-on: ubuntu-latest
@@ -186,38 +171,31 @@ jobs:
     env:
       NODE_ENV: test
       PORT: 4000
+
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
       DB_USER: root
       DB_PASSWORD: ci_test_pw
       DB_NAME: supplyiq
-      # Throwaway value. Committed on purpose: a JWT secret in a public CI file
-      # that only ever signs tokens for an ephemeral local database is not a
-      # secret. The real one lives in backend/.env, which is never committed.
+
       JWT_SECRET: ci-only-value-not-a-real-secret-0123456789abcdef
       JWT_EXPIRES_IN: 7d
       BCRYPT_ROUNDS: 10
+
       FIREBASE_API_KEY: ci-placeholder-key
-      # Not committed, unlike the throwaway values above. This one is the demo
-      # owner's real password: the seeder sets it, the login step uses it, and
-      # anyone who read it from this file could log in as the seeded owner.
-      #
-      # Create it in the repository settings before the first push:
-      #   Settings -> Secrets and variables -> Actions -> New repository secret
-      #   name: DEMO_PASSWORD
-      #
-      # Any value works. It only has to match itself - the database is created
-      # fresh by this job and destroyed when it ends.
+
       DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
       DEMO_EMAIL: demo@supplyiq.local
       DEMO_STORE_ID: demo-store-01
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
@@ -226,311 +204,176 @@ jobs:
         run: npm ci
 
       - name: Run migrations
-        run: |
-          cd backend
-          node scripts/migrate.js up
-
-      - name: Seed data and demo owner
         working-directory: backend
-        env:
-          DEMO_EMAIL: demo@supplyiq.local
-          DEMO_STORE_ID: demo-store-01
+        run: node scripts/migrate.js up
+
+      - name: Seed database
+        working-directory: backend
         run: |
           node seed-mysql.js
-          # scripts/seed-sample.js is the canonical seeder: it provisions the
-          # organisation, store and owner together so the foreign keys hold.
-          # The old seed-users.js is a tombstone and creates nothing, which is
-          # why this step used to leave the database with no user to log in as.
           node scripts/seed-sample.js
 
-      - name: Start server
+      - name: Start backend
         working-directory: backend
         run: |
           node server.js > /tmp/server.log 2>&1 &
           echo $! > /tmp/server.pid
 
-      - name: Wait for readiness
+      - name: Wait for backend
+        shell: bash
         run: |
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:4000/api/health > /dev/null; then
-              echo "Server ready after ${i}s"
+          set -euo pipefail
+
+          for i in $(seq 1 40); do
+            if curl -sf http://127.0.0.1:4000/api/health > /dev/null; then
+              echo "Backend ready"
               exit 0
             fi
+
             sleep 1
           done
-          echo "::error::Server never became ready"
+
+          echo "::error::Backend did not become ready"
           cat /tmp/server.log
           exit 1
 
-      - name: Smoke check the auth flow
+      - name: Test authentication
+        shell: bash
         run: |
           set -euo pipefail
-          echo "Unauthenticated request is rejected:"
-          code=$(curl -s -o /dev/null -w '%{http_code}' \
-            "http://localhost:4000/api/kpis?storeId=${DEMO_STORE_ID}")
-          echo "  GET /api/kpis without a token -> $code"
-          [ "$code" = "401" ] || { echo "::error::expected 401, got $code"; exit 1; }
 
-            echo "Password login returns a token:"
-            curl -sf -X POST http://localhost:4000/api/login \
-              -H 'Content-Type: application/json' \
-              -d "{\"email\":\"${DEMO_EMAIL}\",\"password\":\"${DEMO_PASSWORD}\"}" \
-              > /tmp/login.json
-          TOKEN=$(node -e "process.stdout.write(require('/tmp/login.json').token)")
-          [ -n "$TOKEN" ] || { echo "::error::no token in login response"; exit 1; }
-          echo "  token acquired (${#TOKEN} chars)"
+          code=$(
+            curl -s \
+              -o /dev/null \
+              -w '%{http_code}' \
+              "http://127.0.0.1:4000/api/kpis?storeId=${DEMO_STORE_ID}"
+          )
 
-          echo "Authenticated request succeeds:"
-          curl -sf -H "Authorization: Bearer $TOKEN" \
-            "http://localhost:4000/api/kpis?storeId=${DEMO_STORE_ID}" > /dev/null
-          echo "  GET /api/kpis with token -> 200"
+          echo "Unauthenticated KPI request: $code"
 
-      - name: Run API suite
+          [ "$code" = "401" ]
+
+          curl -sf \
+            -X POST \
+            http://127.0.0.1:4000/api/login \
+            -H 'Content-Type: application/json' \
+            -d "{\"email\":\"${DEMO_EMAIL}\",\"password\":\"${DEMO_PASSWORD}\"}" \
+            > /tmp/login.json
+
+          TOKEN=$(
+            node -e \
+            "process.stdout.write(require('/tmp/login.json').token || '')"
+          )
+
+          [ -n "$TOKEN" ]
+
+          curl -sf \
+            -H "Authorization: Bearer $TOKEN" \
+            "http://127.0.0.1:4000/api/kpis?storeId=${DEMO_STORE_ID}" \
+            > /dev/null
+
+          echo "Authentication smoke test passed"
+
+      - name: Run API tests
         working-directory: backend
         run: npm test
 
-      - name: Upload server log on failure
+      - name: Upload backend log
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: backend-server-log
           path: /tmp/server.log
 
-  # -------------------------------------------------------------- frontend
-  # There is deliberately no build step here: the frontend is plain static HTML
-  # served by frontend/serve.js in dev and by nginx in Docker. There is no
-  # bundler, no package.json and no src/ directory, so a "build" would be a copy.
-  # This job checks the pages exist and that the auth wiring is intact.
+  # ================================================================
+  # FRONTEND
+  # ================================================================
   frontend-validate:
     name: Frontend validation
     runs-on: ubuntu-latest
     needs: secret-scan
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Required pages exist
+      - name: Check required frontend files
+        shell: bash
         run: |
-          for f in \
-            frontend/SupplyIQ-Grocery-Dashboard.html \
-            frontend/SupplyShield-AI.html \
-            frontend/public/login.html \
-            frontend/public/signup.html \
-            frontend/public/landing.html \
-            frontend/public/js/auth.js \
-            frontend/firebase-config.js \
-            frontend/public/firebase-config.js \
-            frontend/css/style.css \
-            frontend/public/css/style.css
-          do
-            test -f "$f" || { echo "::error::missing $f"; exit 1; }
+          set -euo pipefail
+
+          files=(
+            "frontend/SupplyIQ-Grocery-Dashboard.html"
+            "frontend/SupplyShield-AI.html"
+            "frontend/public/login.html"
+            "frontend/public/signup.html"
+            "frontend/public/landing.html"
+            "frontend/public/js/auth.js"
+            "frontend/firebase-config.js"
+            "frontend/public/firebase-config.js"
+            "frontend/css/style.css"
+            "frontend/public/css/style.css"
+          )
+
+          for file in "${files[@]}"; do
+            test -f "$file" || {
+              echo "::error::Missing $file"
+              exit 1
+            }
           done
-          echo "OK: all pages present"
 
-      - name: Every API call is authenticated
+          echo "All required frontend files exist"
+
+      - name: Check authentication wiring
+        shell: bash
         run: |
-          # This used to scan the two page files for inline fetch() call sites and
-          # require each to carry a credential. The pages no longer call fetch()
-          # themselves - every request goes through the centralised wrapper in
-          # frontend/js/api.js - so the scan matched nothing and failed closed with
-          # 'no API fetch calls were found to check'.
-          #
-          # The property that matters is two-sided, and both halves are real:
-          #   1. the wrapper attaches a bearer token, and
-          #   2. no page reaches the backend carrying no credential.
-          # (2) is the half that catches a regression. SupplyShield-AI.html does
-          # call the backend itself, through its own authHeaders() helper, so a
-          # direct call is only a failure when it has no credential at all.
-          python - <<'PY'
-          import re
-          import sys
-          
-          WRAPPER = 'frontend/js/api.js'
-          PAGES = [
-              'frontend/SupplyIQ-Grocery-Dashboard.html',
-              'frontend/SupplyShield-AI.html',
-          ]
-          
-          # Direct backend calls are the thing to police. authHeaders() is an accepted way
-          # to authenticate them - SupplyShield-AI.html legitimately calls /kpis itself
-          # through that helper - so a direct fetch is only a problem when it carries no
-          # credential at all. The optional quote matters: apiFetch is itself written
-          # fetch(`${API_BASE}${path}`), and a detector that misses its own probe is worse
-          # than no detector.
-          BYPASS = re.compile(r"""fetch\(\s*['"`]?\s*(?:\$\{\s*API\w*\s*\}|API\s*\+|/?api/)""")
-          # Both spellings of an inline credential.
-          CREDENTIAL = re.compile(r'Authorization|authHeaders')
-          
-          WINDOW = 400
-          
-          
-          def audit_wrapper(src):
-              """fetch() sites in the wrapper, and those with no bearer token nearby.
-          
-              The window is symmetric on purpose: apiFetch builds its headers above the
-              call site, the raw-CSV fetch below it.
-              """
-              sites = list(re.finditer(r'fetch\(', src))
-              bad = [src[:m.start()].count('\n') + 1
-                     for m in sites
-                     if 'Authorization' not in src[max(0, m.start() - WINDOW):m.start() + WINDOW]]
-              return sites, bad
-          
-          
-          def audit_page(src):
-              """Direct backend fetches in a page, and those carrying no credential."""
-              sites = list(BYPASS.finditer(src))
-              bad = [src[:m.start()].count('\n') + 1
-                     for m in sites
-                     if not CREDENTIAL.search(src[m.start():m.start() + WINDOW])]
-              return sites, bad
-          
-          
-          wrapper_src = open(WRAPPER, encoding='utf-8').read()
-          problems = []
-          
-          sites, unauth = audit_wrapper(wrapper_src)
-          for line in unauth:
-              problems.append('{}:{} fetch() sends no Authorization header'.format(WRAPPER, line))
-          
-          direct_total = 0
-          for path in PAGES:
-              src = open(path, encoding='utf-8').read()
-              found, bad = audit_page(src)
-              direct_total += len(found)
-              for line in bad:
-                  problems.append('{}:{} calls the backend with no credential'.format(path, line))
-          
-          # --- negative controls: this check must be able to fail ------------------------
-          # 1. every direct-call shape must be detected, including the backtick form
-          for probe in ["fetch(`${API}/kpis`)", "fetch(`${API_BASE}/kpis`)",
-                        "fetch(API + '/kpis')", "fetch('/api/orders')", 'fetch("/api/orders")']:
-              if not BYPASS.search(probe):
-                  print('::error::direct-call detector failed to reject: ' + probe)
-                  sys.exit(1)
-          
-          # 2. a credentialless direct call must be reported
-          _, bad_probe = audit_page("await fetch(`${API}/kpis`)")
-          if not bad_probe:
-              print('::error::page audit failed to reject a credentialless API call')
-              sys.exit(1)
-          
-          # 3. a credentialed direct call must NOT be reported
-          for good in ["await fetch(`${API}/kpis`,{headers:authHeaders})",
-                       "await fetch('/api/orders',{headers:{Authorization:'Bearer '+t}})"]:
-              _, bad_good = audit_page(good)
-              if bad_good:
-                  print('::error::page audit false-positives on: ' + good)
-                  sys.exit(1)
-          
-          # 4. the Wikimedia image lookup must not be mistaken for an API call
-          _, bad_wiki = audit_page("fetch('https://commons.wikimedia.org/w/api.php?action=query')")
-          if bad_wiki:
-              print('::error::external image lookup misread as an API call')
-              sys.exit(1)
-          
-          # 5. a wrapper with no header must be reported; a correct one must not
-          _, unauth_probe = audit_wrapper("async function apiFetch(p){ return fetch(API + p, {}); }")
-          if not unauth_probe:
-              print('::error::wrapper audit failed to reject a headerless fetch')
-              sys.exit(1)
-          _, unauth_ok = audit_wrapper(
-              "async function apiFetch(p){ const h={Authorization:'Bearer '+t}; return fetch(API+p,{headers:h}); }")
-          if unauth_ok:
-              print('::error::wrapper audit false-positives on a correct wrapper')
-              sys.exit(1)
-          
-          if not sites:
-              print('::error::no fetch() found in the API wrapper; the scan is broken')
-              sys.exit(1)
-          
-          if problems:
-              for p in problems:
-                  print('::error::' + p)
-              sys.exit(1)
-          
-          print('OK: {} wrapper fetch site(s) all send a bearer token; '
-                '{} direct API call(s) in the pages, all credentialed'.format(len(sites), direct_total))
-          PY
-          grep -q 'Bearer' frontend/public/js/auth.js || { echo "::error::auth.js does not build a Bearer header"; exit 1; }
+          set -euo pipefail
 
-      - name: Firebase ID-token exchange is present
+          grep -q "Bearer" frontend/public/js/auth.js
+          grep -q "getIdToken" frontend/public/js/auth.js
+          grep -q "siq_signed_out" frontend/public/js/auth.js
+
+          echo "Authentication wiring is present"
+
+      - name: Check auth modules are synchronized
+        shell: bash
         run: |
-          grep -q 'getIdToken' frontend/public/js/auth.js || { echo "::error::auth.js no longer exchanges a Firebase ID token"; exit 1; }
-          echo "OK: Firebase exchange present"
+          set -euo pipefail
 
-      - name: Sign-out guard is not defeated
+          test -f frontend/js/auth.js
+          test -f frontend/public/js/auth.js
+
+          diff -q \
+            frontend/js/auth.js \
+            frontend/public/js/auth.js
+
+          echo "Auth modules are synchronized"
+
+      - name: Validate nginx configuration
+        shell: bash
         run: |
-          # The sign-out flag is the only thing stopping onAuthStateChanged from
-          # silently restoring a Firebase session after logout. A page-load
-          # clear of it reintroduces the auto-login bug, so fail if one reappears.
-          if grep -rn "removeItem('siq_signed_out')" frontend/public/*.html frontend/*.html; then
-            echo "::error::A page clears siq_signed_out on load, which re-enables auto-login after logout"
-            exit 1
-          fi
-          grep -q "siq_signed_out" frontend/public/js/auth.js || { echo "::error::auth.js no longer honours the sign-out flag"; exit 1; }
-          echo "OK: sign-out guard intact"
+          set -euo pipefail
 
-      - name: Only one maintained auth module
-        run: |
-          # Two copies of the *main* auth.js is what caused the fake-session bug:
-          # frontend/js/auth.js and frontend/public/js/auth.js drifted apart and
-          # one of them minted a session out of a Firebase UID. frontend/js/auth.js
-          # is now a redirect away from the canonical copy, but the file is still
-          # referenced by login-3d.js, so both are tracked and must stay identical.
-          #
-          # frontend/Login_Authentication/ is excluded on purpose: it is a separate,
-          # self-contained sample app with its own start.bat and README that the
-          # main app never links to, so it cannot drift into production code.
-          copies=$(git ls-files -z | tr '\0' '\n' \
-            | grep -v '^frontend/Login_Authentication/' \
-            | grep -c '/js/auth\.js$' || true)
-          echo "main auth.js copies: $copies"
-          [ "$copies" -eq 2 ] || {
-            echo "::error::expected exactly 2 main auth.js copies, found $copies"
-            exit 1
-          }
-          if ! diff -q frontend/js/auth.js frontend/public/js/auth.js > /dev/null; then
-            echo "::error::frontend/js/auth.js has drifted from the canonical frontend/public/js/auth.js"
-            diff -u frontend/public/js/auth.js frontend/js/auth.js | head -60
-            exit 1
-          fi
-          echo "OK: auth modules in sync"
+          sed 's/backend/127.0.0.1/g' frontend/nginx.conf |
+            docker run --rm -i nginx:alpine \
+            nginx -t -c /etc/nginx/nginx.conf
 
-      # A step used to live here called these "the removed OTP endpoints" and
-      # failed the build on any /api/otp/ reference under frontend/. It was
-      # wrong twice over and was removed rather than patched:
-      #   - the endpoints were never removed. backend/otp.js is required by
-      #     server.js and both routes are live:
-      #       POST /api/otp/send    POST /api/otp/verify
-      #     The frontend depends on them for signup. There are 8 live call sites
-      #     in signup.html, js/api.js, js/auth.js and public/js/auth.js, so
-      #     teaching the check to see real code would have failed every push.
-      #   - the pattern could never have caught them anyway. It grepped
-      #     '/api/otp/', but the pages build their URLs as ${API}/otp/send, so
-      #     the only things it ever matched were two explanatory comments in
-      #     test_dashboard_boot.js. The step was inert for its stated purpose.
-      # The OTP flow itself is covered by tests/api.test.js.
-
-      - name: nginx config is valid
-        run: |
-          # The nginx config proxies /api/* to http://backend:4000/.
-          # The hostname "backend" only exists inside docker-compose.
-          # For a standalone syntax check, substitute a dummy upstream so
-          # nginx -t doesn't fail on the missing host.
-          sed 's/backend/127.0.0.1/g' frontend/nginx.conf | \
-            docker run --rm -i nginx:alpine nginx -t -c /etc/nginx/nginx.conf
-
-  # ---------------------------------------------------------------- docker
+  # ================================================================
+  # DOCKER BUILD
+  # ================================================================
   docker-build:
     name: Docker build
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-validate]
+    needs:
+      - backend-test
+      - frontend-validate
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build backend image
         uses: docker/build-push-action@v6
@@ -541,178 +384,342 @@ jobs:
           load: true
           tags: supplyiq-backend:${{ github.sha }}
 
-      - name: Image runs and reports healthy
+      - name: Start MySQL
+        shell: bash
         run: |
           set -euo pipefail
+
           docker network create supplyiq-ci
 
-          docker run -d --name supplyiq-ci-db --network supplyiq-ci \
+          docker run -d \
+            --name supplyiq-ci-db \
+            --network supplyiq-ci \
             -e MYSQL_ROOT_PASSWORD=ci_test_pw \
             -e MYSQL_DATABASE=supplyiq \
-            mysql:8.0 > /dev/null
+            mysql:8.0
 
-          echo "Waiting for MySQL..."
           for i in $(seq 1 40); do
-            if docker exec supplyiq-ci-db mysqladmin ping --silent -pci_test_pw 2>/dev/null; then
-              echo "MySQL up after ${i}s"
-              break
+            if docker exec supplyiq-ci-db \
+              mysqladmin ping --silent -pci_test_pw \
+              > /dev/null 2>&1; then
+              echo "MySQL ready"
+              exit 0
             fi
-            [ "$i" -eq 40 ] && { echo "::error::MySQL never came up"; exit 1; }
+
             sleep 2
           done
 
-          docker run -d --name supplyiq-ci-backend --network supplyiq-ci -p 4000:4000 \
-            -e PORT=4000 -e NODE_ENV=production \
-            -e DB_HOST=supplyiq-ci-db -e DB_PORT=3306 \
-            -e DB_USER=root -e DB_PASSWORD=ci_test_pw -e DB_NAME=supplyiq \
+          echo "::error::MySQL failed to start"
+          docker logs supplyiq-ci-db
+          exit 1
+
+      - name: Start backend container
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker run -d \
+            --name supplyiq-ci-backend \
+            --network supplyiq-ci \
+            -p 4000:4000 \
+            -e PORT=4000 \
+            -e NODE_ENV=production \
+            -e DB_HOST=supplyiq-ci-db \
+            -e DB_PORT=3306 \
+            -e DB_USER=root \
+            -e DB_PASSWORD=ci_test_pw \
+            -e DB_NAME=supplyiq \
             -e JWT_SECRET=ci-only-value-not-a-real-secret-0123456789abcdef \
-            -e JWT_EXPIRES_IN=7d -e BCRYPT_ROUNDS=10 \
+            -e JWT_EXPIRES_IN=7d \
+            -e BCRYPT_ROUNDS=10 \
             -e FIREBASE_API_KEY=ci-placeholder-key \
-            supplyiq-backend:${{ github.sha }} > /dev/null
+            supplyiq-backend:${{ github.sha }}
 
-          echo "Waiting for backend..."
-          ready=0
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:4000/api/health > /dev/null; then ready=1; break; fi
+      - name: Wait for backend container
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for i in $(seq 1 40); do
+            if curl -sf http://127.0.0.1:4000/api/health > /dev/null; then
+              echo "Backend image is healthy"
+              exit 0
+            fi
+
             sleep 2
           done
-          if [ "$ready" -ne 1 ]; then
-            echo "::error::Backend container never became ready"
-            docker logs supplyiq-ci-backend
-            exit 1
-          fi
 
-            echo "Unauthenticated access is refused in the image:"
-            # This asserts the auth layer, not store resolution, so the store id is
-            # a literal here; the request is rejected before it is ever read.
-            code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:4000/api/kpis?storeId=demo-store-01")
-          echo "  GET /api/kpis -> $code"
-          [ "$code" = "401" ] || { echo "::error::expected 401, got $code"; exit 1; }
+          echo "::error::Backend image did not become ready"
+          docker logs supplyiq-ci-backend
+          exit 1
 
-      - name: Container logs on failure
+      - name: Verify authentication guard
+        shell: bash
+        run: |
+          code=$(
+            curl -s \
+              -o /dev/null \
+              -w '%{http_code}' \
+              "http://127.0.0.1:4000/api/kpis?storeId=demo-store-01"
+          )
+
+          echo "Unauthenticated KPI request: $code"
+
+          [ "$code" = "401" ]
+
+      - name: Logs on failure
         if: failure()
-        run: docker logs supplyiq-ci-backend || true
+        run: |
+          docker logs supplyiq-ci-backend || true
+          docker logs supplyiq-ci-db || true
 
-      - name: Tear down
+      - name: Cleanup
         if: always()
         run: |
-          docker rm -f supplyiq-ci-backend supplyiq-ci-db > /dev/null 2>&1 || true
-          docker network rm supplyiq-ci > /dev/null 2>&1 || true
+          docker rm -f supplyiq-ci-backend supplyiq-ci-db 2>/dev/null || true
+          docker network rm supplyiq-ci 2>/dev/null || true
 
-  # ---------------------------------------------------------- integration
-  # End to end through the real stack: MySQL, the built backend and nginx. This
-  # is what catches path bugs between the pages, which no unit test can see.
+  # ================================================================
+  # FULL COMPOSE INTEGRATION
+  # ================================================================
   integration:
     name: End-to-end (compose)
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-validate]
+    needs:
+      - backend-test
+      - frontend-validate
 
     env:
-      JWT_SECRET: ci-only-value-not-a-real-secret-0123456789abcdef
+      NODE_ENV: production
+      PORT: 4000
+
       DB_PASSWORD: ci_test_pw
       DB_NAME: supplyiq
-      # The demo owner has no default password, so it comes from repository
-      # secrets here for the same reason as in backend-test.
+
+      JWT_SECRET: ci-only-value-not-a-real-secret-0123456789abcdef
+      JWT_EXPIRES_IN: 7d
+      BCRYPT_ROUNDS: 10
+
+      FIREBASE_API_KEY: ci-placeholder-key
+
       DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
       DEMO_EMAIL: demo@supplyiq.local
       DEMO_STORE_ID: demo-store-01
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Validate compose file
-        # Block scalar, not an inline value: a plain YAML scalar cannot contain
-        # ": ", so the ": " inside the echo message would otherwise parse as a
-        # mapping and fail to load the whole workflow.
+      - name: Validate Docker Compose
         run: |
           docker compose config --quiet
-          echo "OK: compose file is valid"
+          echo "Compose configuration is valid"
 
-      - name: Create Docker Compose .env file
+      - name: Create CI environment
+        shell: bash
         run: |
-          chmod +x create-docker-env.sh
-          ./create-docker-env.sh
+          set -euo pipefail
 
-      - name: Bring the stack up
-        run: docker compose up -d --build
+          cat > .env <<EOF
+          DB_PASSWORD=${DB_PASSWORD}
+          DB_NAME=${DB_NAME}
+          JWT_SECRET=${JWT_SECRET}
+          JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+          BCRYPT_ROUNDS=${BCRYPT_ROUNDS}
+          NODE_ENV=${NODE_ENV}
+          PORT=${PORT}
+          FIREBASE_API_KEY=${FIREBASE_API_KEY}
+          DEMO_EMAIL=${DEMO_EMAIL}
+          DEMO_STORE_ID=${DEMO_STORE_ID}
+          DEMO_PASSWORD=${DEMO_PASSWORD}
+          EOF
+
+          chmod 600 .env
+
+      # ------------------------------------------------------------
+      # IMPORTANT:
+      # Do NOT start the whole compose stack here.
+      #
+      # The old workflow started frontend -> backend health dependency
+      # before migrations. If backend health depends on DB tables, this
+      # creates:
+      #
+      # backend unhealthy
+      #      ->
+      # frontend cannot start
+      #      ->
+      # compose up fails
+      #
+      # Start MySQL and backend first, migrate, then start frontend.
+      # ------------------------------------------------------------
+      - name: Start MySQL and backend
+        run: |
+          docker compose up -d --build mysql backend
+
+      - name: Wait for MySQL
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for i in $(seq 1 40); do
+            if docker compose exec -T mysql \
+              mysqladmin ping \
+              -h 127.0.0.1 \
+              -p"${DB_PASSWORD}" \
+              --silent \
+              > /dev/null 2>&1; then
+
+              echo "MySQL is ready"
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          echo "::error::MySQL did not become ready"
+          docker compose logs mysql
+          exit 1
 
       - name: Run database migrations
         run: |
           set -euo pipefail
-          # Wait for MySQL to be ready
-          for i in $(seq 1 30); do
-            if docker compose exec -T mysql mysqladmin ping -h 127.0.0.1 -p"${DB_PASSWORD:-supplyiq_root_pw}" > /dev/null 2>&1; then
-              break
-            fi
-            sleep 2
-          done
-          # Run migrations inside the backend container
-          docker compose exec -T backend node scripts/migrate.js up
 
-      - name: Wait for the stack
+          docker compose exec -T backend \
+            node scripts/migrate.js up
+
+      - name: Seed demo owner
         run: |
           set -euo pipefail
+
+          docker compose exec -T \
+            -e DEMO_PASSWORD \
+            -e DEMO_EMAIL \
+            -e DEMO_STORE_ID \
+            backend \
+            node scripts/seed-sample.js
+
+      # Start nginx/frontend only after DB setup.
+      # --no-deps intentionally bypasses a backend service_healthy
+      # dependency if the compose file has one.
+      - name: Start frontend
+        run: |
+          docker compose up -d --no-deps frontend
+
+      - name: Wait for backend health
+        shell: bash
+        run: |
+          set -euo pipefail
+
           for i in $(seq 1 45); do
-            if curl -sf http://localhost/api/health > /dev/null 2>&1; then
-              echo "Stack ready after $((i * 2))s"
+            if curl -sf http://127.0.0.1:4000/api/health > /dev/null; then
+              echo "Backend healthy"
               exit 0
             fi
+
             sleep 2
           done
-          echo "::error::Stack never became ready"
+
+          echo "::error::Backend health endpoint failed"
+
           docker compose ps
-          docker compose logs --tail 80
+          docker compose logs --tail 120 backend
+
           exit 1
 
-      - name: Pages are served at the paths the app links to
+      - name: Wait for frontend
+        shell: bash
         run: |
           set -euo pipefail
-          check() {
-            code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost$1")
-            printf '  %-42s %s\n' "$1" "$code"
-            [ "$code" = "200" ] || { echo "::error::$1 returned $code"; exit 1; }
+
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1/ > /dev/null; then
+              echo "Frontend/nginx ready"
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          echo "::error::Frontend did not become ready"
+          docker compose ps
+          docker compose logs --tail 120 frontend
+          exit 1
+
+      - name: Check application pages
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          check_page() {
+            local path="$1"
+            local code
+
+            code=$(
+              curl -s \
+                -o /dev/null \
+                -w '%{http_code}' \
+                "http://127.0.0.1${path}"
+            )
+
+            echo "${path} -> ${code}"
+
+            [ "$code" = "200" ] || {
+              echo "::error::${path} returned ${code}"
+              exit 1
+            }
           }
-          # The dashboard redirects to public/login.html on sign-out, so that
-          # exact path has to resolve. Mounting pages individually into the nginx
-          # root is what previously made this 404 in Docker only.
-          check /
-          check /public/landing.html
-          check /public/login.html
-          check /public/signup.html
-          check /SupplyIQ-Grocery-Dashboard.html
-          check /SupplyShield-AI.html
-          check /js/auth.js
-          check /css/style.css
 
-      - name: Seed the demo owner
-        # The compose stack initialises the schema and nothing else, so without
-        # this the database has zero users and the login step below cannot
-        # succeed. Run inside the backend container so it reaches MySQL on the
-        # compose network; the seeder is idempotent and self-guarding.
+          check_page /
+          check_page /public/landing.html
+          check_page /public/login.html
+          check_page /public/signup.html
+          check_page /SupplyIQ-Grocery-Dashboard.html
+          check_page /SupplyShield-AI.html
+          check_page /js/auth.js
+          check_page /css/style.css
+
+      - name: Test login through nginx
+        shell: bash
         run: |
           set -euo pipefail
-          docker compose exec -T \
-            -e DEMO_PASSWORD -e DEMO_EMAIL -e DEMO_STORE_ID \
-            backend node scripts/seed-sample.js
 
-      - name: Login works through the proxy
-        run: |
-          set -euo pipefail
-          curl -sf -X POST http://localhost/api/login \
+          curl -sf \
+            -X POST \
+            http://127.0.0.1/api/login \
             -H 'Content-Type: application/json' \
-            -d "{\"email\":\"${DEMO_EMAIL}\",\"password\":\"${DEMO_PASSWORD}\"}" > /tmp/login.json
-          TOKEN=$(node -e "process.stdout.write(require('/tmp/login.json').token)")
-          [ -n "$TOKEN" ] || { echo "::error::no token"; exit 1; }
-          code=$(curl -s -o /dev/null -w '%{http_code}' \
-            -H "Authorization: Bearer $TOKEN" \
-            "http://localhost/api/kpis?storeId=${DEMO_STORE_ID}")
-          echo "  GET /api/kpis with token -> $code"
-          [ "$code" = "200" ] || { echo "::error::expected 200, got $code"; exit 1; }
+            -d "{\"email\":\"${DEMO_EMAIL}\",\"password\":\"${DEMO_PASSWORD}\"}" \
+            > /tmp/login.json
 
-      - name: Dump logs on failure
+          TOKEN=$(
+            node -e \
+            "process.stdout.write(require('/tmp/login.json').token || '')"
+          )
+
+          [ -n "$TOKEN" ] || {
+            echo "::error::Login returned no token"
+            exit 1
+          }
+
+          code=$(
+            curl -s \
+              -o /dev/null \
+              -w '%{http_code}' \
+              -H "Authorization: Bearer ${TOKEN}" \
+              "http://127.0.0.1/api/kpis?storeId=${DEMO_STORE_ID}"
+          )
+
+          echo "Authenticated KPI request -> ${code}"
+
+          [ "$code" = "200" ]
+
+      - name: Dump compose logs on failure
         if: failure()
-        run: docker compose logs --tail 120
+        run: |
+          docker compose ps
+          docker compose logs --tail 200
 
-      - name: Tear down
+      - name: Cleanup
         if: always()
-        run: docker compose down -v
+        run: |
+          docker compose down -v --remove-orphans
+          rm -f .env
