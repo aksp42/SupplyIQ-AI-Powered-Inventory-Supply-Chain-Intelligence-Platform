@@ -304,7 +304,6 @@ jobs:
 
           files=(
             "frontend/SupplyIQ-Grocery-Dashboard.html"
-            "frontend/SupplyShield-AI.html"
             "frontend/public/login.html"
             "frontend/public/signup.html"
             "frontend/public/landing.html"
@@ -674,7 +673,6 @@ jobs:
           check_page /public/login.html
           check_page /public/signup.html
           check_page /SupplyIQ-Grocery-Dashboard.html
-          check_page /SupplyShield-AI.html
           check_page /js/auth.js
           check_page /css/style.css
 
