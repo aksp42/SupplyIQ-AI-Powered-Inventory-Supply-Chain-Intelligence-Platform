@@ -1,0 +1,259 @@
+date,sku,direction,quantity,product_name,category,unit,supplier,supplier_phone,unit_cost,unit_price,discount,channel,invoice_no,reason,note,reorder_pt,safety_stock,max_stock
+2026-08-21,GRC-001,IN,648,Basmati Rice 5kg,Staples,kg,Sri Traders,9845012345,540,0,0,Purchase,INV-1001,purchase,Opening stock,40,15,200
+2026-08-21,GRC-002,IN,432,Sunflower Oil 1L,Oils,pc,Agri Distributors,9845098765,128,0,0,Purchase,INV-1002,purchase,Opening stock,30,10,120
+2026-08-21,GRC-003,IN,504,Toor Dal 1kg,Staples,kg,Sri Traders,9845012345,142,0,0,Purchase,INV-1003,purchase,Opening stock,25,8,90
+2026-08-21,GRC-004,IN,1008,Wheat Atta 10kg,Staples,kg,Mysore Mills,9845077881,38,0,0,Purchase,INV-1004,purchase,Opening stock,50,20,250
+2026-08-21,GRC-005,IN,576,Sugar 1kg,Staples,kg,Agri Distributors,9845098765,44,0,0,Purchase,INV-1005,purchase,Opening stock,35,12,150
+2026-08-21,GRC-006,IN,288,Tea Powder 500g,Beverages,pc,Chai Traders,9845033221,210,0,0,Purchase,INV-1006,purchase,Opening stock,20,6,80
+2026-09-08,GRC-001,IN,54,Basmati Rice 5kg,Staples,kg,Sri Traders,9845012345,544,0,0,Purchase,INV-1007,purchase,Mid-month restock,0,0,0
+2026-09-09,GRC-002,IN,36,Sunflower Oil 1L,Oils,pc,Agri Distributors,9845098765,132,0,0,Purchase,INV-1008,purchase,Mid-month restock,0,0,0
+2026-09-10,GRC-003,IN,42,Toor Dal 1kg,Staples,kg,Sri Traders,9845012345,146,0,0,Purchase,INV-1009,purchase,Mid-month restock,0,0,0
+2026-09-11,GRC-004,IN,84,Wheat Atta 10kg,Staples,kg,Mysore Mills,9845077881,42,0,0,Purchase,INV-1010,purchase,Mid-month restock,0,0,0
+2026-09-12,GRC-005,IN,48,Sugar 1kg,Staples,kg,Agri Distributors,9845098765,48,0,0,Purchase,INV-1011,purchase,Mid-month restock,0,0,0
+2026-09-13,GRC-006,IN,24,Tea Powder 500g,Beverages,pc,Chai Traders,9845033221,214,0,0,Purchase,INV-1012,purchase,Mid-month restock,0,0,0
+2026-08-23,GRC-001,SALE,12,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1001,sale,,0,0,0
+2026-08-23,GRC-002,SALE,6,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1002,sale,,0,0,0
+2026-08-23,GRC-003,SALE,7,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1003,sale,,0,0,0
+2026-08-23,GRC-004,SALE,19,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1004,sale,,0,0,0
+2026-08-23,GRC-005,SALE,12,Sugar 1kg,Staples,kg,,,0,56,0,POS,1005,sale,,0,0,0
+2026-08-23,GRC-006,SALE,5,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1006,sale,,0,0,0
+2026-08-24,GRC-001,SALE,9,Basmati Rice 5kg,Staples,kg,,,0,665,15,Wholesale,1007,sale,Wholesale bulk,0,0,0
+2026-08-24,GRC-002,SALE,5,Sunflower Oil 1L,Oils,pc,,,0,158,0,Delivery,1008,sale,,0,0,0
+2026-08-24,GRC-003,SALE,7,Toor Dal 1kg,Staples,kg,,,0,180,15,Wholesale,1009,sale,Wholesale bulk,0,0,0
+2026-08-24,GRC-004,SALE,16,Wheat Atta 10kg,Staples,kg,,,0,53,0,Delivery,1010,sale,,0,0,0
+2026-08-24,GRC-005,SALE,9,Sugar 1kg,Staples,kg,,,0,56,15,Wholesale,1011,sale,Wholesale bulk,0,0,0
+2026-08-24,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,Delivery,1012,sale,,0,0,0
+2026-08-25,GRC-001,SALE,8,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1013,sale,,0,0,0
+2026-08-25,GRC-002,SALE,5,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1014,sale,,0,0,0
+2026-08-25,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1015,sale,,0,0,0
+2026-08-25,GRC-004,SALE,16,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1016,sale,,0,0,0
+2026-08-25,GRC-005,SALE,8,Sugar 1kg,Staples,kg,,,0,56,0,POS,1017,sale,,0,0,0
+2026-08-25,GRC-006,SALE,3,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1018,sale,,0,0,0
+2026-08-26,GRC-001,SALE,7,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1019,sale,,0,0,0
+2026-08-26,GRC-002,SALE,6,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1020,sale,,0,0,0
+2026-08-26,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1021,sale,,0,0,0
+2026-08-26,GRC-004,SALE,16,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1022,sale,,0,0,0
+2026-08-26,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,0,POS,1023,sale,,0,0,0
+2026-08-26,GRC-006,SALE,3,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1024,sale,,0,0,0
+2026-08-27,GRC-001,SALE,8,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1025,sale,,0,0,0
+2026-08-27,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1026,sale,,0,0,0
+2026-08-27,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1027,sale,,0,0,0
+2026-08-27,GRC-004,SALE,14,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1028,sale,,0,0,0
+2026-08-27,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,0,POS,1029,sale,,0,0,0
+2026-08-27,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1030,sale,,0,0,0
+2026-08-28,GRC-001,SALE,9,Basmati Rice 5kg,Staples,kg,,,0,665,0,Delivery,1031,sale,,0,0,0
+2026-08-28,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,Delivery,1032,sale,,0,0,0
+2026-08-28,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,Delivery,1033,sale,,0,0,0
+2026-08-28,GRC-004,SALE,12,Wheat Atta 10kg,Staples,kg,,,0,53,0,Delivery,1034,sale,,0,0,0
+2026-08-28,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,0,Delivery,1035,sale,,0,0,0
+2026-08-28,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,Delivery,1036,sale,,0,0,0
+2026-08-29,GRC-001,SALE,12,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1037,sale,,0,0,0
+2026-08-29,GRC-002,SALE,9,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1038,sale,,0,0,0
+2026-08-29,GRC-003,SALE,9,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1039,sale,,0,0,0
+2026-08-29,GRC-004,SALE,14,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1040,sale,,0,0,0
+2026-08-29,GRC-005,SALE,9,Sugar 1kg,Staples,kg,,,0,56,0,POS,1041,sale,,0,0,0
+2026-08-29,GRC-006,SALE,6,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1042,sale,,0,0,0
+2026-08-30,GRC-001,SALE,13,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1043,sale,,0,0,0
+2026-08-30,GRC-002,SALE,8,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1044,sale,,0,0,0
+2026-08-30,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1045,sale,,0,0,0
+2026-08-30,GRC-004,SALE,15,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1046,sale,,0,0,0
+2026-08-30,GRC-005,SALE,10,Sugar 1kg,Staples,kg,,,0,56,0,POS,1047,sale,,0,0,0
+2026-08-30,GRC-006,SALE,6,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1048,sale,,0,0,0
+2026-08-31,GRC-001,SALE,10,Basmati Rice 5kg,Staples,kg,,,0,665,15,Wholesale,1049,sale,Wholesale bulk,0,0,0
+2026-08-31,GRC-002,SALE,6,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1050,sale,,0,0,0
+2026-08-31,GRC-003,SALE,6,Toor Dal 1kg,Staples,kg,,,0,180,15,Wholesale,1051,sale,Wholesale bulk,0,0,0
+2026-08-31,GRC-004,SALE,13,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1052,sale,,0,0,0
+2026-08-31,GRC-005,SALE,9,Sugar 1kg,Staples,kg,,,0,56,15,Wholesale,1053,sale,Wholesale bulk,0,0,0
+2026-08-31,GRC-006,SALE,5,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1054,sale,,0,0,0
+2026-09-01,GRC-001,SALE,10,Basmati Rice 5kg,Staples,kg,,,0,665,0,Delivery,1055,sale,,0,0,0
+2026-09-01,GRC-002,SALE,5,Sunflower Oil 1L,Oils,pc,,,0,158,0,Delivery,1056,sale,,0,0,0
+2026-09-01,GRC-003,SALE,6,Toor Dal 1kg,Staples,kg,,,0,180,0,Delivery,1057,sale,,0,0,0
+2026-09-01,GRC-004,SALE,15,Wheat Atta 10kg,Staples,kg,,,0,53,0,Delivery,1058,sale,,0,0,0
+2026-09-01,GRC-005,SALE,9,Sugar 1kg,Staples,kg,,,0,56,0,Delivery,1059,sale,,0,0,0
+2026-09-01,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,Delivery,1060,sale,,0,0,0
+2026-09-02,GRC-001,SALE,9,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1061,sale,,0,0,0
+2026-09-02,GRC-002,SALE,5,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1062,sale,,0,0,0
+2026-09-02,GRC-003,SALE,7,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1063,sale,,0,0,0
+2026-09-02,GRC-004,SALE,16,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1064,sale,,0,0,0
+2026-09-02,GRC-005,SALE,9,Sugar 1kg,Staples,kg,,,0,56,0,POS,1065,sale,,0,0,0
+2026-09-02,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1066,sale,,0,0,0
+2026-09-03,GRC-001,SALE,8,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1067,sale,,0,0,0
+2026-09-03,GRC-002,SALE,5,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1068,sale,,0,0,0
+2026-09-03,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1069,sale,,0,0,0
+2026-09-03,GRC-004,SALE,16,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1070,sale,,0,0,0
+2026-09-03,GRC-005,SALE,8,Sugar 1kg,Staples,kg,,,0,56,0,POS,1071,sale,,0,0,0
+2026-09-03,GRC-006,SALE,3,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1072,sale,,0,0,0
+2026-09-04,GRC-001,SALE,7,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1073,sale,,0,0,0
+2026-09-04,GRC-002,SALE,6,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1074,sale,,0,0,0
+2026-09-04,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1075,sale,,0,0,0
+2026-09-04,GRC-004,SALE,16,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1076,sale,,0,0,0
+2026-09-04,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,0,POS,1077,sale,,0,0,0
+2026-09-04,GRC-006,SALE,3,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1078,sale,,0,0,0
+2026-09-05,GRC-001,SALE,10,Basmati Rice 5kg,Staples,kg,,,0,665,0,Delivery,1079,sale,,0,0,0
+2026-09-05,GRC-002,SALE,8,Sunflower Oil 1L,Oils,pc,,,0,158,0,Delivery,1080,sale,,0,0,0
+2026-09-05,GRC-003,SALE,10,Toor Dal 1kg,Staples,kg,,,0,180,0,Delivery,1081,sale,,0,0,0
+2026-09-05,GRC-004,SALE,17,Wheat Atta 10kg,Staples,kg,,,0,53,0,Delivery,1082,sale,,0,0,0
+2026-09-05,GRC-005,SALE,8,Sugar 1kg,Staples,kg,,,0,56,0,Delivery,1083,sale,,0,0,0
+2026-09-05,GRC-006,SALE,5,Tea Powder 500g,Beverages,pc,,,0,265,0,Delivery,1084,sale,,0,0,0
+2026-09-06,GRC-001,SALE,11,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1085,sale,,0,0,0
+2026-09-06,GRC-002,SALE,9,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1086,sale,,0,0,0
+2026-09-06,GRC-003,SALE,10,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1087,sale,,0,0,0
+2026-09-06,GRC-004,SALE,15,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1088,sale,,0,0,0
+2026-09-06,GRC-005,SALE,8,Sugar 1kg,Staples,kg,,,0,56,0,POS,1089,sale,,0,0,0
+2026-09-06,GRC-006,SALE,5,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1090,sale,,0,0,0
+2026-09-07,GRC-001,SALE,10,Basmati Rice 5kg,Staples,kg,,,0,665,15,Wholesale,1091,sale,Wholesale bulk,0,0,0
+2026-09-07,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1092,sale,,0,0,0
+2026-09-07,GRC-003,SALE,7,Toor Dal 1kg,Staples,kg,,,0,180,15,Wholesale,1093,sale,Wholesale bulk,0,0,0
+2026-09-07,GRC-004,SALE,12,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1094,sale,,0,0,0
+2026-09-07,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,15,Wholesale,1095,sale,Wholesale bulk,0,0,0
+2026-09-07,GRC-006,SALE,5,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1096,sale,,0,0,0
+2026-09-08,GRC-001,SALE,11,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1097,sale,,0,0,0
+2026-09-08,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1098,sale,,0,0,0
+2026-09-08,GRC-003,SALE,6,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1099,sale,,0,0,0
+2026-09-08,GRC-004,SALE,12,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1100,sale,,0,0,0
+2026-09-08,GRC-005,SALE,8,Sugar 1kg,Staples,kg,,,0,56,0,POS,1101,sale,,0,0,0
+2026-09-08,GRC-006,SALE,5,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1102,sale,,0,0,0
+2026-09-09,GRC-001,SALE,10,Basmati Rice 5kg,Staples,kg,,,0,665,0,Delivery,1103,sale,,0,0,0
+2026-09-09,GRC-002,SALE,6,Sunflower Oil 1L,Oils,pc,,,0,158,0,Delivery,1104,sale,,0,0,0
+2026-09-09,GRC-003,SALE,6,Toor Dal 1kg,Staples,kg,,,0,180,0,Delivery,1105,sale,,0,0,0
+2026-09-09,GRC-004,SALE,13,Wheat Atta 10kg,Staples,kg,,,0,53,0,Delivery,1106,sale,,0,0,0
+2026-09-09,GRC-005,SALE,9,Sugar 1kg,Staples,kg,,,0,56,0,Delivery,1107,sale,,0,0,0
+2026-09-09,GRC-006,SALE,5,Tea Powder 500g,Beverages,pc,,,0,265,0,Delivery,1108,sale,,0,0,0
+2026-09-10,GRC-001,SALE,10,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1109,sale,,0,0,0
+2026-09-10,GRC-002,SALE,5,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1110,sale,,0,0,0
+2026-09-10,GRC-003,SALE,6,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1111,sale,,0,0,0
+2026-09-10,GRC-004,SALE,15,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1112,sale,,0,0,0
+2026-09-10,GRC-005,SALE,9,Sugar 1kg,Staples,kg,,,0,56,0,POS,1113,sale,,0,0,0
+2026-09-10,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1114,sale,,0,0,0
+2026-09-11,GRC-001,SALE,9,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1115,sale,,0,0,0
+2026-09-11,GRC-002,SALE,5,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1116,sale,,0,0,0
+2026-09-11,GRC-003,SALE,7,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1117,sale,,0,0,0
+2026-09-11,GRC-004,SALE,16,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1118,sale,,0,0,0
+2026-09-11,GRC-005,SALE,9,Sugar 1kg,Staples,kg,,,0,56,0,POS,1119,sale,,0,0,0
+2026-09-11,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1120,sale,,0,0,0
+2026-09-12,GRC-001,SALE,10,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1121,sale,,0,0,0
+2026-09-12,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1122,sale,,0,0,0
+2026-09-12,GRC-003,SALE,9,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1123,sale,,0,0,0
+2026-09-12,GRC-004,SALE,21,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1124,sale,,0,0,0
+2026-09-12,GRC-005,SALE,10,Sugar 1kg,Staples,kg,,,0,56,0,POS,1125,sale,,0,0,0
+2026-09-12,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1126,sale,,0,0,0
+2026-09-13,GRC-001,SALE,9,Basmati Rice 5kg,Staples,kg,,,0,665,0,Delivery,1127,sale,,0,0,0
+2026-09-13,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,Delivery,1128,sale,,0,0,0
+2026-09-13,GRC-003,SALE,10,Toor Dal 1kg,Staples,kg,,,0,180,0,Delivery,1129,sale,,0,0,0
+2026-09-13,GRC-004,SALE,19,Wheat Atta 10kg,Staples,kg,,,0,53,0,Delivery,1130,sale,,0,0,0
+2026-09-13,GRC-005,SALE,9,Sugar 1kg,Staples,kg,,,0,56,0,Delivery,1131,sale,,0,0,0
+2026-09-13,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,Delivery,1132,sale,,0,0,0
+2026-09-14,GRC-001,SALE,8,Basmati Rice 5kg,Staples,kg,,,0,665,15,Wholesale,1133,sale,Wholesale bulk,0,0,0
+2026-09-14,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1134,sale,,0,0,0
+2026-09-14,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,15,Wholesale,1135,sale,Wholesale bulk,0,0,0
+2026-09-14,GRC-004,SALE,14,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1136,sale,,0,0,0
+2026-09-14,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,15,Wholesale,1137,sale,Wholesale bulk,0,0,0
+2026-09-14,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1138,sale,,0,0,0
+2026-09-15,GRC-001,SALE,9,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1139,sale,,0,0,0
+2026-09-15,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1140,sale,,0,0,0
+2026-09-15,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1141,sale,,0,0,0
+2026-09-15,GRC-004,SALE,12,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1142,sale,,0,0,0
+2026-09-15,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,0,POS,1143,sale,,0,0,0
+2026-09-15,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1144,sale,,0,0,0
+2026-09-16,GRC-001,SALE,10,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1145,sale,,0,0,0
+2026-09-16,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1146,sale,,0,0,0
+2026-09-16,GRC-003,SALE,7,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1147,sale,,0,0,0
+2026-09-16,GRC-004,SALE,12,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1148,sale,,0,0,0
+2026-09-16,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,0,POS,1149,sale,,0,0,0
+2026-09-16,GRC-006,SALE,5,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1150,sale,,0,0,0
+2026-09-17,GRC-001,SALE,11,Basmati Rice 5kg,Staples,kg,,,0,665,0,Delivery,1151,sale,,0,0,0
+2026-09-17,GRC-002,SALE,6,Sunflower Oil 1L,Oils,pc,,,0,158,0,Delivery,1152,sale,,0,0,0
+2026-09-17,GRC-003,SALE,6,Toor Dal 1kg,Staples,kg,,,0,180,0,Delivery,1153,sale,,0,0,0
+2026-09-17,GRC-004,SALE,12,Wheat Atta 10kg,Staples,kg,,,0,53,0,Delivery,1154,sale,,0,0,0
+2026-09-17,GRC-005,SALE,8,Sugar 1kg,Staples,kg,,,0,56,0,Delivery,1155,sale,,0,0,0
+2026-09-17,GRC-006,SALE,5,Tea Powder 500g,Beverages,pc,,,0,265,0,Delivery,1156,sale,,0,0,0
+2026-09-18,GRC-001,SALE,10,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1157,sale,,0,0,0
+2026-09-18,GRC-002,SALE,6,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1158,sale,,0,0,0
+2026-09-18,GRC-003,SALE,6,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1159,sale,,0,0,0
+2026-09-18,GRC-004,SALE,13,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1160,sale,,0,0,0
+2026-09-18,GRC-005,SALE,9,Sugar 1kg,Staples,kg,,,0,56,0,POS,1161,sale,,0,0,0
+2026-09-18,GRC-006,SALE,5,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1162,sale,,0,0,0
+2026-09-19,GRC-001,SALE,12,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1163,sale,,0,0,0
+2026-09-19,GRC-002,SALE,6,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1164,sale,,0,0,0
+2026-09-19,GRC-003,SALE,7,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1165,sale,,0,0,0
+2026-09-19,GRC-004,SALE,19,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1166,sale,,0,0,0
+2026-09-19,GRC-005,SALE,12,Sugar 1kg,Staples,kg,,,0,56,0,POS,1167,sale,,0,0,0
+2026-09-19,GRC-006,SALE,5,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1168,sale,,0,0,0
+2026-09-20,GRC-001,SALE,11,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1169,sale,,0,0,0
+2026-09-20,GRC-002,SALE,6,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1170,sale,,0,0,0
+2026-09-20,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1171,sale,,0,0,0
+2026-09-20,GRC-004,SALE,20,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1172,sale,,0,0,0
+2026-09-20,GRC-005,SALE,11,Sugar 1kg,Staples,kg,,,0,56,0,POS,1173,sale,,0,0,0
+2026-09-20,GRC-006,SALE,5,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1174,sale,,0,0,0
+2026-09-21,GRC-001,SALE,8,Basmati Rice 5kg,Staples,kg,,,0,665,15,Wholesale,1175,sale,Wholesale bulk,0,0,0
+2026-09-21,GRC-002,SALE,5,Sunflower Oil 1L,Oils,pc,,,0,158,0,Delivery,1176,sale,,0,0,0
+2026-09-21,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,15,Wholesale,1177,sale,Wholesale bulk,0,0,0
+2026-09-21,GRC-004,SALE,16,Wheat Atta 10kg,Staples,kg,,,0,53,0,Delivery,1178,sale,,0,0,0
+2026-09-21,GRC-005,SALE,8,Sugar 1kg,Staples,kg,,,0,56,15,Wholesale,1179,sale,Wholesale bulk,0,0,0
+2026-09-21,GRC-006,SALE,3,Tea Powder 500g,Beverages,pc,,,0,265,0,Delivery,1180,sale,,0,0,0
+2026-09-22,GRC-001,SALE,7,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1181,sale,,0,0,0
+2026-09-22,GRC-002,SALE,6,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1182,sale,,0,0,0
+2026-09-22,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1183,sale,,0,0,0
+2026-09-22,GRC-004,SALE,16,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1184,sale,,0,0,0
+2026-09-22,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,0,POS,1185,sale,,0,0,0
+2026-09-22,GRC-006,SALE,3,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1186,sale,,0,0,0
+2026-09-23,GRC-001,SALE,8,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1187,sale,,0,0,0
+2026-09-23,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1188,sale,,0,0,0
+2026-09-23,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1189,sale,,0,0,0
+2026-09-23,GRC-004,SALE,14,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1190,sale,,0,0,0
+2026-09-23,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,0,POS,1191,sale,,0,0,0
+2026-09-23,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1192,sale,,0,0,0
+2026-09-24,GRC-001,SALE,9,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1193,sale,,0,0,0
+2026-09-24,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1194,sale,,0,0,0
+2026-09-24,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1195,sale,,0,0,0
+2026-09-24,GRC-004,SALE,12,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1196,sale,,0,0,0
+2026-09-24,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,0,POS,1197,sale,,0,0,0
+2026-09-24,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1198,sale,,0,0,0
+2026-09-25,GRC-001,SALE,10,Basmati Rice 5kg,Staples,kg,,,0,665,0,Delivery,1199,sale,,0,0,0
+2026-09-25,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,Delivery,1200,sale,,0,0,0
+2026-09-25,GRC-003,SALE,7,Toor Dal 1kg,Staples,kg,,,0,180,0,Delivery,1201,sale,,0,0,0
+2026-09-25,GRC-004,SALE,12,Wheat Atta 10kg,Staples,kg,,,0,53,0,Delivery,1202,sale,,0,0,0
+2026-09-25,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,0,Delivery,1203,sale,,0,0,0
+2026-09-25,GRC-006,SALE,5,Tea Powder 500g,Beverages,pc,,,0,265,0,Delivery,1204,sale,,0,0,0
+2026-09-26,GRC-001,SALE,13,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1205,sale,,0,0,0
+2026-09-26,GRC-002,SALE,8,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1206,sale,,0,0,0
+2026-09-26,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1207,sale,,0,0,0
+2026-09-26,GRC-004,SALE,15,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1208,sale,,0,0,0
+2026-09-26,GRC-005,SALE,11,Sugar 1kg,Staples,kg,,,0,56,0,POS,1209,sale,,0,0,0
+2026-09-26,GRC-006,SALE,6,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1210,sale,,0,0,0
+2026-09-27,GRC-001,SALE,13,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1211,sale,,0,0,0
+2026-09-27,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1212,sale,,0,0,0
+2026-09-27,GRC-003,SALE,7,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1213,sale,,0,0,0
+2026-09-27,GRC-004,SALE,17,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1214,sale,,0,0,0
+2026-09-27,GRC-005,SALE,12,Sugar 1kg,Staples,kg,,,0,56,0,POS,1215,sale,,0,0,0
+2026-09-27,GRC-006,SALE,6,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1216,sale,,0,0,0
+2026-09-28,GRC-001,SALE,10,Basmati Rice 5kg,Staples,kg,,,0,665,15,Wholesale,1217,sale,Wholesale bulk,0,0,0
+2026-09-28,GRC-002,SALE,5,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1218,sale,,0,0,0
+2026-09-28,GRC-003,SALE,6,Toor Dal 1kg,Staples,kg,,,0,180,15,Wholesale,1219,sale,Wholesale bulk,0,0,0
+2026-09-28,GRC-004,SALE,15,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1220,sale,,0,0,0
+2026-09-28,GRC-005,SALE,9,Sugar 1kg,Staples,kg,,,0,56,15,Wholesale,1221,sale,Wholesale bulk,0,0,0
+2026-09-28,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1222,sale,,0,0,0
+2026-09-29,GRC-001,SALE,8,Basmati Rice 5kg,Staples,kg,,,0,665,0,Delivery,1223,sale,,0,0,0
+2026-09-29,GRC-002,SALE,5,Sunflower Oil 1L,Oils,pc,,,0,158,0,Delivery,1224,sale,,0,0,0
+2026-09-29,GRC-003,SALE,7,Toor Dal 1kg,Staples,kg,,,0,180,0,Delivery,1225,sale,,0,0,0
+2026-09-29,GRC-004,SALE,16,Wheat Atta 10kg,Staples,kg,,,0,53,0,Delivery,1226,sale,,0,0,0
+2026-09-29,GRC-005,SALE,9,Sugar 1kg,Staples,kg,,,0,56,0,Delivery,1227,sale,,0,0,0
+2026-09-29,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,Delivery,1228,sale,,0,0,0
+2026-09-30,GRC-001,SALE,8,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1229,sale,,0,0,0
+2026-09-30,GRC-002,SALE,5,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1230,sale,,0,0,0
+2026-09-30,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1231,sale,,0,0,0
+2026-09-30,GRC-004,SALE,16,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1232,sale,,0,0,0
+2026-09-30,GRC-005,SALE,8,Sugar 1kg,Staples,kg,,,0,56,0,POS,1233,sale,,0,0,0
+2026-09-30,GRC-006,SALE,3,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1234,sale,,0,0,0
+2026-10-01,GRC-001,SALE,7,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1235,sale,,0,0,0
+2026-10-01,GRC-002,SALE,6,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1236,sale,,0,0,0
+2026-10-01,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1237,sale,,0,0,0
+2026-10-01,GRC-004,SALE,16,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1238,sale,,0,0,0
+2026-10-01,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,0,POS,1239,sale,,0,0,0
+2026-10-01,GRC-006,SALE,3,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1240,sale,,0,0,0
+2026-10-02,GRC-001,SALE,8,Basmati Rice 5kg,Staples,kg,,,0,665,0,POS,1241,sale,,0,0,0
+2026-10-02,GRC-002,SALE,7,Sunflower Oil 1L,Oils,pc,,,0,158,0,POS,1242,sale,,0,0,0
+2026-10-02,GRC-003,SALE,8,Toor Dal 1kg,Staples,kg,,,0,180,0,POS,1243,sale,,0,0,0
+2026-10-02,GRC-004,SALE,14,Wheat Atta 10kg,Staples,kg,,,0,53,0,POS,1244,sale,,0,0,0
+2026-10-02,GRC-005,SALE,7,Sugar 1kg,Staples,kg,,,0,56,0,POS,1245,sale,,0,0,0
+2026-10-02,GRC-006,SALE,4,Tea Powder 500g,Beverages,pc,,,0,265,0,POS,1246,sale,,0,0,0

@@ -1,0 +1,4 @@
+name,contact_person,phone,email,gstin,address_line,city,state,pincode,payment_terms,rating,is_active,notes
+Krishna Wholesale,Ramesh Iyer,+918045551201,ramesh@krishnawolesale.in,29ABCDE1234F1Z5,14 Industrial Estate,Mysuru,Karnataka,570010,Net 30,4.40,1,Reliable for staples
+FreshFarm Co.,Anita Desai,+918045551302,orders@freshfarm.co.in,29ABCDE1234F1Z6,88 Commercial Road,Bengaluru,Karnataka,560001,Net 15,4.10,1,Best for oils and beverages
+AgriLink Suppliers,Suresh Nair,+918045551403,sales@agrilink.in,29ABCDE1234F1Z7,7 Market Yard,Hassan,Karnataka,573201,Advance 50%,3.80,1,Pulses specialist

@@ -1,0 +1,8 @@
+sku,direction,quantity,unit_cost,reason,occurred_at,reference_type,reference_id,note
+GRC-001,IN,500,620.00,purchase,2026-09-20,manual,,Opening PO delivery
+GRC-003,IN,200,260.00,purchase,2026-09-20,manual,,Opening PO delivery
+GRC-005,IN,80,280.00,purchase,2026-09-26,manual,,Restock
+GRC-006,OUT,25,160.00,sale,2026-10-01,manual,,Counter sale
+GRC-002,OUT,8,165.00,sale,2026-10-01,manual,,Counter sale
+GRC-004,OUT,3,48.00,damage,2026-10-01,manual,,Crushed packets discarded
+GRC-008,OUT,2,20.00,expiry,2026-10-02,manual,,Expired stock removed

@@ -1,0 +1,39 @@
+{
+  "name": "supplyiq-backend",
+  "version": "1.0.0",
+  "description": "SupplyIQ Backend API — Express + MySQL + JWT auth",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node tests/api.test.js",
+    "test:ledger": "node tests/ledger.test.js",
+    "test:csv": "node --test tests/csv.test.js",
+    "test:ui": "node ../frontend/test_render.js && node ../frontend/test_render_regression.js && node ../frontend/test_preview_regression.js",
+    "test:browser": "node ../frontend/test_addstock_browser.js",
+    "test:boot": "node ../frontend/test_dashboard_boot.js",
+    "test:all": "node tests/api.test.js && node tests/ledger.test.js && node --test tests/csv.test.js && npm run test:ui",
+    "test:full": "npm run test:all && npm run test:browser && npm run test:boot",
+    "db:status": "node scripts/migrate.js status",
+    "db:migrate": "node scripts/migrate.js up",
+    "db:rollback": "node scripts/migrate.js down 1",
+    "db:fresh": "node scripts/migrate.js fresh",
+    "db:verify": "node scripts/verify-schema.js",
+    "db:seed": "node scripts/seed-sample.js",
+    "db:check": "node scripts/verify-sample.js",
+    "db:test": "node scripts/test-constraints.js",
+    "migrate:passwords": "node migrate-password-hashes.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^18.0.4",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.24.5",
+    "nodemailer": "^7.0.13"
+  },
+  "devDependencies": {
+    "firebase-admin": "^14.5.0"
+  }
+}

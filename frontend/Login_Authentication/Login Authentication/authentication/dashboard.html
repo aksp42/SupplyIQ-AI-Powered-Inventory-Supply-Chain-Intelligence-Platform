@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Dashboard · SupplyIQ</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK (compat builds) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <!-- Your Firebase config -->
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <div class="dashboard-container">
+    <div class="dashboard-box">
+      <!-- Avatar -->
+      <img class="profile-avatar" id="profileAvatar" alt="Profile photo" hidden>
+
+      <p class="profile-name" id="profileName">Loading…</p>
+      <p class="profile-email" id="profileEmail"></p>
+
+      <div class="profile-detail"><strong>User ID</strong><span id="profileUid">-</span></div>
+      <div class="profile-detail"><strong>Email Verified</strong><span id="profileVerified">-</span></div>
+
+      <p class="session-hint">Session active – refresh the page and you'll stay logged in.</p>
+
+      <button type="button" class="btn btn-primary" id="logoutButton">Log Out</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { onAuthStateChanged, signOut } from './js/auth.js?v=2';
+
+    const avatar = document.getElementById('profileAvatar');
+    const nameEl = document.getElementById('profileName');
+    const emailEl = document.getElementById('profileEmail');
+    const uidEl = document.getElementById('profileUid');
+    const verifiedEl = document.getElementById('profileVerified');
+    const logoutButton = document.getElementById('logoutButton');
+
+    function renderUser(user) {
+      if (user.photoURL) {
+        avatar.src = user.photoURL;
+        avatar.hidden = false;
+      }
+      nameEl.textContent = user.displayName || 'No name';
+      emailEl.textContent = user.email || 'No email';
+      uidEl.textContent = user.uid;
+      verifiedEl.textContent = user.isEmailVerified ? 'Yes' : 'No';
+    }
+
+    // This is the real auth-state "gate":
+    // if there is no logged-in user, redirect to the login page.
+    onAuthStateChanged((state) => {
+      if (!state.isAuthenticated) {
+        window.location.replace('login.html');
+        return;
+      }
+      renderUser(state.user);
+    });
+
+    logoutButton.addEventListener('click', async () => {
+      logoutButton.disabled = true;
+      logoutButton.textContent = 'Logging out…';
+      const result = await signOut();
+      if (result.success) {
+        // Auth state listener fires and redirects to login.
+      } else {
+        logoutButton.disabled = false;
+        logoutButton.textContent = 'Log Out';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+sku,name,category,unit,pack_size,barcode,tax_rate,default_unit_cost,default_sell_price,shelf_life_days
+GRC-001,Basmati Rice 5kg,Staples,pc,5 kg,8901234500017,5.00,620.00,780.00,365
+GRC-002,Sunflower Oil 1L,Oils,L,1 L,8901234500024,12.00,165.00,210.00,270
+GRC-003,Wheat Atta 10kg,Staples,pc,10 kg,8901234500031,5.00,260.00,330.00,180
+GRC-004,Sugar 1kg,Staples,pc,1 kg,8901234500048,5.00,48.00,62.00,365
+GRC-005,Tea Powder 250g,Beverages,pc,250 g,8901234500055,5.00,280.00,355.00,365
+GRC-006,Toor Dal 1kg,Pulses,pc,1 kg,8901234500062,0.00,160.00,205.00,365
+GRC-008,Salt 1kg,Staples,pc,1 kg,8901234500086,5.00,20.00,28.00,730
+GRC-011,Chickpeas 1kg,Pulses,pc,1 kg,8901234500110,0.00,120.00,155.00,365

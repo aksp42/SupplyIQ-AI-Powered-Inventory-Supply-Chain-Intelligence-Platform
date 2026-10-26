@@ -1,0 +1,6 @@
+po_no,supplier,order_date,expected_date,status,payment_terms,source,item_sku,item_quantity,item_unit_cost,item_tax_rate,notes
+PO-2026-0041,Krishna Wholesale,2026-09-20,2026-09-26,ordered,Net 30,manual,GRC-001,20,42.50,5,Weekly staples top-up
+PO-2026-0041,Krishna Wholesale,2026-09-20,2026-09-26,ordered,Net 30,manual,GRC-004,12,180.00,5,Weekly staples top-up
+PO-2026-0042,FreshFarm Co.,2026-09-26,2026-10-03,ordered,Net 15,manual,GRC-006,30,26.00,0,Split delivery expected
+PO-2026-0043,AgriLink Suppliers,2026-09-28,2026-10-05,ordered,Advance 50%,manual,GRC-008,40,58.00,5,Pulses restock
+PO-2026-0044,AgriLink Suppliers,2026-10-02,2026-10-09,draft,Advance 50%,manual,,,,,

@@ -1,0 +1,72 @@
+# Dependencies
+node_modules/
+
+# Environment & secrets — never commit these.
+# .env.example IS committed on purpose; it documents the variables without values.
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+backend/serviceAccountKey.json
+*.pem
+*.key
+
+# Local data
+backend/data/
+*.sqlite
+*.sqlite3
+
+# Database dumps — never commit a copy of real data
+*.dump
+*.sql.gz
+*.sql.bak
+/dumps/
+/backup/
+/backups/
+*-local-backup*/
+*backup-before-git*/
+
+# Build output & logs
+*.log
+*.err
+*.out
+npm-debug.log*
+logs/
+dist/
+build/
+coverage/
+.cache/
+
+# Python bytecode / tooling caches (the ML service under backend/ml)
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.venv/
+venv/
+
+# Trained model artefacts — regenerate, do not commit
+backend/ml/models/registry/
+backend/ml/models/*.pkl
+backend/ml/models/*.joblib
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local scratch
+frontend/*.bak
+frontend/*.bak-*
+*.tmp
+frontend/.tmp-*
+*.orig
+*.rej
+

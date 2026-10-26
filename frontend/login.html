@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Sign in &middot; SupplyIQ</title>
+  <!--
+    This file used to hold a second, independent copy of the login screen. The
+    two copies drifted apart and that drift caused real bugs: one build minted a
+    fake session out of a Firebase UID, and the other kept calling an OTP
+    endpoint that no longer exists. Only public/login.html is maintained now,
+    so this page just forwards to it. Links to /login.html (including the one in
+    signup.html) and old bookmarks keep working.
+  -->
+  <script>
+    // Preserve the query string and hash so deep links still land correctly.
+    (function () {
+      var target = 'public/login.html' + window.location.search + window.location.hash;
+      window.location.replace(target);
+    })();
+  </script>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f4f8f0;
+      font-family: Inter, -apple-system, "Segoe UI", Arial, sans-serif;
+      color: #0f2a24;
+    }
+    .box { text-align: center; padding: 24px; }
+    .box p { color: #61776f; font-size: 14px; margin: 0 0 16px; }
+    a { color: #0f8a5f; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>SupplyIQ</h1>
+    <p>Taking you to the sign-in page&hellip;</p>
+    <a href="public/login.html">Continue</a>
+  </div>
+  <noscript>
+    <p>JavaScript is required. <a href="public/login.html">Open the sign-in page</a>.</p>
+  </noscript>
+</body>
+</html>

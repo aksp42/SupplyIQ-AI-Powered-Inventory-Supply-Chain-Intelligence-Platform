@@ -1,0 +1,362 @@
+/* ============================================================
+   SupplyIQ login - spatial / 3D layer
+   Loaded after style.css. Everything is scoped to body.auth-3d,
+   so dashboard.html is not affected. Used by login.html and signup.html.
+   ============================================================ */
+
+body.auth-3d {
+  --glow: rgba(201, 221, 69, 0.22);
+  color: #fff;
+  background:
+    radial-gradient(1100px 700px at 28% 32%, #0f5a3f 0%, transparent 62%),
+    radial-gradient(800px 600px at 88% 8%, rgba(201, 221, 69, 0.14), transparent 60%),
+    radial-gradient(900px 700px at 70% 100%, rgba(18, 93, 59, 0.5), transparent 60%),
+    linear-gradient(160deg, #06251c 0%, #03130e 55%, #010806 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+
+#scene3d {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.auth-3d .page { position: relative; z-index: 1; }
+.auth-3d .leaf-tr, .auth-3d .leaf-br { display: none; }
+
+/* ---------------------------------------------------------- left column */
+.auth-3d .left {
+  display: flex;
+  flex-direction: column;
+  background: none;
+  min-height: 100vh;
+  padding-bottom: clamp(28px, 4vw, 52px);
+}
+
+.auth-3d .brand-name { text-shadow: 0 4px 24px rgba(0, 0, 0, 0.4); }
+.auth-3d .hero { font-size: clamp(30px, 3vw, 42px); text-shadow: 0 6px 34px rgba(0, 0, 0, 0.45); }
+.auth-3d .lead { max-width: 24em; }
+
+.auth-3d .features {
+  margin-top: auto;
+  padding-top: 36px;
+  perspective: 1000px;
+  gap: 14px;
+}
+
+.auth-3d .feat {
+  --rx: 0deg; --ry: 0deg;
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 18px 16px 16px;
+  border-radius: 16px;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03) 60%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 22px 34px -22px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 0.25s ease-out, box-shadow 0.3s, border-color 0.3s;
+}
+
+.auth-3d .feat:hover {
+  transform: translateY(-8px) rotateX(var(--rx)) rotateY(var(--ry));
+  border-color: rgba(201, 221, 69, 0.55);
+  box-shadow: 0 34px 46px -22px rgba(0, 0, 0, 0.95), 0 0 34px -6px var(--glow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.auth-3d .feat-icon { margin-bottom: 10px; filter: drop-shadow(0 4px 10px rgba(201, 221, 69, 0.35)); }
+.auth-3d .feat h3 { font-size: 14px; }
+.auth-3d .feat p { font-size: 12px; padding-right: 26px; color: rgba(255, 255, 255, 0.68); }
+
+.auth-3d .feat .go {
+  position: absolute;
+  right: 12px; bottom: 12px;
+  display: grid; place-items: center;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e6e250;
+  transition: background 0.2s, transform 0.2s;
+}
+.auth-3d .feat:hover .go { background: rgba(201, 221, 69, 0.28); transform: translateX(2px); }
+
+/* ---------------------------------------------------------- right column: floating glass card */
+.auth-3d .right { background: none; overflow: visible; perspective: 1400px; color: var(--ink); }
+
+.auth-3d .right .card {
+  isolation: isolate;
+  background: linear-gradient(160deg, rgba(255, 253, 244, 0.95), rgba(243, 242, 228, 0.9));
+  -webkit-backdrop-filter: blur(26px) saturate(1.25);
+  backdrop-filter: blur(26px) saturate(1.25);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 26px;
+  box-shadow:
+    0 50px 90px -30px rgba(0, 0, 0, 0.75),
+    0 18px 30px -18px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(201, 221, 69, 0.28),
+    inset 0 1px 0 #fff,
+    inset 0 -18px 30px -24px rgba(18, 93, 59, 0.25);
+  transition: transform 0.18s ease-out;
+  will-change: transform;
+  animation: card-in 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both, float 8s ease-in-out 0.8s infinite;
+}
+
+/* lime rim light + soft ground glow behind the card */
+.auth-3d .right .card::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: 28px;
+  background: linear-gradient(140deg, rgba(201, 221, 69, 0.75), rgba(201, 221, 69, 0) 38%, rgba(47, 158, 88, 0) 65%, rgba(47, 158, 88, 0.55));
+  filter: blur(14px);
+  opacity: 0.55;
+}
+
+/* specular sheen across the top edge */
+.auth-3d .right .card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 28%);
+  pointer-events: none;
+  opacity: 0.55;
+}
+.auth-3d .right .card > * { position: relative; z-index: 1; }
+
+.auth-3d .btn-primary {
+  background: linear-gradient(180deg, #1f7a4d, #0f5233);
+  box-shadow: 0 14px 26px -8px rgba(15, 82, 51, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.auth-3d .btn-primary:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
+.auth-3d .input-wrapper { background: rgba(255, 255, 255, 0.75); box-shadow: inset 0 1px 2px rgba(20, 60, 40, 0.06); }
+.auth-3d .newbox { background: rgba(224, 233, 210, 0.6); }
+.auth-3d .card h1,
+.auth-3d .reset-panel h2 { color: #0f3a2b; }
+
+@keyframes card-in { from { opacity: 0; translate: 0 24px; } to { opacity: 1; translate: 0 0; } }
+@keyframes float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+
+/* ---------------------------------------------------------- floating support widget */
+.chat {
+  position: fixed;
+  right: clamp(14px, 2vw, 28px);
+  bottom: clamp(14px, 2vw, 26px);
+  z-index: 50;
+  display: grid;
+  justify-items: end;
+  gap: 12px;
+}
+
+.chat-toggle {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 10px 8px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(201, 221, 69, 0.4);
+  background: linear-gradient(150deg, rgba(20, 70, 50, 0.85), rgba(6, 30, 22, 0.9));
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 18px 34px -12px rgba(0, 0, 0, 0.8), 0 0 26px -6px var(--glow);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.chat-toggle:hover { transform: translateY(-3px); }
+.chat-toggle:focus-visible { outline: 2px solid #c9dd45; outline-offset: 3px; }
+
+.chat-orb {
+  display: grid; place-items: center;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  font-size: 13px; font-weight: 700; color: #06251c;
+  background: radial-gradient(circle at 35% 30%, #f4ffb0, #9bcf3c 55%, #2f9e58);
+  box-shadow: 0 0 0 4px rgba(201, 221, 69, 0.18), 0 0 18px rgba(201, 221, 69, 0.5);
+}
+.chat-text strong { display: block; font-size: 13.5px; }
+.chat-text span { display: block; margin-top: 1px; font-size: 11px; color: rgba(255, 255, 255, 0.7); }
+.chat-ico { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 12px; background: rgba(255, 255, 255, 0.12); }
+
+.chat-panel {
+  width: min(300px, calc(100vw - 28px));
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(255, 253, 244, 0.97), rgba(243, 242, 228, 0.95));
+  color: #0f3a2b;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(201, 221, 69, 0.3);
+  animation: card-in 0.25s ease-out both;
+}
+.chat-panel p { font-size: 13.5px; line-height: 1.45; color: #405b4f; margin-bottom: 12px; }
+.chat-panel strong { font-size: 14.5px; }
+.chat-panel button {
+  display: block; width: 100%; margin-top: 8px; padding: 11px 12px;
+  border-radius: 10px; border: 1px solid #dde3da; background: #fff;
+  font: inherit; font-size: 13.5px; font-weight: 600; color: #0e6a40; text-align: left; cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+.chat-panel button:hover { background: #eef3e9; transform: translateX(2px); }
+
+/* ---------------------------------------------------------- responsive */
+@media (max-width: 900px) {
+  body.auth-3d { background-attachment: scroll; }
+  .auth-3d .left { min-height: 0; padding-bottom: 14px; }
+  .auth-3d .hero { font-size: 28px; }
+  .auth-3d .lead { max-width: none; }
+  .auth-3d .right { padding: 8px 14px 96px; }
+  .auth-3d .right .card { animation: card-in 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .chat-text, .chat-ico { display: none; }
+  .chat-toggle { padding: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-3d .right .card { animation: none; }
+  .auth-3d .feat:hover { transform: none; }
+}
+
+/* ============================================================
+   Signup page specifics (body.auth-signup)
+   The flat SVG warehouse scene and corner blob are replaced by the
+   WebGL hub; the trust strip flows under the feature cards instead of
+   being pinned to the bottom, and the taller form card is tightened a
+   little so it fits a laptop viewport.
+   ============================================================ */
+body.auth-signup .scene,
+body.auth-signup .blob-bl,
+body.auth-signup .steps { display: none !important; }
+
+body.auth-signup .trust {
+  position: relative !important;
+  left: auto; right: auto; bottom: auto;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  font-size: 13px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+/* ---- fit-to-viewport (desktop): everything scales with viewport height so the
+   whole signup page is visible at 100% zoom without scrolling ---------------- */
+@media (min-width: 901px) {
+  body.auth-signup .page { height: 100vh; height: 100dvh; min-height: 0; }
+  body.auth-signup .left { min-height: 0; height: 100%; }
+
+  /* left column */
+  body.auth-signup .left { padding-top: clamp(14px, 3vh, 44px); padding-bottom: clamp(12px, 2.4vh, 36px); }
+  body.auth-signup .brand svg { width: clamp(40px, 5.4vh, 54px); height: clamp(40px, 5.4vh, 54px); }
+  body.auth-signup .hero { margin-top: clamp(12px, 4vh, 64px); font-size: clamp(24px, min(3vw, 4.6vh), 42px); }
+  body.auth-signup .lead { margin-top: clamp(8px, 1.6vh, 16px); font-size: clamp(12.5px, min(1.15vw, 1.9vh), 16px); }
+  body.auth-signup .features { padding-top: clamp(10px, 2.6vh, 32px); gap: clamp(8px, 1.5vh, 14px); }
+  body.auth-signup .feat { padding: clamp(10px, 1.9vh, 18px) 16px clamp(10px, 1.7vh, 16px); }
+  body.auth-signup .feat-icon { margin-bottom: clamp(2px, 1vh, 10px); }
+  body.auth-signup .trust { margin-top: clamp(8px, 2vh, 20px); }
+
+  /* "how it works" glass steps fill the space under the hero */
+  body.auth-signup .steps {
+    display: grid !important;
+    gap: clamp(6px, 1.2vh, 10px);
+    width: clamp(300px, 26vw, 360px);
+    margin: clamp(10px, 1.8vh, 20px) 0 0;
+    padding: 0;
+    list-style: none;
+    perspective: 1000px;
+  }
+  body.auth-signup .step {
+    --rx: 0deg; --ry: 0deg;
+    display: flex; align-items: center; gap: 12px;
+    padding: clamp(7px, 1.3vh, 12px) 14px;
+    border-radius: 14px;
+    background: linear-gradient(150deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03) 60%);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    box-shadow: 0 16px 26px -20px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    transform: rotateX(var(--rx)) rotateY(var(--ry));
+    transition: transform 0.25s ease-out, box-shadow 0.3s, border-color 0.3s;
+  }
+  body.auth-signup .step:hover {
+    transform: translateY(-3px) rotateX(var(--rx)) rotateY(var(--ry));
+    border-color: rgba(201, 221, 69, 0.55);
+    box-shadow: 0 22px 32px -20px rgba(0, 0, 0, 0.95), 0 0 26px -6px var(--glow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  body.auth-signup .step-n {
+    flex: none; display: grid; place-items: center;
+    width: clamp(24px, 3.6vh, 30px); height: clamp(24px, 3.6vh, 30px);
+    border-radius: 50%;
+    font-size: 13px; font-weight: 700; color: #06251c;
+    background: radial-gradient(circle at 35% 30%, #f4ffb0, #9bcf3c 55%, #2f9e58);
+    box-shadow: 0 0 0 3px rgba(201, 221, 69, 0.16), 0 0 14px rgba(201, 221, 69, 0.4);
+  }
+  body.auth-signup .step h3 { font-size: clamp(12.5px, 1.7vh, 14px); font-weight: 600; line-height: 1.25; }
+  body.auth-signup .step p { margin-top: 2px; font-size: clamp(11px, 1.5vh, 12px); line-height: 1.35; color: rgba(255, 255, 255, 0.68); }
+
+  /* right column: card sits high, small breathing room top and bottom */
+  body.auth-signup .right { height: 100%; align-items: flex-start; padding-block: clamp(10px, 3.6vh, 40px) clamp(10px, 2vh, 24px); }
+  body.auth-signup .right .card { padding: clamp(14px, 2.6vh, 28px) clamp(24px, 2.8vw, 38px); }
+  body.auth-signup .card h1 { font-size: clamp(21px, 3.1vh, 28px); }
+  body.auth-signup .card .sub { margin-top: clamp(2px, .6vh, 5px); font-size: clamp(12px, 1.6vh, 14.5px); }
+  body.auth-signup .form { margin-top: clamp(8px, 2vh, 20px); gap: clamp(6px, 1.7vh, 16px); }
+  body.auth-signup .lbl { margin-bottom: clamp(3px, .8vh, 7px); font-size: clamp(12px, 1.55vh, 14px); }
+  body.auth-signup .input-wrapper { height: clamp(34px, 5.3vh, 48px); }
+  body.auth-signup .input-wrapper input,
+  body.auth-signup .input-wrapper select { font-size: clamp(13px, 1.6vh, 14.5px); }
+  body.auth-signup .err-msg { margin-top: 4px; font-size: 12px; }
+  body.auth-signup .terms { margin-top: 0; }
+  body.auth-signup .check { font-size: clamp(12px, 1.5vh, 13px); }
+  body.auth-signup .btn { padding-block: clamp(8px, 1.5vh, 13px); }
+  body.auth-signup .card .divider { margin-top: clamp(8px, 1.8vh, 18px); }
+  body.auth-signup .card .socials { margin-top: clamp(8px, 1.8vh, 18px); }
+  body.auth-signup .social { height: clamp(34px, 4.9vh, 46px); }
+  body.auth-signup .card .switch { margin-top: clamp(8px, 1.6vh, 16px); font-size: clamp(12px, 1.6vh, 13.5px); }
+
+  /* support widget collapses to just the orb so it never covers the card */
+  body.auth-signup .chat-text,
+  body.auth-signup .chat-ico { display: none; }
+  body.auth-signup .chat-toggle { padding: 6px; }
+}
+
+/* short screens: drop the feature blurbs so the left column fits too */
+@media (min-width: 901px) and (max-height: 860px) {
+  body.auth-signup .feat p,
+  body.auth-signup .feat .go { display: none; }
+}
+
+/* very short screens (e.g. 1366x768 laptops with browser chrome) */
+@media (min-width: 901px) and (max-height: 700px) {
+  body.auth-signup .left { padding-top: 12px; padding-bottom: 10px; }
+  body.auth-signup .hero { margin-top: 8px; font-size: 24px; }
+  body.auth-signup .lead,
+  body.auth-signup .steps { display: none !important; }
+  body.auth-signup .features { padding-top: 8px; gap: 8px; }
+  body.auth-signup .feat { padding: 8px 14px; }
+  body.auth-signup .feat-icon { margin-bottom: 2px; }
+  body.auth-signup .feat-icon svg { width: 20px; height: 20px; }
+  body.auth-signup .trust { margin-top: 8px; }
+
+  body.auth-signup .right { padding-top: 10px; padding-bottom: 8px; }
+  body.auth-signup .right .card { padding: 14px 28px; }
+  body.auth-signup .card .sub { display: none; }
+  body.auth-signup .card h1 { font-size: 21px; }
+  body.auth-signup .form { margin-top: 10px; gap: 8px; }
+  body.auth-signup .lbl { margin-bottom: 3px; }
+  body.auth-signup .input-wrapper { height: 38px; }
+  body.auth-signup .err-msg { margin-top: 2px; }
+  body.auth-signup .btn { padding-block: 9px; }
+  body.auth-signup .social { height: 36px; }
+  body.auth-signup .card .divider,
+  body.auth-signup .card .socials,
+  body.auth-signup .card .switch { margin-top: 9px; }
+}
+
+/* narrow + short (e.g. 1280x720): steps keep only their titles */
+@media (min-width: 901px) and (max-width: 1400px) and (max-height: 760px) {
+  body.auth-signup .step p { display: none; }
+}
