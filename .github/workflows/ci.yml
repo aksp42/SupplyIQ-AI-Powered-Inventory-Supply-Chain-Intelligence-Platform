@@ -567,7 +567,6 @@ jobs:
               -p"${DB_PASSWORD}" \
               --silent \
               > /dev/null 2>&1; then
-
               echo "MySQL is ready"
               exit 0
             fi
@@ -721,6 +720,10 @@ jobs:
         run: |
           docker compose down -v --remove-orphans
           rm -f .env
+
+  # ================================================================
+  # AWS ECR DEPLOYMENT
+  # ================================================================
   deploy-ecr:
     name: Push backend image to AWS ECR
     runs-on: ubuntu-latest
@@ -730,7 +733,9 @@ jobs:
       - frontend-validate
       - docker-build
       - integration
+
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     permissions:
       contents: read
       id-token: write
@@ -738,6 +743,23 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Diagnose GitHub OIDC claims
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('sts.amazonaws.com');
+            const payload = JSON.parse(
+              Buffer.from(token.split('.')[1], 'base64url').toString()
+            );
+            core.info(JSON.stringify({
+              iss: payload.iss,
+              aud: payload.aud,
+              sub: payload.sub,
+              repository: payload.repository,
+              ref: payload.ref,
+              repository_owner: payload.repository_owner
+            }, null, 2));
 
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
