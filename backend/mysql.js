@@ -18,9 +18,9 @@ function getPool() {
         'DB_PASSWORD is not set. Copy backend/.env.example to backend/.env and fill it in.'
       );
     }
-    pool = mysql.createPool({
+    const poolConfig = {
       host:               process.env.DB_HOST     || 'localhost',
-      port:               process.env.DB_PORT     || 3306,
+      port:               Number(process.env.DB_PORT) || 3306,
       user:               process.env.DB_USER     || 'root',
       password,
       database:           process.env.DB_NAME     || 'supplyiq',
@@ -28,7 +28,11 @@ function getPool() {
       connectionLimit:    10,
       timezone:           '+00:00',
       charset:            'utf8mb4',
-    });
+    };
+    if (process.env.DB_SSL === 'true' || process.env.DB_SSL === '1') {
+      poolConfig.ssl = { rejectUnauthorized: false };
+    }
+    pool = mysql.createPool(poolConfig);
   }
   return pool;
 }

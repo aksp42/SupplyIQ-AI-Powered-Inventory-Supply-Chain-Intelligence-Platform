@@ -9,7 +9,10 @@
  * Firebase onAuthStateChanged from auto-restoring the session.
  */
 
-const API = 'http://localhost:4000/api';
+const API = window.API_BASE
+  || (window.location.hostname === 'localhost' && window.location.port === '3000'
+      ? 'http://localhost:4000/api'
+      : '/api');
 
 // ── Session helpers ───────────────────────────────────────────────
 export function saveSession(data) {

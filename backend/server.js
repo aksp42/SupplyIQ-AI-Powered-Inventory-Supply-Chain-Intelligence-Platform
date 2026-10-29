@@ -1633,6 +1633,19 @@ app.post('/api/password/reset', throttleLogin, async (req, res) => {
   res.json({ success: true, message: 'Password updated. You can now sign in.' });
 });
 
+// ── Static Frontend (for unified deployment on Render/Heroku/Docker) ─────────
+const frontendDir = path.join(__dirname, '../frontend');
+if (fs.existsSync(frontendDir)) {
+  app.use((req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    next();
+  });
+  app.use(express.static(frontendDir));
+  app.get('/', (req, res) => {
+    res.redirect('/public/landing.html');
+  });
+}
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 // Body-parser failures happen before any route runs, so without this they reach
 // the browser as an HTML error page with a bare status code. The client cannot

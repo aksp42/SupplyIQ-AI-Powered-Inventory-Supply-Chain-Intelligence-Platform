@@ -69,4 +69,5 @@ frontend/*.bak-*
 frontend/.tmp-*
 *.orig
 *.rej
+*.backup
 

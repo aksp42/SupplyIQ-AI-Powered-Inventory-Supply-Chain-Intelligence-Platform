@@ -12,7 +12,10 @@
 (() => {
   'use strict';
 
-  const API_BASE = 'http://localhost:4000/api';
+  const API_BASE = window.API_BASE
+    || (window.location.hostname === 'localhost' && window.location.port === '3000'
+        ? 'http://localhost:4000/api'
+        : '/api');
 
   // ─── Session helpers ──────────────────────────────────────────────
   function getSession() {

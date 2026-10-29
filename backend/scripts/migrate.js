@@ -38,7 +38,7 @@ function fail(msg) { console.error(`\x1b[31m✖ ${msg}\x1b[0m`); process.exit(1)
 
 async function connect(withDatabase) {
   try {
-    return await mysql.createConnection({
+    const connConfig = {
       host:     process.env.DB_HOST || 'localhost',
       port:     Number(process.env.DB_PORT || 3306),
       user:     process.env.DB_USER || 'root',
@@ -47,7 +47,11 @@ async function connect(withDatabase) {
       multipleStatements: true,
       charset: 'utf8mb4',
       timezone: 'Z',
-    });
+    };
+    if (process.env.DB_SSL === 'true' || process.env.DB_SSL === '1') {
+      connConfig.ssl = { rejectUnauthorized: false };
+    }
+    return await mysql.createConnection(connConfig);
   } catch (err) {
     fail(`Cannot connect to MySQL as ${process.env.DB_USER || 'root'}: ${err.message}`);
   }
