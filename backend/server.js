@@ -1640,10 +1640,13 @@ if (fs.existsSync(frontendDir)) {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
     next();
   });
-  app.use(express.static(frontendDir));
-  app.get('/', (req, res) => {
+  app.get(['/', '/index.html'], (req, res) => {
     res.redirect('/public/landing.html');
   });
+  app.get('/public', (req, res) => {
+    res.redirect('/public/landing.html');
+  });
+  app.use(express.static(frontendDir, { index: false }));
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────

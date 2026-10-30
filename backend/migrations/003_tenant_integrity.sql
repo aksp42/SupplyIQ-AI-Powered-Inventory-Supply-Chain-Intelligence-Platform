@@ -138,6 +138,10 @@ ALTER TABLE import_jobs
 -- ---------------------------------------------------------------------------
 ALTER TABLE roles
   ADD COLUMN org_scope BIGINT UNSIGNED
-    GENERATED ALWAYS AS (COALESCE(organization_id, 0)) STORED,
-  DROP INDEX uq_role_key,
+    GENERATED ALWAYS AS (COALESCE(organization_id, 0)) VIRTUAL;
+
+ALTER TABLE roles
   ADD UNIQUE KEY uq_role_scope_key (org_scope, key_name);
+
+ALTER TABLE roles
+  DROP INDEX uq_role_key;

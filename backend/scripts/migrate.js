@@ -143,14 +143,182 @@ function splitStatements(sql) {
     .filter(s => s.length > 0);
 }
 
+function parseStatement1(sql) {
+  const norm = sql.replace(/\s+/g, ' ').trim();
+  return /^ALTER TABLE\s+stores\s+ADD\s+UNIQUE\s+(?:KEY|INDEX)\s+uq_store_org_store\s*\(\s*organization_id\s*,\s*store_id\s*\)$/i.test(norm);
+}
+
+function parseFkStatement(sql) {
+  const norm = sql.replace(/\s+/g, ' ').trim();
+  const m = norm.match(/^ALTER TABLE\s+(\w+)\s+ADD\s+CONSTRAINT\s+(\w+)\s+FOREIGN\s+KEY\s*\(\s*organization_id\s*,\s*store_id\s*\)\s+REFERENCES\s+stores\s*\(\s*organization_id\s*,\s*store_id\s*\)\s+ON\s+DELETE\s+(NO\s+ACTION|CASCADE)$/i);
+  if (!m) return null;
+  return {
+    table: m[1],
+    constraintName: m[2],
+    deleteRule: m[3].toUpperCase().replace(/\s+/, ' ')
+  };
+}
+
+async function verifyStoresUniqueKey(conn) {
+  const [rows] = await conn.query(
+    `SELECT COLUMN_NAME, NON_UNIQUE, SEQ_IN_INDEX
+       FROM information_schema.statistics
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'stores'
+        AND INDEX_NAME = 'uq_store_org_store'
+      ORDER BY SEQ_IN_INDEX`
+  );
+  if (rows.length !== 2) {
+    throw new Error(
+      `Verification failed: uq_store_org_store on stores expected 2 columns, found ${rows.length}.`
+    );
+  }
+  if (Number(rows[0].NON_UNIQUE) !== 0 || Number(rows[1].NON_UNIQUE) !== 0) {
+    throw new Error(
+      `Verification failed: uq_store_org_store on stores is not marked UNIQUE.`
+    );
+  }
+  if (Number(rows[0].SEQ_IN_INDEX) !== 1 || rows[0].COLUMN_NAME !== 'organization_id') {
+    throw new Error(
+      `Verification failed: uq_store_org_store on stores column at position 1 is '${rows[0].COLUMN_NAME}', expected 'organization_id'.`
+    );
+  }
+  if (Number(rows[1].SEQ_IN_INDEX) !== 2 || rows[1].COLUMN_NAME !== 'store_id') {
+    throw new Error(
+      `Verification failed: uq_store_org_store on stores column at position 2 is '${rows[1].COLUMN_NAME}', expected 'store_id'.`
+    );
+  }
+  return true;
+}
+
+async function verifyTenantForeignKey(conn, { table, constraintName, deleteRule }) {
+  const [rcRows] = await conn.query(
+    `SELECT TABLE_NAME, REFERENCED_TABLE_NAME, UNIQUE_CONSTRAINT_SCHEMA, DELETE_RULE,
+            DATABASE() AS CURRENT_DB
+       FROM information_schema.referential_constraints
+      WHERE CONSTRAINT_SCHEMA = DATABASE()
+        AND TABLE_NAME = ?
+        AND CONSTRAINT_NAME = ?`,
+    [table, constraintName]
+  );
+  if (rcRows.length !== 1) {
+    throw new Error(
+      `Verification failed: foreign key '${constraintName}' on table '${table}' expected 1 referential constraint row, found ${rcRows.length}.`
+    );
+  }
+  const rc = rcRows[0];
+  if (!rc.CURRENT_DB || !rc.UNIQUE_CONSTRAINT_SCHEMA ||
+      rc.UNIQUE_CONSTRAINT_SCHEMA.toLowerCase() !== rc.CURRENT_DB.toLowerCase()) {
+    throw new Error(
+      `Verification failed: foreign key '${constraintName}' references unique constraint in schema '${rc.UNIQUE_CONSTRAINT_SCHEMA}', expected current database '${rc.CURRENT_DB}'.`
+    );
+  }
+  if (rc.TABLE_NAME.toLowerCase() !== table.toLowerCase()) {
+    throw new Error(
+      `Verification failed: foreign key '${constraintName}' belongs to table '${rc.TABLE_NAME}', expected '${table}'.`
+    );
+  }
+  if (rc.REFERENCED_TABLE_NAME.toLowerCase() !== 'stores') {
+    throw new Error(
+      `Verification failed: foreign key '${constraintName}' references '${rc.REFERENCED_TABLE_NAME}', expected 'stores'.`
+    );
+  }
+
+  const actualRule = rc.DELETE_RULE ? rc.DELETE_RULE.toUpperCase() : '';
+  const ruleMatches =
+    (deleteRule === 'NO ACTION' && (actualRule === 'NO ACTION' || actualRule === 'RESTRICT')) ||
+    actualRule === deleteRule;
+  if (!ruleMatches) {
+    throw new Error(
+      `Verification failed: foreign key '${constraintName}' on '${table}' has DELETE_RULE '${actualRule}', expected '${deleteRule}'.`
+    );
+  }
+
+  const [kcuRows] = await conn.query(
+    `SELECT COLUMN_NAME, REFERENCED_TABLE_SCHEMA, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME, ORDINAL_POSITION,
+            DATABASE() AS CURRENT_DB
+       FROM information_schema.key_column_usage
+      WHERE CONSTRAINT_SCHEMA = DATABASE()
+        AND TABLE_NAME = ?
+        AND CONSTRAINT_NAME = ?
+      ORDER BY ORDINAL_POSITION`,
+    [table, constraintName]
+  );
+  if (kcuRows.length !== 2) {
+    throw new Error(
+      `Verification failed: foreign key '${constraintName}' on '${table}' expected 2 key columns, found ${kcuRows.length}.`
+    );
+  }
+  for (let idx = 0; idx < 2; idx++) {
+    const row = kcuRows[idx];
+    if (!row.CURRENT_DB || !row.REFERENCED_TABLE_SCHEMA ||
+        row.REFERENCED_TABLE_SCHEMA.toLowerCase() !== row.CURRENT_DB.toLowerCase()) {
+      throw new Error(
+        `Verification failed: foreign key '${constraintName}' column at position ${idx + 1} references schema '${row.REFERENCED_TABLE_SCHEMA}', expected current database '${row.CURRENT_DB}'.`
+      );
+    }
+  }
+  if (Number(kcuRows[0].ORDINAL_POSITION) !== 1 ||
+      kcuRows[0].COLUMN_NAME !== 'organization_id' ||
+      kcuRows[0].REFERENCED_TABLE_NAME.toLowerCase() !== 'stores' ||
+      kcuRows[0].REFERENCED_COLUMN_NAME !== 'organization_id') {
+    throw new Error(
+      `Verification failed: foreign key '${constraintName}' column 1 mapping is (${kcuRows[0].COLUMN_NAME} -> ${kcuRows[0].REFERENCED_TABLE_NAME}.${kcuRows[0].REFERENCED_COLUMN_NAME}), expected organization_id -> stores.organization_id at position 1.`
+    );
+  }
+  if (Number(kcuRows[1].ORDINAL_POSITION) !== 2 ||
+      kcuRows[1].COLUMN_NAME !== 'store_id' ||
+      kcuRows[1].REFERENCED_TABLE_NAME.toLowerCase() !== 'stores' ||
+      kcuRows[1].REFERENCED_COLUMN_NAME !== 'store_id') {
+    throw new Error(
+      `Verification failed: foreign key '${constraintName}' column 2 mapping is (${kcuRows[1].COLUMN_NAME} -> ${kcuRows[1].REFERENCED_TABLE_NAME}.${kcuRows[1].REFERENCED_COLUMN_NAME}), expected store_id -> stores.store_id at position 2.`
+    );
+  }
+  return true;
+}
+
 async function applyMigration(conn, m) {
   const statements = splitStatements(m.sql);
   const started = Date.now();
   for (let i = 0; i < statements.length; i++) {
+    const stmt = statements[i];
     try {
-      await conn.query(statements[i]);
+      await conn.query(stmt);
     } catch (err) {
-      const firstLine = statements[i].split('\n').find(l => l.trim()) || '';
+      // For migration 003 only: handle resumable statements 1–21 if they already exist
+      if (m.version === '003' && i < 21) {
+        const isDuplicateErr =
+          err.errno === 1061 ||
+          err.errno === 1826 ||
+          err.code === 'ER_DUP_KEYNAME' ||
+          err.code === 'ER_FK_DUP_NAME' ||
+          (err.errno === 1005 && /foreign key.*already exists|duplicate/i.test(err.message));
+
+        if (isDuplicateErr) {
+          if (i === 0) {
+            if (!parseStatement1(stmt)) {
+              throw new Error(
+                `Migration 003 statement 1 failed with duplicate key, but SQL was not recognized as intended stores unique index statement.`
+              );
+            }
+            await verifyStoresUniqueKey(conn);
+            console.log(`  ℹ Statement 1/${statements.length} (uq_store_org_store) verified already present; safely resuming.`);
+            continue;
+          } else {
+            const fkSpec = parseFkStatement(stmt);
+            if (!fkSpec) {
+              throw new Error(
+                `Migration 003 statement ${i + 1} failed with duplicate foreign key, but SQL was not recognized as an intended foreign key statement.`
+              );
+            }
+            await verifyTenantForeignKey(conn, fkSpec);
+            console.log(`  ℹ Statement ${i + 1}/${statements.length} (${fkSpec.constraintName}) verified already present; safely resuming.`);
+            continue;
+          }
+        }
+      }
+
+      const firstLine = stmt.split('\n').find(l => l.trim()) || '';
       err.message = `migration ${m.version} (${m.file}) failed on statement ${i + 1}/${statements.length}:\n` +
                     `${firstLine.slice(0, 120)}\n  → ${err.message}`;
       throw err;
