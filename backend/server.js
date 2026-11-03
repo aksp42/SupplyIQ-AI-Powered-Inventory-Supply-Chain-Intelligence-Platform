@@ -148,7 +148,7 @@ async function provisionWorkspaceForUser({
           firebase_uid, email_verified_at, status)
        VALUES (?,?,?,?,?,?,?,?,?, 'active')`,
       [email, passwordHash || null, name, phone || null, storeId, businessKey,
-       provider || 'email', firebaseUid || null, emailVerifiedAt || new Date()]);
+       provider || 'email', firebaseUid || null, emailVerifiedAt ? emailVerifiedAt : null]);
     const userId = user.insertId;
 
     await tx.run('UPDATE organizations SET owner_user_id = ? WHERE id = ?', [userId, orgId]);
@@ -1371,7 +1371,7 @@ app.post('/api/login', throttleLogin, async (req, res) => {
 // ── Auth: Signup (email/password) ─────────────────────────────────────────────
 app.post('/api/signup', throttleLogin, async (req, res) => {
   try {
-    const { name, email, password, businessType, phone, code } = req.body;
+    const { name, email, password, businessType, phone } = req.body;
     if (!name || !email || !password)
       return res.status(400).json({ error: 'Name, email and password are required.' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
@@ -1387,16 +1387,6 @@ const existing = await queryOne('SELECT id FROM users WHERE email = ?', [normalE
     if (existing)
       return res.status(409).json({ error: 'An account with this email already exists. Please log in.' });
 
-    // Email ownership is proven before the account exists — the code was issued
-    // for this address and consumed here, so it cannot be reused for another signup.
-    const otp = await verifyCode({ email: normalEmail, code, purpose: OTP_PURPOSE.SIGNUP });
-    if (!otp.verified) {
-      const error = otp.reason === 'expired' ? 'That code has expired. Request a new one.'
-                 : otp.reason === 'locked'  ? 'Too many incorrect attempts. Request a new code.'
-                 : 'That verification code is not correct.';
-      return res.status(400).json({ error });
-    }
-
 const passwordHash = await hashPassword(password);
 
 // The whole workspace — organization, store, catalogue, opening stock and this
@@ -1404,7 +1394,7 @@ const passwordHash = await hashPassword(password);
 // fails, nothing is left behind, so a retry starts clean.
 const { storeId, userId } = await provisionWorkspaceForUser({
   name, email: normalEmail, businessType, phone,
-  passwordHash, provider: 'email', emailVerifiedAt: new Date(),
+  passwordHash, provider: 'email', emailVerifiedAt: null,
 });
 
 const user  = await queryOne('SELECT * FROM users WHERE id = ?', [userId]);

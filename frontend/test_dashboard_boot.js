@@ -15,7 +15,7 @@
 // Isolation
 // ---------
 // The suite signs up a throwaway tenant through the same public endpoints a real
-// shop uses (/api/otp/send + /api/signup), creates its one product there, and
+// shop uses (/api/signup), creates its one product there, and
 // tears the whole tenant down afterwards. It never signs in as the demo user and
 // never writes to the demo store, so running it cannot disturb real data — an
 // earlier version of this file seeded "Boot Check Widget" into demo-store-01,
@@ -350,12 +350,8 @@ async function destroyTenant(storeId, email) {
 // endpoint so the browser session carries a genuine JWT.
 //
 // The tenant rows are inserted directly rather than through /api/signup because
-// signup is gated on an emailed OTP, and /api/otp/send only hands the code back
-// when SMTP is unconfigured. Rather than unset SMTP to obtain it — which would
-// risk mailing a real address, and would make the test's behaviour depend on the
-// host's mail config — the rows this suite needs are written here and everything
-// downstream of them (the token, the session, every dashboard fetch) still goes
-// through the real server.
+// the boot-test suite is a headless Node script that doesn't want to depend on
+// the database being in a clean state, and direct insertion keeps it self-contained.
 //
 // There is deliberately no fallback to the demo account: if the tenant cannot be
 // created the run fails rather than quietly writing into real data.

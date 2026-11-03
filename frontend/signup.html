@@ -833,9 +833,9 @@
         return;
       }
 
-      // ── Step 1: Create Firebase account ──────────────────────────
+      // Submit directly — no OTP step required.
       setBusy(submitBtn, true, 'Creating account…');
-      const result = await emailSignUp(email, password, name, type);
+      const result = await emailSignUp(name, email, password, type);
       setBusy(submitBtn, false, '');
 
       if (!result.success) {
@@ -851,18 +851,8 @@
         return;
       }
 
-      // ── Step 2: Send OTP for email verification ───────────────────
-      setBusy(submitBtn, true, 'Sending verification code…');
-      const otpRes = await sendOTPRequest(email, name);
-      setBusy(submitBtn, false, '');
-
-      if (otpRes.success || otpRes.error?.includes('already sent')) {
-        showOTPModal(email, name);
-        showMessage(`Verification code sent to ${email}`, 'success');
-      } else {
-        showMessage('Account created! Welcome to SupplyIQ 🎉', 'success');
-        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1200);
-      }
+      showMessage('Account created! Welcome to SupplyIQ 🎉', 'success');
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 1200);
     }
 
     // ── Auth State ────────────────────────────────────────────────

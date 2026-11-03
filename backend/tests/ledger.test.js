@@ -81,26 +81,15 @@ async function waitForServer(tries = 40) {
 }
 
 /**
- * Sign up a real tenant. The signup code is normally emailed, so the
- * verification code is written straight into otp_codes using the same HMAC the
- * server hashes with; that keeps the test runnable without an SMTP relay while
- * still exercising the genuine signup path.
+ * Sign up a real tenant. OTP verification has been removed from the signup
+ * flow, so this calls /api/signup directly without needing to seed otp_codes.
  */
 async function signup(label, businessType = 'grocery') {
   const email = `ledger-${label}-${RUN}@test.local`;
-  const code = '246810';
-  const pepper = process.env.OTP_PEPPER || process.env.JWT_SECRET;
-  const codeHash = crypto.createHmac('sha256', pepper)
-    .update(`${email}:${code}`).digest('hex');
-
-  await run(
-    `INSERT INTO otp_codes (email, purpose, code_hash, expires_at, attempts)
-     VALUES (?, 'signup', ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE), 0)`,
-    [email, codeHash]);
 
   const res = await api('POST', '/signup', {
     name: `Ledger ${label} ${RUN}`, email, password: 'Ledger@1234',
-    businessType, phone: '', code,
+    businessType, phone: '',
   });
   assert.strictEqual(res.status, 201, `signup failed: ${JSON.stringify(res.body)}`);
   assert.ok(res.body.token, 'signup must return a token');

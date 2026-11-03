@@ -108,7 +108,7 @@
   const auth = {
     login:      (email, password)           => api.post('/login', { email, password }),
     signup:     (name, email, password, businessType, phone, code) =>
-                api.post('/signup', { name, email, password, businessType, phone, code }),
+                api.post('/signup', { name, email, password, businessType, phone, ...(code ? { code } : {}) }),
     firebase:   (idToken)                   => api.post('/auth/firebase', { idToken }),
     me:         ()                          => api.get('/me'),
     permissions:()                          => api.get('/me/permissions'),

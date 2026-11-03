@@ -338,17 +338,6 @@
             <p class="err-msg" id="termsErr" aria-live="polite"></p>
           </div>
 
-          <!-- Email verification code -->
-          <div id="otpBlock" hidden>
-            <label class="lbl" for="signupOtp">Verification code</label>
-            <div class="input-wrapper" id="otpWrapper">
-              <svg class="input-icon icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a5 5 0 0 1 5 5v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1V7a5 5 0 0 1 5-5zm-3 8h6V7a3 3 0 0 0-6 0v3z" fill="currentColor"/></svg>
-              <input class="input" type="text" id="signupOtp" name="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code" aria-describedby="otpErr">
-            </div>
-            <p class="err-msg" id="otpErr" aria-live="polite"></p>
-            <p class="err-msg" id="otpHint" style="color:var(--ink2);font-size:12px">We sent a 6-digit code to <span id="otpEmail"></span>.</p>
-          </div>
-
           <button type="submit" class="btn btn-primary" id="submitBtn">
             Create Account
             <svg class="icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -416,7 +405,7 @@
   <script src="js/login-3d.js"></script>
 
   <script type="module">
-    import { googleSignIn, microsoftSignIn, emailSignUp, sendOtp, onAuthStateChanged } from './js/auth.js?v=5';
+    import { googleSignIn, microsoftSignIn, emailSignUp, onAuthStateChanged } from './js/auth.js?v=5';
 
     // ── DOM refs ──────────────────────────────────────────────────
     const messageEl   = document.getElementById('message');
@@ -442,12 +431,6 @@
     const passwordErr = document.getElementById('passwordErr');
     const confirmErr  = document.getElementById('confirmErr');
 const typeErr    = document.getElementById('typeErr');
-
-    // OTP step state: hidden until the rest of the form validates, then the code
-    // is sent and the user stays on this page to confirm it.
-    const otpBlock  = document.getElementById('otpBlock');
-    const otpWrapper = document.getElementById('otpWrapper');
-    const otpErr    = document.getElementById('otpErr');
     const termsErr    = document.getElementById('termsErr');
 
     let messageTimer = null;
@@ -714,40 +697,9 @@ const typeErr    = document.getElementById('typeErr');
         return;
       }
 
-      const otpCode = document.getElementById('signupOtp').value.trim();
-
-      // Step 1 — all details valid, so send the verification code first.
-      if (otpBlock.hidden) {
-        setBusy(submitBtn, true, 'Sending code…');
-        const sent = await sendOtp(email, 'signup');
-        setBusy(submitBtn, false, '');
-        if (!sent.success) {
-          if (sent.error.toLowerCase().includes('already')) {
-            setFieldError(emailWrapper, emailErr, sent.error);
-            document.getElementById('signupEmail').focus();
-          } else {
-            showMessage(sent.error, 'error');
-          }
-          return;
-        }
-        otpBlock.hidden = false;
-        document.getElementById('otpEmail').textContent = email;
-        document.getElementById('signupOtp').value = '';
-        document.getElementById('signupOtp').focus();
-        showMessage(sent.devCode ? `Code sent. (dev: ${sent.devCode})` : `Verification code sent to ${email}.`, 'success');
-        return;
-      }
-
-      // Step 2 — code entered, create the account.
-      if (!/^\d{6}$/.test(otpCode)) {
-        setFieldError(otpWrapper, otpErr, 'Enter the 6-digit code from your email.');
-        document.getElementById('signupOtp').focus();
-        return;
-      }
-      setFieldError(otpWrapper, otpErr, '');
-
+      // Submit directly — no OTP step required.
       setBusy(submitBtn, true, 'Creating account…');
-      const result = await emailSignUp(name, email, password, type, otpCode);
+      const result = await emailSignUp(name, email, password, type);
       setBusy(submitBtn, false, '');
 
       if (!result.success) {
@@ -757,11 +709,6 @@ const typeErr    = document.getElementById('typeErr');
         } else if (result.error.toLowerCase().includes('password') || result.error.toLowerCase().includes('weak')) {
           setFieldError(passwordWrapper, passwordErr, result.error);
           document.getElementById('signupPassword').focus();
-        } else if (result.error.toLowerCase().includes('code')) {
-          // Wrong/expired code — keep the user on step 2 to try again.
-          setFieldError(otpWrapper, otpErr, result.error);
-          document.getElementById('signupOtp').value = '';
-          document.getElementById('signupOtp').focus();
         } else {
           showMessage(result.error, 'error');
         }

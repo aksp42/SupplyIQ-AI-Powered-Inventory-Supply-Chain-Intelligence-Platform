@@ -126,10 +126,12 @@ export async function emailSignIn(email, password) {
 // ── Email / Password Sign Up → OWN BACKEND ───────────────────────
 export async function emailSignUp(name, email, password, businessType = '', code = '') {
   try {
+    const payload = { name, email, password, businessType };
+    if (code) payload.code = code;
     const res  = await fetch(`${API}/signup`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ name, email, password, businessType, code }),
+      body:    JSON.stringify(payload),
     });
     const data = await res.json();
     if (!res.ok) return { success: false, error: data.error || 'Signup failed.' };

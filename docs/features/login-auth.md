@@ -16,7 +16,7 @@ door the user came through:
 | Flow | Endpoint | Proves identity with |
 |---|---|---|
 | Email + password | `POST /api/login` | bcrypt hash comparison |
-| New account | `POST /api/signup` | emailed OTP, then a password is set |
+| New account | `POST /api/signup` | password validation (no OTP required) |
 | Google | `POST /api/auth/firebase` | Firebase ID token → `identitytoolkit` lookup |
 | Microsoft | `POST /api/auth/firebase` | same endpoint; provider is read from the token |
 | Password reset | `POST /api/password/reset` | emailed OTP, then a new password |
