@@ -1308,6 +1308,7 @@ app.post('/api/imports/:id/commit', requireAuth, requireStore, async (req, res) 
     res.json({ success: true, ...result,
       message: `Imported ${result.created} new and updated ${result.updated} row(s).` });
   } catch (err) {
+    console.error(`[POST /api/imports/${req.params.id}/commit failed]:`, err);
     // Mark the job failed so the history shows why it stopped, but only when the
     // failure was ours — a 409 (already committed / not ready) is a state the
     // job was already in.

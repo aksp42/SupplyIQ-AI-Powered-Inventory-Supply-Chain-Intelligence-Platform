@@ -4,7 +4,7 @@
   "description": "SupplyIQ Backend API — Express + MySQL + JWT auth",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node scripts/migrate.js up && node server.js",
     "dev": "node server.js",
     "test": "node tests/api.test.js",
     "test:ledger": "node tests/ledger.test.js",

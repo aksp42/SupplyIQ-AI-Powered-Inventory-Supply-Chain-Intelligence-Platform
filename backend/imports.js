@@ -796,6 +796,7 @@ async function commit({ jobId, organizationId, storeId, userId }) {
   try {
     result = await applyRows({ tx: null, jobId, job, rows, organizationId, storeId, userId });
   } catch (err) {
+    console.error(`[Import Commit Failed] Job #${jobId} error:`, err);
     // withTransaction has already rolled every row back, including the
     // 'committing' status write that happened inside it, so the job is still
     // sitting at 'ready'. Left there it looked retryable with no explanation, and
@@ -826,6 +827,8 @@ function safeCommitError(err) {
   const code = err && err.code;
   const msg = String((err && err.message) || '');
 
+  if (code === 'ER_BAD_FIELD_ERROR' || /unknown column/i.test(msg))
+    return 'The import failed because the database schema is missing required columns. Please run database migrations (npm run db:migrate) or contact support.';
   if (code === 'ER_DATA_TOO_LONG')
     return 'A value in the file is longer than its field allows, so the import was rolled back and nothing was saved. Shorten it and validate the file again.';
   if (code === 'ER_DUP_ENTRY')

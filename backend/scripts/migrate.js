@@ -318,6 +318,29 @@ async function applyMigration(conn, m) {
         }
       }
 
+      // Handle additive columns and check constraints that may already exist (e.g. on TiDB / recovery)
+      if (
+        (err.errno === 1060 || err.code === 'ER_DUP_FIELDNAME') &&
+        /ADD COLUMN/i.test(stmt)
+      ) {
+        console.log(`  ℹ Statement ${i + 1}/${statements.length} column already exists; safely continuing.`);
+        continue;
+      }
+      if (
+        (err.errno === 3823 || err.errno === 1091 || /check constraint.*doesn't exist|can't drop/i.test(err.message)) &&
+        /DROP CHECK/i.test(stmt)
+      ) {
+        console.log(`  ℹ Statement ${i + 1}/${statements.length} check constraint not found to drop; safely continuing.`);
+        continue;
+      }
+      if (
+        (err.errno === 3822 || /duplicate check constraint/i.test(err.message)) &&
+        /ADD CONSTRAINT.*CHECK/i.test(stmt)
+      ) {
+        console.log(`  ℹ Statement ${i + 1}/${statements.length} check constraint already present; safely continuing.`);
+        continue;
+      }
+
       const firstLine = stmt.split('\n').find(l => l.trim()) || '';
       err.message = `migration ${m.version} (${m.file}) failed on statement ${i + 1}/${statements.length}:\n` +
                     `${firstLine.slice(0, 120)}\n  → ${err.message}`;
