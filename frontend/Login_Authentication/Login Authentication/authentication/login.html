@@ -187,17 +187,7 @@
               </svg>
               <span>Continue with Google</span>
             </button>
-
-            <button type="button" class="social" id="microsoftButton" aria-label="Continue with Microsoft">
-              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="2" y="2" width="9.5" height="9.5" fill="#F25022"/>
-                <rect x="12.5" y="2" width="9.5" height="9.5" fill="#7FBA00"/>
-                <rect x="2" y="12.5" width="9.5" height="9.5" fill="#00A4EF"/>
-                <rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#FFB900"/>
-              </svg>
-              <span>Continue with Microsoft</span>
-            </button>
-          </div>
+            </div>
 
           <div class="newbox">
             <strong>New to SupplyIQ?</strong>
@@ -270,7 +260,7 @@
   <script src="js/login-3d.js"></script>
 
   <script type="module">
-    import { googleSignIn, microsoftSignIn, emailSignIn, resetPassword, onAuthStateChanged } from './js/auth.js?v=2';
+    import { googleSignIn, emailSignIn, resetPassword, onAuthStateChanged } from './js/auth.js?v=2';
 
     // DOM Elements
     const loginCard = document.getElementById('loginCard');
@@ -290,7 +280,6 @@
 
     // Buttons
     const googleBtn = document.getElementById('googleButton');
-    const microsoftBtn = document.getElementById('microsoftButton');
     const submitBtn = document.getElementById('submitBtn');
     const forgotLink = document.getElementById('forgotLink');
     const backToLoginLink = document.getElementById('backToLoginLink');
@@ -384,18 +373,6 @@
       }
     }
 
-    async function handleMicrosoft() {
-      clearFieldErrors();
-      setBusy(microsoftBtn, true, 'Signing in…');
-      const result = await microsoftSignIn();
-      setBusy(microsoftBtn, false, '');
-      if (result.success) {
-        window.location.href = getRedirectUrl();
-      } else {
-        showMessage(result.error, 'error');
-      }
-    }
-
     async function handleLogin(event) {
       event.preventDefault();
       clearFieldErrors();
@@ -469,7 +446,6 @@
 
     // ============ Event Listeners ============
     googleBtn.addEventListener('click', handleGoogle);
-    microsoftBtn.addEventListener('click', handleMicrosoft);
     loginForm.addEventListener('submit', handleLogin);
     forgotLink.addEventListener('click', showResetPanel);
     backToLoginLink.addEventListener('click', showLoginPanel);

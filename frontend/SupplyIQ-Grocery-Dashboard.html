@@ -239,6 +239,16 @@ input.f{width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;marg
 </style>
 </head>
 <body>
+<div id="demoBanner" style="display:none;background:linear-gradient(90deg,#0b3b34,#12a05f);color:#fff;padding:8px 18px;font-size:12.5px;font-weight:600;align-items:center;justify-content:space-between;box-shadow:0 3px 12px rgba(0,0,0,.2);z-index:1001;position:relative">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="background:#3ddc97;color:#062a24;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px">Demo Mode</span>
+    <span>Exploring SupplyIQ with sample grocery store data (No registration required).</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+    <a href="public/signup.html" style="background:#3ddc97;color:#062a24;padding:4px 12px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:700">Create Free Account</a>
+    <a href="public/login.html" onclick="localStorage.removeItem('siq_session');localStorage.removeItem('siq-store');" style="color:#dcfce7;text-decoration:underline;font-size:12px">Exit Demo</a>
+  </div>
+</div>
 <div class="dock-nav-wrap">
   <nav id="nav" class="dock-nav"></nav>
 </div>
@@ -351,11 +361,38 @@ let STORE_ID = null;
 
 /* Initialize session and storeId from siqApi */
 (async function initSession() {
-  const sess = siqApi.getSession();
+  const isDemoParam = new URLSearchParams(window.location.search).get('demo') === '1';
+  let sess = siqApi.getSession();
+  if (isDemoParam || sess?.isDemo) {
+    if (!sess || !sess.isDemo) {
+      sess = {
+        success: true,
+        token: 'demo-guest-token',
+        storeId: 'demo-store-01',
+        storeName: 'SupplyIQ Supermarket (Demo Store)',
+        userName: 'Demo Visitor',
+        ownerName: 'Demo Store',
+        email: 'demo@supplyiq.local',
+        theme: 'green',
+        isDemo: true
+      };
+      try {
+        localStorage.removeItem('siq_signed_out');
+        localStorage.setItem('siq_session', JSON.stringify(sess));
+        localStorage.setItem('siq-store', sess.storeId);
+      } catch {}
+    }
+  }
+
   if (!sess) { window.location.replace('public/login.html'); return; }
   // siqApi already validates token expiry on each request (401 handling)
   STORE_ID = siqApi.getStoreId();
   if (!STORE_ID) { window.location.replace('public/login.html'); return; }
+
+  if (sess.isDemo) {
+    const banner = document.getElementById('demoBanner');
+    if (banner) banner.style.display = 'flex';
+  }
 })();
 
 /* =====================  HELPERS  ===================== */

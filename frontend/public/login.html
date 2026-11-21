@@ -191,15 +191,12 @@
               </svg>
               <span>Continue with Google</span>
             </button>
+          </div>
 
-            <button type="button" class="social" id="microsoftButton" aria-label="Continue with Microsoft">
-              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="2" y="2" width="9.5" height="9.5" fill="#F25022"/>
-                <rect x="12.5" y="2" width="9.5" height="9.5" fill="#7FBA00"/>
-                <rect x="2" y="12.5" width="9.5" height="9.5" fill="#00A4EF"/>
-                <rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#FFB900"/>
-              </svg>
-              <span>Continue with Microsoft</span>
+          <div class="demo-box" style="margin-top: 16px; padding: 12px 14px; background: rgba(34, 181, 115, 0.08); border: 1px dashed #22b573; border-radius: 10px; text-align: center;">
+            <div style="font-size: 12.5px; font-weight: 600; color: #0b4030; margin-bottom: 6px;">Want to explore without registering?</div>
+            <button type="button" id="demoBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: #fff; color: #0b4030; border: 1.5px solid #22b573; font-weight: 600; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: all .15s ease;">
+              <span>⚡ Explore Demo Dashboard</span>
             </button>
           </div>
 
@@ -299,7 +296,7 @@
     const _sess = localStorage.getItem('siq_session');
     if (_sess) { try { const _s = JSON.parse(_sess); if (_s && _s.token) window.location.replace('../SupplyIQ-Grocery-Dashboard.html'); } catch {} }
 
-    import { googleSignIn, microsoftSignIn, emailSignIn, sendOtp, resetPasswordWithOtp, onAuthStateChanged } from './js/auth.js?v=5';
+    import { googleSignIn, emailSignIn, sendOtp, resetPasswordWithOtp, onAuthStateChanged } from './js/auth.js?v=5';
 
     // DOM Elements
     const loginCard = document.getElementById('loginCard');
@@ -319,7 +316,6 @@
 
     // Buttons
     const googleBtn = document.getElementById('googleButton');
-    const microsoftBtn = document.getElementById('microsoftButton');
     const submitBtn = document.getElementById('submitBtn');
     const forgotLink = document.getElementById('forgotLink');
     const backToLoginLink = document.getElementById('backToLoginLink');
@@ -409,18 +405,6 @@
       setBusy(googleBtn, true, 'Signing in…');
       const result = await googleSignIn();
       setBusy(googleBtn, false, '');
-      if (result.success) {
-        window.location.href = getRedirectUrl();
-      } else {
-        showMessage(result.error, 'error');
-      }
-    }
-
-    async function handleMicrosoft() {
-      clearFieldErrors();
-      setBusy(microsoftBtn, true, 'Signing in…');
-      const result = await microsoftSignIn();
-      setBusy(microsoftBtn, false, '');
       if (result.success) {
         window.location.href = getRedirectUrl();
       } else {
@@ -538,12 +522,32 @@
 
     // ============ Event Listeners ============
     googleBtn.addEventListener('click', handleGoogle);
-    microsoftBtn.addEventListener('click', handleMicrosoft);
     loginForm.addEventListener('submit', handleLogin);
     forgotLink.addEventListener('click', showResetPanel);
     backToLoginLink.addEventListener('click', showLoginPanel);
     resetForm.addEventListener('submit', handleReset);
     togglePasswordBtn.addEventListener('click', togglePassword);
+
+    // ============ Demo Mode Launcher ============
+    document.getElementById('demoBtn')?.addEventListener('click', () => {
+      const demoSession = {
+        success: true,
+        token: 'demo-guest-token',
+        storeId: 'demo-store-01',
+        storeName: 'SupplyIQ Supermarket (Demo Store)',
+        userName: 'Demo Visitor',
+        ownerName: 'Demo Store',
+        email: 'demo@supplyiq.local',
+        theme: 'green',
+        isDemo: true
+      };
+      try {
+        localStorage.removeItem('siq_signed_out');
+        localStorage.setItem('siq_session', JSON.stringify(demoSession));
+        localStorage.setItem('siq-store', demoSession.storeId);
+      } catch {}
+      window.location.replace('../SupplyIQ-Grocery-Dashboard.html?demo=1');
+    });
 
     // Real-time validation clearing
     document.getElementById('loginEmail').addEventListener('input', () => setFieldError(emailWrapper, emailErr, ''));

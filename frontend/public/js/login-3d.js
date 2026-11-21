@@ -49,7 +49,6 @@
         var press = function (id) { var el = document.getElementById(id); if (el) el.click(); };
         if (a === 'reset') press('forgotLink');
         if (a === 'google') press('googleButton');
-        if (a === 'microsoft') press('microsoftButton');
         if (a === 'register') window.location.href = 'signup.html';
         if (a === 'login') window.location.href = 'login.html';
       });

@@ -955,6 +955,7 @@ a { text-decoration: none; }
         <span class="status-dot"></span>
         Live Platform
       </span>
+      <a href="javascript:void(0)" onclick="launchDemo()" class="nav-login" style="color:var(--green-mid);font-weight:700">⚡ Live Demo</a>
       <a href="login.html" class="nav-login">Login</a>
       <a href="signup.html" class="btn btn-primary" style="padding:10px 20px;font-size:13px;border-radius:10px">
         Get Started
@@ -992,9 +993,9 @@ a { text-decoration: none; }
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
         </span>
-        <a href="#how" class="btn btn-outline">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/></svg>
-          Watch Demo
+        <a href="javascript:void(0)" onclick="launchDemo()" class="btn btn-outline" style="border-color:#22c55e;background:rgba(34,197,94,.08);color:var(--green-deep);font-weight:700">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Explore Demo Dashboard
         </a>
       </div>
       <div class="hero-marquee reveal" style="--d:320ms">
@@ -1671,6 +1672,26 @@ function rotateT(d) {
     el.addEventListener('mouseleave', () => { el.style.transform = ''; });
   });
 })();
+
+function launchDemo() {
+  const demoSession = {
+    success: true,
+    token: 'demo-guest-token',
+    storeId: 'demo-store-01',
+    storeName: 'SupplyIQ Supermarket (Demo Store)',
+    userName: 'Demo Visitor',
+    ownerName: 'Demo Store',
+    email: 'demo@supplyiq.local',
+    theme: 'green',
+    isDemo: true
+  };
+  try {
+    localStorage.removeItem('siq_signed_out');
+    localStorage.setItem('siq_session', JSON.stringify(demoSession));
+    localStorage.setItem('siq-store', demoSession.storeId);
+  } catch {}
+  window.location.href = '../SupplyIQ-Grocery-Dashboard.html?demo=1';
+}
 </script>
 </body>
 </html>

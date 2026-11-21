@@ -354,10 +354,10 @@ a:hover { text-decoration: underline; }
 .btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
 .btn-primary:focus-visible { outline: 3px solid rgba(201, 221, 69, 0.8); outline-offset: 2px; }
 
-/* Social Buttons (Google, Microsoft) */
+/* Social Buttons (Google) */
 .socials {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 

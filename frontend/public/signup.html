@@ -47,7 +47,7 @@
       <h2 class="hero">Build a Smarter<span>Supply Chain Today</span></h2>
       <p class="lead">Join SupplyIQ and get real-time insights, AI-powered forecasting and complete control over your supply chain.</p>
       <ol class="steps" aria-label="How it works">
-        <li class="step"><span class="step-n">1</span><div><h3>Create your workspace</h3><p>Use email, Google or Microsoft.</p></div></li>
+        <li class="step"><span class="step-n">1</span><div><h3>Create your workspace</h3><p>Use email or Google.</p></div></li>
         <li class="step"><span class="step-n">2</span><div><h3>Connect your supply chain data</h3><p>Bring in inventory, suppliers and orders.</p></div></li>
         <li class="step"><span class="step-n">3</span><div><h3>Let AI do the heavy lifting</h3><p>Forecasts, risk alerts and reorders.</p></div></li>
       </ol>
@@ -356,15 +356,12 @@
             </svg>
             <span>Continue with Google</span>
           </button>
+        </div>
 
-          <button type="button" class="social" id="microsoftButton" aria-label="Continue with Microsoft">
-            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="2" y="2" width="9.5" height="9.5" fill="#F25022"/>
-              <rect x="12.5" y="2" width="9.5" height="9.5" fill="#7FBA00"/>
-              <rect x="2" y="12.5" width="9.5" height="9.5" fill="#00A4EF"/>
-              <rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#FFB900"/>
-            </svg>
-            <span>Continue with Microsoft</span>
+        <div class="demo-box" style="margin-top: 14px; padding: 12px 14px; background: rgba(34, 181, 115, 0.08); border: 1px dashed #22b573; border-radius: 10px; text-align: center;">
+          <div style="font-size: 12.5px; font-weight: 600; color: #0b4030; margin-bottom: 6px;">Want to explore without registering?</div>
+          <button type="button" id="demoBtn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: #fff; color: #0b4030; border: 1.5px solid #22b573; font-weight: 600; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: all .15s ease;">
+            <span>⚡ Explore Demo Dashboard</span>
           </button>
         </div>
 
@@ -391,7 +388,6 @@
       <strong>Need a hand signing up?</strong>
       <p>Pick a shortcut and I'll take you there.</p>
       <button type="button" data-act="google">Sign up with Google</button>
-      <button type="button" data-act="microsoft">Sign up with Microsoft</button>
       <button type="button" data-act="login">I already have an account</button>
     </div>
     <button type="button" class="chat-toggle" aria-expanded="false" aria-label="Open sign-up help">
@@ -405,14 +401,13 @@
   <script src="js/login-3d.js"></script>
 
   <script type="module">
-    import { googleSignIn, microsoftSignIn, emailSignUp, onAuthStateChanged } from './js/auth.js?v=5';
+    import { googleSignIn, emailSignUp, onAuthStateChanged } from './js/auth.js?v=5';
 
     // ── DOM refs ──────────────────────────────────────────────────
     const messageEl   = document.getElementById('message');
     const signupForm  = document.getElementById('signupForm');
     const submitBtn   = document.getElementById('submitBtn');
     const googleBtn   = document.getElementById('googleButton');
-    const microsoftBtn= document.getElementById('microsoftButton');
     const togglePasswordBtn        = document.getElementById('togglePassword');
     const toggleConfirmPasswordBtn = document.getElementById('toggleConfirmPassword');
     const termsCheckbox= document.getElementById('termsCheckbox');
@@ -616,15 +611,6 @@ const typeErr    = document.getElementById('typeErr');
       else showMessage(result.error, 'error');
     }
 
-    async function handleMicrosoft() {
-      clearAllFieldErrors();
-      setBusy(microsoftBtn, true, 'Signing up…');
-      const result = await microsoftSignIn();
-      setBusy(microsoftBtn, false, '');
-      if (result.success) window.location.href = getRedirectUrl();
-      else showMessage(result.error, 'error');
-    }
-
     // ── Submit ────────────────────────────────────────────────────
     async function handleSignUp(event) {
       event.preventDefault();
@@ -726,11 +712,31 @@ const typeErr    = document.getElementById('typeErr');
 
     // ── Wire buttons ──────────────────────────────────────────────
     googleBtn.addEventListener('click', handleGoogle);
-    microsoftBtn.addEventListener('click', handleMicrosoft);
     signupForm.addEventListener('submit', handleSignUp);
     togglePasswordBtn.addEventListener('click', () => togglePassword(togglePasswordBtn, 'signupPassword'));
     toggleConfirmPasswordBtn.addEventListener('click', () => togglePassword(toggleConfirmPasswordBtn, 'signupConfirmPassword'));
     syncTypeColor();
+
+    // ── Demo Mode Launcher ────────────────────────────────────────
+    document.getElementById('demoBtn')?.addEventListener('click', () => {
+      const demoSession = {
+        success: true,
+        token: 'demo-guest-token',
+        storeId: 'demo-store-01',
+        storeName: 'SupplyIQ Supermarket (Demo Store)',
+        userName: 'Demo Visitor',
+        ownerName: 'Demo Store',
+        email: 'demo@supplyiq.local',
+        theme: 'green',
+        isDemo: true
+      };
+      try {
+        localStorage.removeItem('siq_signed_out');
+        localStorage.setItem('siq_session', JSON.stringify(demoSession));
+        localStorage.setItem('siq-store', demoSession.storeId);
+      } catch {}
+      window.location.replace('../SupplyIQ-Grocery-Dashboard.html?demo=1');
+    });
 
     document.getElementById('termsLink').addEventListener('click', e => { e.preventDefault(); showMessage('Terms of Service — coming soon.', 'success'); });
     document.getElementById('privacyLink').addEventListener('click', e => { e.preventDefault(); showMessage('Privacy Policy — coming soon.', 'success'); });

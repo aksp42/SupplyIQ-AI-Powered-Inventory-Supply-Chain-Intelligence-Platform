@@ -17,6 +17,116 @@
         ? 'http://localhost:4000/api'
         : '/api');
 
+  // ─── Demo Mode Interceptor ─────────────────────────────────────────
+  const DEMO_STORE = {
+    store_id: 'demo-store-01',
+    name: 'SupplyIQ Supermarket (Demo Store)',
+    owner_name: 'Demo Visitor',
+    owner_initials: 'DV',
+    city: 'Mysuru',
+    theme: 'green',
+    suppliers: [
+      { name: 'Krishna Wholesale', contact: 'Ramesh Iyer', city: 'Mysuru', rating: 4.4, terms: 'Net 30' },
+      { name: 'FreshFarm Co.', contact: 'Anita Desai', city: 'Bengaluru', rating: 4.1, terms: 'Net 15' },
+      { name: 'AgriLink Suppliers', contact: 'Suresh Nair', city: 'Hassan', rating: 3.8, terms: 'Advance 50%' }
+    ]
+  };
+
+  const DEMO_INVENTORY = [
+    { sku: 'GRC-001', name: 'Basmati Rice 5kg', category: 'Staples', supplier: 'Krishna Wholesale', quantity: 8, unit_cost: 620, sell_price: 780, monthly_demand: 420, monthly_demand_est: 420, reorder_point: 50, status: 'Critical', forecast_low: 12, forecast_high: 16, forecast_sufficient: true, forecast_level: 14, forecast_basis: 'Observed sales ledger', forecast_observed_days: 30, pack_size: '5kg' },
+    { sku: 'GRC-002', name: 'Sunflower Oil 1L', category: 'Oils', supplier: 'FreshFarm Co.', quantity: 22, unit_cost: 165, sell_price: 210, monthly_demand: 300, monthly_demand_est: 300, reorder_point: 30, status: 'Low', forecast_low: 9, forecast_high: 12, forecast_sufficient: true, forecast_level: 10, forecast_basis: 'Observed sales ledger', forecast_observed_days: 30, pack_size: '1L' },
+    { sku: 'GRC-003', name: 'Wheat Atta 10kg', category: 'Staples', supplier: 'Krishna Wholesale', quantity: 64, unit_cost: 260, sell_price: 330, monthly_demand: 220, monthly_demand_est: 220, reorder_point: 30, status: 'Healthy', forecast_low: 6, forecast_high: 9, forecast_sufficient: true, forecast_level: 7, forecast_basis: 'Observed sales ledger', forecast_observed_days: 30, pack_size: '10kg' },
+    { sku: 'GRC-004', name: 'Toor Dal 1kg', category: 'Pulses', supplier: 'AgriLink Suppliers', quantity: 95, unit_cost: 140, sell_price: 175, monthly_demand: 180, monthly_demand_est: 180, reorder_point: 25, status: 'Healthy', forecast_low: 5, forecast_high: 7, forecast_sufficient: true, forecast_level: 6, forecast_basis: 'Observed sales ledger', forecast_observed_days: 30, pack_size: '1kg' },
+    { sku: 'GRC-005', name: 'Tata Tea Gold 500g', category: 'Beverages', supplier: 'Krishna Wholesale', quantity: 150, unit_cost: 280, sell_price: 340, monthly_demand: 110, monthly_demand_est: 110, reorder_point: 20, status: 'Overstock', forecast_low: 3, forecast_high: 5, forecast_sufficient: true, forecast_level: 4, forecast_basis: 'Observed sales ledger', forecast_observed_days: 30, pack_size: '500g' },
+    { sku: 'GRC-006', name: 'Aashirvaad Salt 1kg', category: 'Spices', supplier: 'FreshFarm Co.', quantity: 45, unit_cost: 24, sell_price: 30, monthly_demand: 150, monthly_demand_est: 150, reorder_point: 20, status: 'Healthy', forecast_low: 4, forecast_high: 6, forecast_sufficient: true, forecast_level: 5, forecast_basis: 'Observed sales ledger', forecast_observed_days: 30, pack_size: '1kg' },
+    { sku: 'GRC-007', name: 'Maggi 2-Minute Noodles 280g', category: 'Staples', supplier: 'AgriLink Suppliers', quantity: 12, unit_cost: 48, sell_price: 60, monthly_demand: 320, monthly_demand_est: 320, reorder_point: 40, status: 'Critical', forecast_low: 10, forecast_high: 14, forecast_sufficient: true, forecast_level: 12, forecast_basis: 'Observed sales ledger', forecast_observed_days: 30, pack_size: 'Pack of 4' },
+    { sku: 'GRC-008', name: 'Everest Garam Masala 100g', category: 'Spices', supplier: 'FreshFarm Co.', quantity: 38, unit_cost: 72, sell_price: 92, monthly_demand: 90, monthly_demand_est: 90, reorder_point: 15, status: 'Healthy', forecast_low: 2, forecast_high: 4, forecast_sufficient: true, forecast_level: 3, forecast_basis: 'Observed sales ledger', forecast_observed_days: 30, pack_size: '100g' }
+  ];
+
+  const DEMO_KPIS = {
+    inventory_valuation: 118450,
+    monthly_sales: 348200,
+    total_skus: 8,
+    low_stock_count: 1,
+    critical_count: 2,
+    overstock_count: 1,
+    healthy_count: 4,
+    in_stock_rate: 87.5
+  };
+
+  const DEMO_SALES = {
+    period: '1W',
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    sales: [18400, 22100, 19800, 26400, 34200, 41500, 38600],
+    profit: [4200, 5100, 4600, 6200, 8100, 9800, 8900],
+    total_sales: 201000,
+    total_profit: 46900,
+    units_sold: 624
+  };
+
+  const DEMO_ORDERS = [
+    { order_no: 'PO-DEMO-01', supplier: 'Krishna Wholesale', sku: 'GRC-001', product: 'Basmati Rice 5kg', quantity: 60, total_value: 37200, status: 'Ordered', expected_date: '2026-11-26' },
+    { order_no: 'PO-DEMO-02', supplier: 'FreshFarm Co.', sku: 'GRC-002', product: 'Sunflower Oil 1L', quantity: 40, total_value: 6600, status: 'Delivered', expected_date: '2026-11-20' },
+    { order_no: 'PO-DEMO-03', supplier: 'AgriLink Suppliers', sku: 'GRC-007', product: 'Maggi 2-Minute Noodles 280g', quantity: 80, total_value: 3840, status: 'Ordered', expected_date: '2026-11-25' }
+  ];
+
+  function handleDemoApi(path, options = {}) {
+    const cleanPath = path.split('?')[0];
+    if (cleanPath.startsWith('/stores/') || cleanPath === '/store/profile') {
+      return Promise.resolve(DEMO_STORE);
+    }
+    if (cleanPath === '/inventory') {
+      return Promise.resolve([...DEMO_INVENTORY]);
+    }
+    if (cleanPath === '/kpis') {
+      return Promise.resolve({ ...DEMO_KPIS });
+    }
+    if (cleanPath === '/sales') {
+      return Promise.resolve({ ...DEMO_SALES });
+    }
+    if (cleanPath === '/orders') {
+      return Promise.resolve([...DEMO_ORDERS]);
+    }
+    if (cleanPath.startsWith('/forecast/history')) {
+      return Promise.resolve({
+        sku: 'GRC-001',
+        days_observed: 30,
+        history: [
+          { date: '2026-11-18', sales: 14 },
+          { date: '2026-11-19', sales: 15 },
+          { date: '2026-11-20', sales: 13 },
+          { date: '2026-11-21', sales: 16 }
+        ],
+        sufficient: true,
+        forecast: { low: 12, high: 16, mean: 14 }
+      });
+    }
+    if (cleanPath === '/chat') {
+      return Promise.resolve({
+        reply: 'Hello! I am TradeSaarthi, your AI Business Guide. Currently you are in Demo Mode. Your Basmati Rice 5kg is critical (8 units left, demand is 14 units/day). I recommend placing an order for 60 units from Krishna Wholesale.'
+      });
+    }
+    if (cleanPath === '/imports/types') {
+      return Promise.resolve([
+        { type: 'ledger', label: 'Stock Movement Ledger' },
+        { type: 'products', label: 'Product Master Catalog' }
+      ]);
+    }
+    if (cleanPath === '/imports') {
+      return Promise.resolve([
+        { id: 1, file_name: 'demo_ledger_november.csv', status: 'ready', entity_type: 'ledger', total_rows: 100, valid_rows: 100, error_rows: 0, created_at: new Date().toISOString() }
+      ]);
+    }
+    if (cleanPath.startsWith('/imports/')) {
+      return Promise.resolve({
+        job: { id: 1, file_name: 'demo_sample.csv', status: 'ready', total_rows: 10, valid_rows: 10, error_rows: 0 },
+        preview: DEMO_INVENTORY.slice(0, 5),
+        headers: ['Date', 'Type', 'Product', 'Quantity', 'Unit Cost']
+      });
+    }
+    return Promise.resolve({ success: true, message: 'Action simulated in Demo Mode.' });
+  }
+
   // ─── Session helpers ──────────────────────────────────────────────
   function getSession() {
     try {
@@ -27,6 +137,8 @@
   }
 
   function clearSessionAndRedirect() {
+    const session = getSession();
+    if (session?.isDemo) return;
     localStorage.setItem('siq_signed_out', '1');
     localStorage.removeItem('siq_session');
     localStorage.removeItem('siq-store');
@@ -36,13 +148,15 @@
   function getStoreId() {
     const sess = getSession();
     if (sess?.storeId) return sess.storeId;
-    // No storeId in session → cannot make store-scoped calls
     return null;
   }
 
   // ─── Core fetch wrapper ───────────────────────────────────────────
   async function apiFetch(path, options = {}) {
     const session = getSession();
+    if (session?.isDemo) {
+      return handleDemoApi(path, options);
+    }
     const storeId = getStoreId();
 
     const headers = {
@@ -195,6 +309,9 @@ create:  (supplier, sku, product, quantity, total_value, unit_cost, expected_dat
   // shared apiFetch always calls response.json() and would mangle the body.
   async function templateText(type) {
     const session = getSession();
+    if (session?.isDemo) {
+      return 'Date,Type,Product,Quantity,Unit Cost\n2026-11-21,IN,Basmati Rice 5kg,50,620\n';
+    }
     const storeId = getStoreId();
     const url = `${API_BASE}/imports/template/${encodeURIComponent(type)}`
       + (storeId ? `?storeId=${encodeURIComponent(storeId)}` : '');
