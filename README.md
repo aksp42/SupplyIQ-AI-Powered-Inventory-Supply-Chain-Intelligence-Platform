@@ -4,6 +4,10 @@
 > purchase orders, a TradeSaarthi assistant, and a supplier delay predictor.
 > Auth is JWT-based: passwords are bcrypt-hashed and every data endpoint is scoped to one store.
 
+🌐 **Live Demo:** [https://supplyiq-9kmv.onrender.com/public/landing.html](https://supplyiq-9kmv.onrender.com/public/landing.html)  
+📦 **GitHub Repository:** [https://github.com/aksp42/SupplyIQ-AI-Powered-Inventory-Supply-Chain-Intelligence-Platform](https://github.com/aksp42/SupplyIQ-AI-Powered-Inventory-Supply-Chain-Intelligence-Platform)  
+👩‍💻 **Author:** Akanksha Singh ([LinkedIn](https://www.linkedin.com/in/akanksha-singh-4715a0351/))
+
 ---
 
 ## 🚀 Quick Start
@@ -219,3 +223,13 @@ Expected: **120/120 ✅** — including tenant-isolation and token-tampering che
 - [ ] Rate-limit at the reverse proxy as well as in-process
 - [ ] Remove `frontend/Login_Authentication/` — a vendored copy of the auth pages that
       talks straight to Firebase and bypasses this backend
+
+---
+
+## 👤 Author & Connect
+
+- **Author:** Akanksha Singh
+- **LinkedIn:** [https://www.linkedin.com/in/akanksha-singh-4715a0351/](https://www.linkedin.com/in/akanksha-singh-4715a0351/)
+- **GitHub:** [https://github.com/aksp42/SupplyIQ-AI-Powered-Inventory-Supply-Chain-Intelligence-Platform](https://github.com/aksp42/SupplyIQ-AI-Powered-Inventory-Supply-Chain-Intelligence-Platform)
+- **Live Demo:** [https://supplyiq-9kmv.onrender.com/public/landing.html](https://supplyiq-9kmv.onrender.com/public/landing.html)
+
