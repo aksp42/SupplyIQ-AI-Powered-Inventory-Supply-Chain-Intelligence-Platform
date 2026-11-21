@@ -1412,13 +1412,14 @@ async function loadSalesChart(period) {
   try {
     const data = await sales.get(period);
     if (!data || !data.length) return false;
-    if (period === '1D' && data.length === 1) {
-      const totS = Number(data[0].sales) || 0;
-      const totP = Number(data[0].profit) || 0;
+    if (period === '1D') {
+      const totS = data.reduce((s, d) => s + (Number(d.sales) || 0), 0);
+      const totP = data.reduce((s, d) => s + (Number(d.profit) || 0), 0);
+      const totU = data.reduce((s, d) => s + (Number(d.units_sold) || 0), 0);
       D['1D'].l = ['9 AM','12 PM','3 PM','6 PM','9 PM'];
       D['1D'].s = [Math.round(totS*0.1), Math.round(totS*0.25), Math.round(totS*0.35), Math.round(totS*0.2), Math.round(totS*0.1)];
       D['1D'].p = [Math.round(totP*0.1), Math.round(totP*0.25), Math.round(totP*0.35), Math.round(totP*0.2), Math.round(totP*0.1)];
-      D['1D'].sold = Math.round(Number(data[0].units_sold) || 0);
+      D['1D'].sold = Math.round(totU);
     } else {
       const labels   = data.map(d => new Date(d.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }));
       D[period].l    = labels;

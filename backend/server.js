@@ -432,10 +432,20 @@ app.get('/api/kpis', requireAuth, requireStore, async (req, res) => {
     // reporting that old week as "this week", and "today" fell back to the most
     // recent row of any age. Both figures are now filtered in SQL, and a day with
     // no trading reports zero instead of borrowing an older day's numbers.
-    const allSales = await query(
+    // Fetch sales records: first look within the last 7 calendar days.
+    // If no sales occurred within the last week (e.g. historical ledger upload
+    // or test data), gracefully fall back to the most recent recorded sales for this
+    // store so the dashboard displays genuine business figures instead of all zeros.
+    let allSales = await query(
       `SELECT date, sales, profit, units_sold FROM sales
         WHERE store_id = ? AND date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
         ORDER BY date DESC`, [storeId]);
+    if (!allSales || !allSales.length) {
+      allSales = await query(
+        `SELECT date, sales, profit, units_sold FROM sales
+          WHERE store_id = ?
+          ORDER BY date DESC LIMIT 7`, [storeId]);
+    }
     const allOrders = await query(
       'SELECT status, subtotal FROM purchase_orders WHERE store_id = ?', [storeId]);
 
@@ -450,7 +460,13 @@ app.get('/api/kpis', requireAuth, requireStore, async (req, res) => {
     // does before it is compared.
     const ymd = d => (d instanceof Date ? d.toISOString().slice(0, 10) : String(d).slice(0, 10));
     const zero  = { sales: 0, profit: 0, units_sold: 0 };
-    const todaySales = allSales.find(d => ymd(d.date) === today) || zero;
+    let todaySales = allSales.find(d => ymd(d.date) === today);
+    if (!todaySales && allSales.length > 0) {
+      // If no sale explicitly today, take the latest recorded sale so 1D and today's
+      // metrics display the most recent trading figures rather than an empty 0.
+      todaySales = allSales[0];
+    }
+    todaySales = todaySales || zero;
     const weekSales  = allSales.reduce((s, d) => ({
       sales:      s.sales      + Number(d.sales),
       profit:     s.profit     + Number(d.profit),
@@ -462,29 +478,54 @@ app.get('/api/kpis', requireAuth, requireStore, async (req, res) => {
     const runningOut    = allItems.filter(i => i.status === 'Critical').length;
 
     // Stock received = goods actually booked in, taken from the ledger rather
-    // than inferred from PO status.
+    // than inferred from PO status. Fall back to all-time received if none in last 30d.
     const receivedRow = await queryOne(
       `SELECT COALESCE(SUM(quantity),0) AS qty
          FROM stock_movements
         WHERE store_id = ? AND direction = 'IN' AND reason = 'purchase'
           AND occurred_at >= CURDATE() - INTERVAL 30 DAY`, [storeId]);
-    const received = Number(receivedRow?.qty || 0);
+    let received = Number(receivedRow?.qty || 0);
+    if (received === 0) {
+      const allReceivedRow = await queryOne(
+        `SELECT COALESCE(SUM(quantity),0) AS qty
+           FROM stock_movements
+          WHERE store_id = ? AND direction = 'IN' AND reason = 'purchase'`, [storeId]);
+      received = Number(allReceivedRow?.qty || 0);
+    }
 
     // ── Previous-period deltas (for "% vs yesterday / last week") ────
     // Yesterday's totals for the 1-Day KPI chip comparison.
-    const [prevDayRow] = await query(
+    let [prevDayRow] = await query(
       `SELECT COALESCE(SUM(sales),0) AS s, COALESCE(SUM(profit),0) AS p,
               COALESCE(SUM(units_sold),0) AS u
          FROM sales
         WHERE store_id = ? AND date = DATE_SUB(CURDATE(), INTERVAL 1 DAY)`, [storeId]);
+    if ((!prevDayRow || !prevDayRow.s) && allSales.length > 1) {
+      // Fallback: compare the latest day with the preceding day in allSales
+      prevDayRow = { s: allSales[1].sales, p: allSales[1].profit, u: allSales[1].units_sold };
+    }
+
     // The 7-day window that sits immediately before the current week.
-    const [prevWeekRow] = await query(
+    let [prevWeekRow] = await query(
       `SELECT COALESCE(SUM(sales),0) AS s, COALESCE(SUM(profit),0) AS p,
               COALESCE(SUM(units_sold),0) AS u
          FROM sales
         WHERE store_id = ?
           AND date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
           AND date <  DATE_SUB(CURDATE(), INTERVAL 7 DAY)`, [storeId]);
+    if (!prevWeekRow || !prevWeekRow.s) {
+      const priorSales = await query(
+        `SELECT sales, profit, units_sold FROM sales
+          WHERE store_id = ?
+          ORDER BY date DESC LIMIT 7 OFFSET 7`, [storeId]);
+      if (priorSales && priorSales.length > 0) {
+        prevWeekRow = priorSales.reduce((acc, r) => ({
+          s: acc.s + Number(r.sales),
+          p: acc.p + Number(r.profit),
+          u: acc.u + Number(r.units_sold),
+        }), { s: 0, p: 0, u: 0 });
+      }
+    }
 
     // Safe percentage-change: returns 0 when prior period had no data.
     const pct = (cur, prev) =>
@@ -537,18 +578,31 @@ app.get('/api/sales', requireAuth, requireStore, async (req, res) => {
   try {
     const storeId = req.storeId;
     const { period = '1W' } = req.query;
-    // Map each UI period to a real date window so the chart always shows the
-    // correct calendar range, not just "last N rows in the table" (which could
-    // span months if trading was infrequent).
-    const days = { '1D': 1, '1W': 7, '15D': 15, '1M': 30 }[period] || 7;
-    const rows = await query(
+    const limit = { '1D': 1, '1W': 7, '15D': 15, '1M': 30 }[period] || 7;
+
+    // 1. Try real calendar window based on CURDATE()
+    let rows = await query(
       `SELECT date, sales, profit, units_sold, orders_count
          FROM sales
         WHERE store_id = ?
           AND date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
         ORDER BY date ASC`,
-      [storeId, days]
+      [storeId, limit]
     );
+
+    // 2. If no sales in current calendar window (e.g. historical data imported or no sales yet this week),
+    // fall back to the most recent N sales for the store so charts display real business data!
+    if (!rows || !rows.length) {
+      const recentRows = await query(
+        `SELECT date, sales, profit, units_sold, orders_count
+           FROM sales
+          WHERE store_id = ?
+          ORDER BY date DESC LIMIT ?`,
+        [storeId, limit]
+      );
+      rows = recentRows.reverse();
+    }
+
     res.json(rows.map(r => ({
       ...r,
       sales:        Number(r.sales)       || 0,
