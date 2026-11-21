@@ -470,6 +470,36 @@ app.get('/api/kpis', requireAuth, requireStore, async (req, res) => {
           AND occurred_at >= CURDATE() - INTERVAL 30 DAY`, [storeId]);
     const received = Number(receivedRow?.qty || 0);
 
+    // ── Previous-period deltas (for "% vs yesterday / last week") ────
+    // Yesterday's totals for the 1-Day KPI chip comparison.
+    const [prevDayRow] = await query(
+      `SELECT COALESCE(SUM(sales),0) AS s, COALESCE(SUM(profit),0) AS p,
+              COALESCE(SUM(units_sold),0) AS u
+         FROM sales
+        WHERE store_id = ? AND date = DATE_SUB(CURDATE(), INTERVAL 1 DAY)`, [storeId]);
+    // The 7-day window that sits immediately before the current week.
+    const [prevWeekRow] = await query(
+      `SELECT COALESCE(SUM(sales),0) AS s, COALESCE(SUM(profit),0) AS p,
+              COALESCE(SUM(units_sold),0) AS u
+         FROM sales
+        WHERE store_id = ?
+          AND date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
+          AND date <  DATE_SUB(CURDATE(), INTERVAL 7 DAY)`, [storeId]);
+
+    // Safe percentage-change: returns 0 when prior period had no data.
+    const pct = (cur, prev) =>
+      prev > 0 ? +((cur - prev) / prev * 100).toFixed(1) : 0;
+
+    const prevDay  = { s: Number(prevDayRow?.s  || 0), p: Number(prevDayRow?.p  || 0), u: Number(prevDayRow?.u  || 0) };
+    const prevWeek = { s: Number(prevWeekRow?.s || 0), p: Number(prevWeekRow?.p || 0), u: Number(prevWeekRow?.u || 0) };
+
+    const todayS = Number(todaySales.sales)      || 0;
+    const todayP = Number(todaySales.profit)     || 0;
+    const todayU = Number(todaySales.units_sold) || 0;
+    const weekS  = Number(weekSales.sales)       || 0;
+    const weekP  = Number(weekSales.profit)      || 0;
+    const weekU  = Number(weekSales.units_sold)  || 0;
+
     // Keyed by category name, with uncategorised stock collected under one explicit
     // label. `categories` here is also read by the dashboard's category filter,
     // so an unset column must not surface as a literal "undefined" bucket.
@@ -484,16 +514,20 @@ app.get('/api/kpis', requireAuth, requireStore, async (req, res) => {
     res.json({
       inventoryValue: +inventoryValue.toFixed(2),
       stockoutRisk, overstockCount,
-      todaySales:     Number(todaySales.sales) || 0,
-      todayProfit:    Number(todaySales.profit) || 0,
-      todayUnitsSold: Math.round(Number(todaySales.units_sold) || 0),
-      weekSales:      Number(weekSales.sales) || 0,
-      weekProfit:     Number(weekSales.profit) || 0,
-      margin:         weekSales.sales > 0 ? +(weekSales.profit / weekSales.sales * 100).toFixed(1) : 0,
+      todaySales:     todayS,
+      todayProfit:    todayP,
+      todayUnitsSold: Math.round(todayU),
+      weekSales:      weekS,
+      weekProfit:     weekP,
+      margin:         weekS > 0 ? +(weekP / weekS * 100).toFixed(1) : 0,
       pendingOrders,  runningOut,
       stockReceived:  Math.round(received),
       totalProducts:  allItems.length,
       categories,
+      // Per-period delta arrays — index matches the K[] array in renderPeriod():
+      // [0] Sales  [1] Profit  [2] Products Sold  [3] Running Out  [4] Stock Received
+      delta1D: [ pct(todayS, prevDay.s), pct(todayP, prevDay.p), pct(todayU, prevDay.u), 0, 0 ],
+      delta1W: [ pct(weekS,  prevWeek.s), pct(weekP,  prevWeek.p), pct(weekU,  prevWeek.u), 0, 0 ],
     });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -503,13 +537,23 @@ app.get('/api/sales', requireAuth, requireStore, async (req, res) => {
   try {
     const storeId = req.storeId;
     const { period = '1W' } = req.query;
-    const limit = { '1D': 1, '1W': 7, '15D': 15, '1M': 30 }[period] || 7;
-    const rows = await query('SELECT * FROM sales WHERE store_id = ? ORDER BY date DESC LIMIT ?', [storeId, limit]);
-    res.json(rows.reverse().map(r => ({
+    // Map each UI period to a real date window so the chart always shows the
+    // correct calendar range, not just "last N rows in the table" (which could
+    // span months if trading was infrequent).
+    const days = { '1D': 1, '1W': 7, '15D': 15, '1M': 30 }[period] || 7;
+    const rows = await query(
+      `SELECT date, sales, profit, units_sold, orders_count
+         FROM sales
+        WHERE store_id = ?
+          AND date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+        ORDER BY date ASC`,
+      [storeId, days]
+    );
+    res.json(rows.map(r => ({
       ...r,
-      sales: Number(r.sales) || 0,
-      profit: Number(r.profit) || 0,
-      units_sold: Math.round(Number(r.units_sold) || 0),
+      sales:        Number(r.sales)       || 0,
+      profit:       Number(r.profit)      || 0,
+      units_sold:   Math.round(Number(r.units_sold)   || 0),
       orders_count: Number(r.orders_count) || 0,
     })));
   } catch (err) { res.status(500).json({ error: err.message }); }

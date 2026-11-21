@@ -44,25 +44,74 @@
   ];
 
   const DEMO_KPIS = {
-    inventory_valuation: 118450,
-    monthly_sales: 348200,
-    total_skus: 8,
-    low_stock_count: 1,
-    critical_count: 2,
-    overstock_count: 1,
-    healthy_count: 4,
-    in_stock_rate: 87.5
+    // Fields the dashboard renderPeriod / loadKpis reads:
+    todaySales:     38600,
+    todayProfit:    8900,
+    todayUnitsSold: 94,
+    weekSales:      201000,
+    weekProfit:     46900,
+    runningOut:     2,          // Critical stock items
+    stockReceived:  180,        // Units received in last 30 days
+    inventoryValue: 118450,
+    totalProducts:  8,
+    pendingOrders:  2,
+    stockoutRisk:   3,
+    overstockCount: 1,
+    margin:         23.3,
+    categories: {
+      Staples: 3, Oils: 1, Pulses: 1,
+      Beverages: 1, Spices: 2
+    },
+    // % change vs previous period — [Sales, Profit, ProductsSold, RunningOut, StockReceived]
+    delta1D: [ 12.4,  9.8, 11.2, 0, 0 ],
+    delta1W: [  8.3,  6.1,  7.5, 0, 0 ],
   };
 
-  const DEMO_SALES = {
-    period: '1W',
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    sales: [18400, 22100, 19800, 26400, 34200, 41500, 38600],
-    profit: [4200, 5100, 4600, 6200, 8100, 9800, 8900],
-    total_sales: 201000,
-    total_profit: 46900,
-    units_sold: 624
-  };
+  // DEMO_SALES must be an ARRAY of day objects — same shape the backend returns
+  // so loadSalesChart()'s data.map() / data.length calls work correctly.
+  function _demoSalesForPeriod(period) {
+    const today = new Date();
+    const fmt = d => d.toISOString().slice(0, 10);
+    const day = ms => new Date(today - ms);
+    const MS  = 86400000;
+    const salesByPeriod = {
+      '1D':  [{ date: fmt(today),         sales: 38600, profit: 8900, units_sold: 94, orders_count: 31 }],
+      '1W':  [
+        { date: fmt(day(6*MS)), sales: 18400, profit: 4200, units_sold: 48, orders_count: 16 },
+        { date: fmt(day(5*MS)), sales: 22100, profit: 5100, units_sold: 57, orders_count: 19 },
+        { date: fmt(day(4*MS)), sales: 19800, profit: 4600, units_sold: 51, orders_count: 17 },
+        { date: fmt(day(3*MS)), sales: 26400, profit: 6200, units_sold: 68, orders_count: 22 },
+        { date: fmt(day(2*MS)), sales: 34200, profit: 8100, units_sold: 88, orders_count: 29 },
+        { date: fmt(day(1*MS)), sales: 41500, profit: 9800, units_sold: 107, orders_count: 35 },
+        { date: fmt(today),     sales: 38600, profit: 8900, units_sold: 94,  orders_count: 31 }
+      ],
+      '15D': [
+        { date: fmt(day(14*MS)), sales: 15200, profit: 3500, units_sold: 39, orders_count: 13 },
+        { date: fmt(day(13*MS)), sales: 18700, profit: 4300, units_sold: 48, orders_count: 16 },
+        { date: fmt(day(12*MS)), sales: 21000, profit: 4900, units_sold: 54, orders_count: 18 },
+        { date: fmt(day(11*MS)), sales: 17500, profit: 4100, units_sold: 45, orders_count: 15 },
+        { date: fmt(day(10*MS)), sales: 23400, profit: 5500, units_sold: 60, orders_count: 20 },
+        { date: fmt(day(9*MS)),  sales: 19800, profit: 4600, units_sold: 51, orders_count: 17 },
+        { date: fmt(day(8*MS)),  sales: 26400, profit: 6200, units_sold: 68, orders_count: 22 },
+        { date: fmt(day(7*MS)),  sales: 18400, profit: 4200, units_sold: 48, orders_count: 16 },
+        { date: fmt(day(6*MS)),  sales: 22100, profit: 5100, units_sold: 57, orders_count: 19 },
+        { date: fmt(day(5*MS)),  sales: 19800, profit: 4600, units_sold: 51, orders_count: 17 },
+        { date: fmt(day(4*MS)),  sales: 26400, profit: 6200, units_sold: 68, orders_count: 22 },
+        { date: fmt(day(3*MS)),  sales: 34200, profit: 8100, units_sold: 88, orders_count: 29 },
+        { date: fmt(day(2*MS)),  sales: 41500, profit: 9800, units_sold: 107, orders_count: 35 },
+        { date: fmt(day(1*MS)),  sales: 38600, profit: 8900, units_sold: 94,  orders_count: 31 },
+        { date: fmt(today),      sales: 38600, profit: 8900, units_sold: 94,  orders_count: 31 }
+      ],
+      '1M':  [
+        { date: fmt(day(29*MS)), sales: 480000, profit: 112000, units_sold: 1240, orders_count: 413 },
+        { date: fmt(day(22*MS)), sales: 512000, profit: 119000, units_sold: 1320, orders_count: 440 },
+        { date: fmt(day(15*MS)), sales: 495000, profit: 115000, units_sold: 1280, orders_count: 426 },
+        { date: fmt(day(7*MS)),  sales: 541000, profit: 126000, units_sold: 1395, orders_count: 465 },
+        { date: fmt(today),      sales: 348200, profit:  46900, units_sold:  624, orders_count: 208 }
+      ]
+    };
+    return salesByPeriod[period] || salesByPeriod['1W'];
+  }
 
   const DEMO_ORDERS = [
     { order_no: 'PO-DEMO-01', supplier: 'Krishna Wholesale', sku: 'GRC-001', product: 'Basmati Rice 5kg', quantity: 60, total_value: 37200, status: 'Ordered', expected_date: '2026-11-26' },
@@ -82,7 +131,9 @@
       return Promise.resolve({ ...DEMO_KPIS });
     }
     if (cleanPath === '/sales') {
-      return Promise.resolve({ ...DEMO_SALES });
+      // Extract the period query param (e.g. /sales?period=1W → '1W')
+      const periodParam = (path.split('period=')[1] || '1W').split('&')[0];
+      return Promise.resolve(_demoSalesForPeriod(decodeURIComponent(periodParam)));
     }
     if (cleanPath === '/orders') {
       return Promise.resolve([...DEMO_ORDERS]);

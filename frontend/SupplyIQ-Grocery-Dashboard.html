@@ -1229,8 +1229,16 @@ async function loadKpis() {
     ['1D','1W','15D','1M'].forEach(per=>{
       D[per].out  = Math.round(Number(k.runningOut ?? D[per].out) || 0);
       D[per].rec  = Math.round(Number(k.stockReceived ?? D[per].rec) || 0);
-      D[per].dl   = D[per].dl || [12, 8, 5, -2, 15];
     });
+    // Apply real % vs previous period deltas when the backend provides them;
+    // fall back to zeros so the chip never shows stale placeholder numbers.
+    if (Array.isArray(k.delta1D)) D['1D'].dl = k.delta1D;
+    else                          D['1D'].dl = [0, 0, 0, 0, 0];
+    if (Array.isArray(k.delta1W)) D['1W'].dl = k.delta1W;
+    else                          D['1W'].dl = [0, 0, 0, 0, 0];
+    // 15D and 1M deltas are not computed server-side yet; keep zeros.
+    D['15D'].dl = D['15D'].dl && D['15D'].dl.some(v => v !== 0) ? D['15D'].dl : [0, 0, 0, 0, 0];
+    D['1M'].dl  = D['1M'].dl  && D['1M'].dl.some(v => v !== 0)  ? D['1M'].dl  : [0, 0, 0, 0, 0];
     S.extraVal   = Number(k.inventoryValue) || 0;
     updateLiveIndicator(true);
     return k;
