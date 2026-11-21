@@ -268,34 +268,6 @@ Update the CSS `:root` variables in `css/style.css`:
 2. You should be sent back to the login page
 3. Try opening `dashboard.html` directly while logged out — it should redirect to login (protected page)
 
-## Deploying to AWS (do this AFTER testing locally)
-
-This module is AWS-ready with **zero code changes**. Before going live on AWS, complete two configuration steps:
-
-### Before deployment on AWS
-- Set the Google OAuth consent screen to **Production** (publish it)
-- Make sure your OAuth **Test users** list includes anyone who must log in during testing
-- Create a **Firestore database** in the Firebase console (left sidebar → **Firestore Database** → **Create database** → choose production or test mode and a location). The module stores user profiles there. If Firestore is not created, authentication still works but profiles/last-login are not saved.
-
-### On the day you deploy
-When you have your real AWS domain (from S3 + CloudFront, EC2, Elastic Beanstalk, Amplify, etc.):
-
-2. **Firebase Console → Authentication → Settings → Authorized domains**
-   - Click **Add domain** and add your exact AWS domain (e.g. `app.mydomain.com`)
-   - Keep `localhost` as well so local dev still works
-3. **Google Cloud Console → APIs & Services → Credentials → your web OAuth client**
-   - Add `https://your-aws-domain` to **Authorized JavaScript origins** (and `http://localhost` if missing)
-   - Add `https://YOUR_PROJECT_ID.firebaseapp.com/__/auth/handler` to **Authorized redirect URIs** if missing
-4. **Google Cloud Console → OAuth consent screen**
-   - Update Application home page, Privacy Policy, Terms of Service to your real AWS URLs
-   - Click **Publish app**
-5. **Upload** the whole `authentication/` folder to your AWS bucket/host unchanged — paths are relative, so it works in any subfolder
-
-### Notes for AWS
-- Firebase requires **HTTPS**. AWS (CloudFront, ALB, Amplify) provides this automatically when you add a certificate.
-- The module uses `signInWithPopup`, which works from any authorized HTTPS domain — no server needed for auth.
-- If your AWS app later needs server-side checks (e.g. to trust user data in your backend), verify Firebase ID tokens on your server using the **Firebase Admin SDK** (`admin.auth().verifyIdToken(token)`). Never trust client-supplied user info alone.
-
 ## File Reference
 
 | File | Description |

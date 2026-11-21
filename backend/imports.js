@@ -387,6 +387,7 @@ async function validate({ type, fileName, text, organizationId, storeId, userId 
     const errors = [];
     const warnings = [];
     const preview = [];
+    const invalidRows = [];
 
     // Rows whose cell count does not match the header are excluded from the
     // preview: committing them would either drop or invent data.
@@ -399,7 +400,13 @@ async function validate({ type, fileName, text, organizationId, storeId, userId 
 
     for (const { line, data } of parsed.rows) {
       if (ragged.has(line)) {
-        errors.push(new RowError(line, '-', 'ragged_row', ragged.get(line), ''));
+        const err = new RowError(line, '-', 'ragged_row', ragged.get(line), '');
+        errors.push(err);
+        invalidRows.push({
+          line,
+          data: { ...data, __line: line },
+          errors: [{ column: '-', code: 'ragged_row', message: ragged.get(line), rawValue: '' }],
+        });
         continue;
       }
       const result = await validateRow({ type: resolved, spec, line, data, organizationId, storeId, ctx });
@@ -407,7 +414,20 @@ async function validate({ type, fileName, text, organizationId, storeId, userId 
       warnings.push(...result.warnings);
       // __line is carried through to the note so a bad movement in the ledger can
       // be traced back to the spreadsheet line that caused it.
-      if (!result.errors.length) preview.push({ line, data: { ...data, __line: line } });
+      if (!result.errors.length) {
+        preview.push({ line, data: { ...data, __line: line } });
+      } else {
+        invalidRows.push({
+          line,
+          data: { ...data, __line: line },
+          errors: result.errors.map(e => ({
+            column: e.column,
+            code: e.code,
+            message: e.message,
+            rawValue: e.rawValue,
+          })),
+        });
+      }
     }
 
     // One import_row_errors row per problem. column_name is nullable but the
@@ -441,8 +461,10 @@ async function validate({ type, fileName, text, organizationId, storeId, userId 
         WHERE id = ?`,
       [status, total, preview.length, errors.length,
        JSON.stringify({
+         headers: parsed.headers,
          rows: preview.slice(0, PREVIEW_LIMIT),
          committed_rows: preview,
+         invalid_rows: invalidRows,
          // Warnings are advisory notes for the preview, so they travel as the
          // same {row_no, column_name, ...} shape the row-errors feed returns.
          warnings: warnings.slice(0, PREVIEW_LIMIT).map(w => ({
@@ -453,7 +475,8 @@ async function validate({ type, fileName, text, organizationId, storeId, userId 
        errors.length ? `${errors.length} row(s) need attention.` : null, ins.insertId]);
 
     return { id: ins.insertId, type: resolved, status, total, valid: preview.length,
-             errorCount: errors.length, warningCount: warnings.length };
+             errorCount: errors.length, warningCount: warnings.length,
+             invalidRows: invalidRows };
   });
 
   return job;
@@ -782,6 +805,14 @@ async function commit({ jobId, organizationId, storeId, userId }) {
       new Error(`This import is "${job.status}" and cannot be committed. Fix the errors and validate again.`),
       { status: 409 });
 
+  // SupplyIQ Rule: Never allow import with unresolved CSV rows.
+  // The backend independently rejects imports containing unresolved validation errors.
+  if (job.error_rows > 0) {
+    throw Object.assign(
+      new Error('Import cannot proceed. Please correct all remaining errors before importing. No rows have been saved.'),
+      { status: 409, code: 'unresolved_errors' });
+  }
+
   // Only the rows that passed validation are committed, so a row that was
   // reported as bad cannot sneak in by being present in the file.
   // committed_rows is the full set; rows is the truncated preview the UI shows,
@@ -853,7 +884,18 @@ function safeCommitError(err) {
  */
 async function applyRows({ jobId, job, rows, organizationId, storeId, userId }) {
   return withTransaction(async (tx) => {
-    await tx.run('UPDATE import_jobs SET status = ? WHERE id = ?', ['committing', jobId]);
+    // Atomic state transition: ensures status is 'ready' and error_rows is 0 at the DB level,
+    // preventing concurrent commit races and stale job execution.
+    const lock = await tx.run(
+      "UPDATE import_jobs SET status = 'committing' WHERE id = ? AND organization_id = ? AND status = 'ready' AND error_rows = 0",
+      [jobId, organizationId]
+    );
+    if (!lock || lock.affectedRows === 0) {
+      throw Object.assign(
+        new Error('Import cannot proceed. The job is not in a valid ready state or has unresolved errors.'),
+        { status: 409, code: 'import_conflict' }
+      );
+    }
 
     const counts = { created: 0, updated: 0 };
     const categoryCache = new Map();
@@ -1285,4 +1327,4 @@ case 'stock_movements': {
   });
 }
 
-module.exports = { TEMPLATES, validate, commit, dbEntityType, detectType, detectTypeFromHeaders, RowError, SKU_MAX };
+module.exports = { TEMPLATES, validate, commit, dbEntityType, detectType, detectTypeFromHeaders, RowError, SKU_MAX, safeCommitError, validateRow };

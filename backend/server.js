@@ -1285,7 +1285,12 @@ app.get('/api/imports/:id', requireAuth, requireStore, async (req, res) => {
     let preview = null;
     if (job.preview_data) {
       const parsed = JSON.parse(job.preview_data);
-      preview = { rows: parsed.rows || [], warnings: parsed.warnings || [] };
+      preview = {
+        headers: parsed.headers || [],
+        rows: parsed.rows || [],
+        invalid_rows: parsed.invalid_rows || [],
+        warnings: parsed.warnings || [],
+      };
     }
 
     res.json({

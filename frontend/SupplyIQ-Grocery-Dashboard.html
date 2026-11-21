@@ -2293,7 +2293,240 @@ function showImportFormatError(message, status, code){
   el.classList.remove('hide');
 }
 
-function showImportPreview(job, csvText){
+function showImportPreview(job, csvText, preParsed){
+  // Lightweight RFC 4180 CSV parser & serializer for import preview editing
+  function parseCsvSimple(text) {
+    if (!text) return { headers: [], rawHeaders: [], rows: [] };
+    const src = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
+    const rawRows = [];
+    let row = [], field = '', inQuotes = false, i = 0, line = 1, rowStart = 1;
+    while (i < src.length) {
+      const c = src[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (src[i + 1] === '"') { field += '"'; i += 2; continue; }
+          inQuotes = false; i++; continue;
+        }
+        if (c === '\n') line++;
+        field += c; i++; continue;
+      }
+      if (c === '"') { inQuotes = true; i++; continue; }
+      if (c === ',') { row.push(field); field = ''; i++; continue; }
+      if (c === '\r') { i++; continue; }
+      if (c === '\n') {
+        row.push(field);
+        rawRows.push({ line: rowStart, cells: row });
+        row = []; field = ''; line++; rowStart = line; i++; continue;
+      }
+      field += c; i++;
+    }
+    if (field !== '' || row.length) { row.push(field); rawRows.push({ line: rowStart, cells: row }); }
+    const nonEmpty = rawRows.filter(r => r.cells.some(cell => cell.trim() !== ''));
+    if (!nonEmpty.length) return { headers: [], rawHeaders: [], rows: [] };
+    const rawHeaders = nonEmpty[0].cells.map(h => h.trim().replace(/^\ufeff/, ''));
+    const headers = rawHeaders.map(h => h.toLowerCase());
+    const body = nonEmpty.slice(1).map((r, idx) => {
+      const data = {};
+      headers.forEach((h, cIdx) => { data[h] = r.cells[cIdx] ?? ''; });
+      return { line: r.line, origLine: r.line, data, cells: r.cells };
+    });
+    return { headers, rawHeaders, rows: body };
+  }
+
+  function serializeCsvRows(headers, rows) {
+    const quote = v => {
+      if (v === null || v === undefined) return '';
+      const s = String(v);
+      if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    };
+    const lines = [headers.map(quote).join(',')];
+    for (const r of rows) {
+      lines.push(headers.map(h => quote(r.data[h.toLowerCase()] ?? r.data[h] ?? '')).join(','));
+    }
+    return lines.join('\n');
+  }
+
+  function renderInvalidRowsEditor(active) {
+    if (!active || !active.invalidRows || !active.invalidRows.length) return '';
+    const allRows = active.invalidRows;
+    const pageSize = 50;
+    const page = Math.max(1, Math.min(active.editorPage || 1, Math.ceil(allRows.length / pageSize) || 1));
+    active.editorPage = page;
+    const totalPages = Math.ceil(allRows.length / pageSize) || 1;
+    const startIndex = (page - 1) * pageSize;
+    const rows = allRows.slice(startIndex, startIndex + pageSize);
+
+    const paginationControls = totalPages > 1 ? `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 2px;margin-bottom:6px;font-size:12px">
+        <span class="mut">Showing <b>${startIndex + 1}–${Math.min(startIndex + pageSize, allRows.length)}</b> of <b>${allRows.length}</b> rows requiring correction (Page ${page} of ${totalPages})</span>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="btn sm ol" style="padding:2px 8px;font-size:11px" ${page <= 1 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''} onclick="window.setImportEditorPage(${page - 1})">◀ Prev 50</button>
+          <button type="button" class="btn sm ol" style="padding:2px 8px;font-size:11px" ${page >= totalPages ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''} onclick="window.setImportEditorPage(${page + 1})">Next 50 ▶</button>
+        </div>
+      </div>
+    ` : '';
+
+    const cardsHtml = rows.map(r => {
+      const errMap = {};
+      const rowErrors = [];
+      (r.errors || []).forEach(e => {
+        const colKey = String(e.column || e.column_name || '-').toLowerCase();
+        const msg = e.message || e.error_message || e.error_code || 'Invalid value';
+        if (colKey === '-' || colKey === 'ragged_row') {
+          rowErrors.push(msg);
+        } else {
+          if (!errMap[colKey]) errMap[colKey] = [];
+          errMap[colKey].push(msg);
+        }
+      });
+      const keys = Object.keys(r.data || {}).filter(k => !k.startsWith('__') && k !== 'origLine');
+      const cols = keys.length ? keys : ['sku', 'direction', 'quantity', 'date', 'unit_cost', 'unit_price', 'reason', 'invoice_no'];
+      const lineDisplay = `Line ${r.line}${r.origLine && r.origLine !== r.line ? ` (originally Line ${r.origLine})` : ''}`;
+      return `
+        <div class="card" style="padding:10px;margin-bottom:8px;border:1px solid var(--bd);background:var(--card)" id="impRow_${r.line}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div><b style="color:var(--crit,#c62828)">${lineDisplay}</b> <span class="pill" style="font-size:11px;background:#ffebee;color:#c62828">Needs Correction</span></div>
+            <div style="display:flex;gap:4px">
+              <button type="button" class="btn sm ol" style="padding:2px 7px;font-size:11px" onclick="window.moveImportRow(${r.line},-1)">▲ Earlier</button>
+              <button type="button" class="btn sm ol" style="padding:2px 7px;font-size:11px" onclick="window.moveImportRow(${r.line},1)">▼ Later</button>
+            </div>
+          </div>
+          ${rowErrors.length ? `<div style="background:#ffebee;color:#c62828;padding:6px 10px;border-radius:6px;font-size:11.5px;font-weight:600;margin-bottom:6px">⚠️ Row issue: ${esc(rowErrors.join(' | '))}</div>` : ''}
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px">
+            ${cols.map(col => {
+              const colLower = String(col).toLowerCase();
+              const errList = errMap[colLower] || (colLower === 'quantity' && errMap['insufficient_stock']) || [];
+              const hasErr = errList.length > 0;
+              const errMsg = errList.join('; ');
+              const val = r.data[col] ?? '';
+              return `
+                <div>
+                  <label class="mut" style="font-size:10.5px;display:block;margin-bottom:2px">${esc(col)}</label>
+                  <input class="f sm" style="${hasErr ? 'border:1.5px solid #d32f2f;background:#ffebee' : ''}"
+                    data-line="${r.line}" data-col="${esc(col)}" value="${esc(String(val))}"
+                    oninput="window.onImportCellInput(this)">
+                  ${hasErr ? `<div style="color:#c62828;font-size:10px;font-weight:600;margin-top:2px;line-height:1.2">⚠️ ${esc(errMsg)}</div>` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return paginationControls + cardsHtml;
+  }
+
+  window.setImportEditorPage = function(p) {
+    if (!window._activeImportJob) return;
+    window._activeImportJob.editorPage = p;
+    const c = document.getElementById('impEditableRows');
+    if (c) c.innerHTML = renderInvalidRowsEditor(window._activeImportJob);
+  };
+
+  window.onImportCellInput = function(el) {
+    const line = Number(el.dataset.line);
+    const col = el.dataset.col;
+    const val = el.value;
+    if (!window._activeImportJob) return;
+    const inv = window._activeImportJob.invalidRows.find(r => r.line === line);
+    if (inv) inv.data[col] = val;
+    if (window._activeImportJob.parsed && window._activeImportJob.parsed.rows) {
+      const pr = window._activeImportJob.parsed.rows.find(r => r.line === line);
+      if (pr) pr.data[col] = val;
+    }
+    window._activeImportJob.hasPendingEdits = true;
+    el.style.border = '1.5px solid var(--acc,#00695c)';
+    el.style.background = 'var(--soft,#f4f8f0)';
+    // NOTE: Rule 6 requirement: Do not count a row as corrected merely because the user edited a cell.
+    // It should count as corrected only when backend revalidation confirms that the row is valid.
+    const noticeEl = document.getElementById('impEditsNotice');
+    if (noticeEl) noticeEl.style.display = 'block';
+  };
+
+  window.moveImportRow = async function(line, delta) {
+    if (!window._activeImportJob || !window._activeImportJob.parsed || !window._activeImportJob.parsed.rows) return;
+    const rows = window._activeImportJob.parsed.rows;
+    const idx = rows.findIndex(r => r.line === line);
+    if (idx < 0) return;
+    const targetIdx = idx + delta;
+    if (targetIdx < 0 || targetIdx >= rows.length) return;
+    const temp = rows[idx];
+    rows[idx] = rows[targetIdx];
+    rows[targetIdx] = temp;
+    // Keep sequential line numbers matching array index (header is 1, rows start at 2)
+    rows.forEach((r, i) => { r.line = i + 2; });
+    toast(`Line ${line} moved ${delta < 0 ? 'earlier' : 'later'} in sequence.`);
+    await window.revalidateActiveImport();
+  };
+
+  window.revalidateActiveImport = async function() {
+    if (!window._activeImportJob) return;
+    const btn = document.getElementById('btnRevalidate');
+    if (btn) { btn.disabled = true; btn.textContent = 'Revalidating…'; }
+    try {
+      let newCsv = '';
+      const p = window._activeImportJob.parsed;
+      const headers = (p && (p.rawHeaders && p.rawHeaders.length ? p.rawHeaders : p.headers)) || [];
+      if (headers.length && p.rows) {
+        newCsv = serializeCsvRows(headers, p.rows);
+      } else {
+        newCsv = window._activeImportJob.csvText;
+      }
+      const job = await imports.validate(window._activeImportJob.type || 'auto', window._activeImportJob.fileName, newCsv);
+      let fullJob = job;
+      try { fullJob = await imports.get(job.id); } catch {}
+      const initialErr = window._activeImportJob.initialErrorCount !== undefined
+        ? window._activeImportJob.initialErrorCount
+        : (job.errorCount || 0);
+      const remainingErr = num(job.errorCount, (fullJob.errors || []).length, job.error_rows);
+      const corrected = Math.max(0, initialErr - remainingErr);
+
+      // Inherit original line numbers across revalidations
+      const newParsed = parseCsvSimple(newCsv);
+      if (p && p.rows && newParsed.rows) {
+        newParsed.rows.forEach((nr, idx) => {
+          if (p.rows[idx] && p.rows[idx].origLine) nr.origLine = p.rows[idx].origLine;
+        });
+      }
+
+      window._activeImportJob.correctedCount = corrected;
+      window._activeImportJob.initialErrorCount = initialErr;
+      window._activeImportJob.hasPendingEdits = false;
+      showImportPreview(fullJob, newCsv, newParsed);
+      if (remainingErr === 0) {
+        toast(`All errors resolved! All ${job.valid} rows are valid.`, 0);
+      } else {
+        toast(`Revalidated: ${job.valid} valid, ${remainingErr} error(s) remaining.`);
+      }
+    } catch (err) {
+      toast('Revalidation failed: ' + err.message, 1);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Revalidate'; }
+    }
+  };
+
+  window.downloadCorrectedCsv = function() {
+    if (!window._activeImportJob) return;
+    let csv = '';
+    const p = window._activeImportJob.parsed;
+    const headers = (p && (p.rawHeaders && p.rawHeaders.length ? p.rawHeaders : p.headers)) || [];
+    if (headers.length && p.rows) {
+      csv = serializeCsvRows(headers, p.rows);
+    } else {
+      csv = window._activeImportJob.csvText;
+    }
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (window._activeImportJob.fileName || 'import').replace(/\.csv$/i, '') + '-corrected.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Corrected CSV downloaded.');
+  };
+
   // Validation returns a summary ({ total, valid, errorCount, warningCount });
   // GET /api/imports/:id returns the full job ({ total_rows, valid_rows,
   // error_rows, errors, can_commit }). Both reach this function, so the two shapes
@@ -2311,15 +2544,73 @@ function showImportPreview(job, csvText){
   const errorCount = num(job.errorCount, errors.length, job.error_rows);
   const warningCount = num(job.warningCount, detail.warnings.length);
   const canCommit  = job.can_commit !== undefined ? !!job.can_commit : valid > 0;
+
+  // Initialize active import state for manual row-level correction
+  const parsed = preParsed || parseCsvSimple(csvText);
+  let invalidRows = detail.invalid_rows || [];
+  if (!invalidRows.length && errorCount > 0) {
+    const errByLine = new Map();
+    errors.forEach(e => {
+      if (!errByLine.has(e.row_no)) errByLine.set(e.row_no, []);
+      errByLine.get(e.row_no).push(e);
+    });
+    errByLine.forEach((errs, line) => {
+      const pr = parsed.rows ? parsed.rows.find(r => r.line === line) : null;
+      invalidRows.push({
+        line,
+        origLine: pr?.origLine || line,
+        data: pr ? { ...pr.data } : { [errs[0].column_name || 'quantity']: errs[0].raw_value || '' },
+        errors: errs,
+      });
+    });
+  }
+
+  const prevCorr = window._activeImportJob?.correctedCount || 0;
+  window._activeImportJob = {
+    job,
+    csvText: csvText || '',
+    fileName: job.file_name || 'import.csv',
+    type: job.type || 'ledger',
+    total,
+    valid,
+    errorCount,
+    initialErrorCount: window._activeImportJob?.initialErrorCount !== undefined ? window._activeImportJob.initialErrorCount : errorCount,
+    correctedCount: prevCorr,
+    hasPendingEdits: false,
+    parsed,
+    invalidRows,
+  };
+
   const html = `
     <div class="h"><h3>Import Preview</h3><a data-close="1">Close</a></div>
     <div class="mut" style="margin-bottom:8px">
       ${total} row(s) in file · ${valid} valid · ${errorCount} error(s) · ${warningCount} warning(s)
     </div>
+    <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;font-size:12px;background:var(--soft);padding:8px 12px;border-radius:8px;border:1px solid var(--bd)">
+      <div><span class="mut">Total Rows:</span> <b>${total}</b></div>
+      <div><span class="mut">Valid:</span> <b style="color:var(--pos,#1b5e20)">${valid}</b></div>
+      <div><span class="mut">Rows Requiring Correction:</span> <b style="color:var(--crit,#b71c1c)">${errorCount}</b></div>
+      <div><span class="mut">Corrected Rows:</span> <b id="impCorrectedCount" style="color:var(--acc,#00695c)">${prevCorr}</b></div>
+      <div><span class="mut">Remaining Errors:</span> <b id="impRemainingErrors" style="color:var(--crit,#b71c1c)">${errorCount}</b></div>
+      <div><span class="mut">Final Imported Rows:</span> <b>${valid}</b></div>
+    </div>
     ${errorCount ? `<div style="margin-bottom:8px;padding:8px;background:var(--soft);border-radius:8px">
       <b>${errorCount} row(s) will be skipped:</b>
-      <ul style="margin:4px 0 0 18px;max-height:120px;overflow:auto">${errors.map(e =>
+      <p class="mut" style="font-size:11.5px;margin:3px 0 6px">You can correct the invalid fields directly below and click <b>Revalidate</b> to import all rows, or proceed with importing only the valid rows.</p>
+      <ul style="margin:4px 0 0 18px;max-height:100px;overflow:auto;font-size:11.5px">${errors.map(e =>
         `<li>Line ${e.row_no}${e.column_name ? ' · ' + esc(e.column_name) : ''}${e.raw_value !== null && e.raw_value !== undefined && e.raw_value !== '' ? ' · value "' + esc(String(e.raw_value)) + '"' : ''} — ${esc(e.error_message || e.error_code || '')}</li>`).join('')}</ul>
+    </div>
+    <div style="margin-bottom:10px;border:1px solid var(--bd);border-radius:8px;padding:10px;background:var(--bg)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <b style="font-size:13px">✏️ Row-Level Manual Error Correction</b>
+        <span class="mut" style="font-size:11.5px">Edit values or reorder sequence, then click Revalidate</span>
+      </div>
+      <div id="impEditsNotice" style="display:none;background:#e0f2f1;color:#004d40;padding:6px 10px;border-radius:6px;font-size:11.5px;margin-bottom:8px">
+        💡 Unsaved edits made. Click <b>Revalidate</b> to verify corrections with the server.
+      </div>
+      <div id="impEditableRows" style="max-height:220px;overflow:auto;display:flex;flex-direction:column;gap:6px">
+        ${renderInvalidRowsEditor(window._activeImportJob)}
+      </div>
     </div>` : ''}
     ${detail.warnings.length ? `
       <div style="margin-bottom:8px;padding:8px;background:var(--soft);border-radius:8px">
@@ -2327,7 +2618,7 @@ function showImportPreview(job, csvText){
         <ul style="margin:4px 0 0 18px">${detail.warnings.map(w => `<li>Line ${w.row_no}: ${esc(w.error_message || '')}</li>`).join('')}</ul>
       </div>` : ''}
     ${detail.rows.length ? `
-      <div style="max-height:200px;overflow:auto;border:1px solid var(--bd);border-radius:8px">
+      <div style="max-height:180px;overflow:auto;border:1px solid var(--bd);border-radius:8px">
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead><tr style="background:var(--soft)"><th style="padding:4px 8px;text-align:left">Line</th><th style="padding:4px 8px;text-align:left">Product</th><th style="padding:4px 8px;text-align:right">Qty</th><th style="padding:4px 8px;text-align:right">Unit Cost</th></tr></thead>
           <tbody>
@@ -2343,15 +2634,29 @@ function showImportPreview(job, csvText){
       </div>
       ${detail.rows.length > 20 ? `<p class="mut" style="margin-top:4px">Showing first 20 of ${detail.rows.length} valid rows</p>` : ''}
     ` : '<p class="mut" style="padding:14px">No valid rows to import</p>'}
-    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;align-items:center">
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;align-items:center;flex-wrap:wrap">
+      <button class="btn ol sm" id="btnDownloadCsv" onclick="window.downloadCorrectedCsv()">${ic('file')} Download Corrected CSV</button>
+      ${errorCount ? `<button class="btn ol sm" id="btnRevalidate" onclick="window.revalidateActiveImport()">${ic('refresh')} Revalidate</button>` : ''}
       <button class="btn ol" data-close="1">Cancel</button>
-      ${canCommit && valid > 0 ? `<button class="btn w" onclick="commitImport(${job.id})">Import ${valid} row(s)${errorCount ? `, skip ${errorCount}` : ''}</button>` : ''}
+      ${canCommit && valid > 0 ? `<button class="btn w" ${errorCount > 0 ? 'disabled title="Please correct all remaining errors before importing" style="opacity:0.5;cursor:not-allowed"' : ''} onclick="commitImport(${job.id})">${errorCount === 0 && prevCorr > 0 ? `Import Corrected Data (${valid} row(s))` : `Import ${valid} row(s)${errorCount ? `, skip ${errorCount}` : ''}`}</button>` : ''}
     </div>
   `;
   modal(html);
 }
 
 async function commitImport(jobId){
+  if (window._activeImportJob) {
+    if (window._activeImportJob.hasPendingEdits) {
+      toast('Revalidating corrections with the server first…');
+      await window.revalidateActiveImport();
+      if (!window._activeImportJob) return;
+      jobId = window._activeImportJob.job.id;
+    }
+    if (window._activeImportJob.errorCount > 0) {
+      toast('Import cannot proceed. Please correct all remaining errors before importing. No rows have been saved.', 1);
+      return;
+    }
+  }
   closeM();
   toast('Importing…');
   try {

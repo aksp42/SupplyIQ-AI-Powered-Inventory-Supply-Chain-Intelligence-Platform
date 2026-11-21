@@ -9,6 +9,7 @@
     "test": "node tests/api.test.js",
     "test:ledger": "node tests/ledger.test.js",
     "test:csv": "node --test tests/csv.test.js",
+    "test:correction": "node --test tests/correction.test.js",
     "test:ui": "node ../frontend/test_render.js && node ../frontend/test_render_regression.js && node ../frontend/test_preview_regression.js",
     "test:browser": "node ../frontend/test_addstock_browser.js",
     "test:boot": "node ../frontend/test_dashboard_boot.js",
