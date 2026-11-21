@@ -359,8 +359,9 @@ let DB_ONLINE = false;
 let STORE_PROFILE = null;
 let STORE_ID = null;
 
-/* Initialize session and storeId from siqApi */
-(async function initSession() {
+/* Initialize session and storeId from siqApi — runs SYNCHRONOUSLY so the demo
+   session is in localStorage before the boot IIFE fires its first API call. */
+(function initSession() {
   const isDemoParam = new URLSearchParams(window.location.search).get('demo') === '1';
   let sess = siqApi.getSession();
   if (isDemoParam || sess?.isDemo) {
@@ -3265,7 +3266,12 @@ chartCard();renderUp();renderAtt();renderGal();renderPeriod();renderInv();render
   if(kpi){
     await Promise.all(['1D','1W','15D','1M'].map(p=>loadSalesChart(p)));
     renderPeriod();renderInv();
-    toast('Live database connected · ' + (STORE_PROFILE?.name || STORE_ID));
+    const sess = siqApi.getSession();
+    if (sess?.isDemo) {
+      toast('🎯 Demo mode — explore with sample grocery data');
+    } else {
+      toast('Live database connected · ' + (STORE_PROFILE?.name || STORE_ID));
+    }
   } else {
     toast('Demo mode — start backend for live data');
   }
