@@ -1,0 +1,79 @@
+graph TB
+    subgraph Client_Tier ["Client Tier (Browser & Presentation)"]
+        UI["SupplyIQ Responsive Dashboard (HTML5 / Vanilla JS / CSS3)"]
+        Landing["Landing & Auth Pages (landing.html, login.html, signup.html)"]
+        Demo["Guest Demo Mode (SupplyIQ-Grocery-Dashboard.html?demo=1)"]
+        Charts["Interactive Visualizations (Chart.js / Custom Metrics)"]
+    end
+
+    subgraph CDN_Hosting ["Cloud Hosting & Edge Delivery"]
+        RenderCDN["Render Web Service (Global CDN / Static & Proxy)"]
+    end
+
+    subgraph API_Gateway ["Application Server Tier (Node.js & Express)"]
+        AuthMiddleware["JWT Authentication & RBAC Middleware"]
+        Router["Express REST API Router (/api/*)"]
+        
+        subgraph Core_Engines ["Business Intelligence & Core Engines"]
+            InvEngine["Inventory Management Engine (Levels, Safety Stock, Cover)"]
+            CSVEngine["CSV Parser & Validation Engine (Transaction Reordering)"]
+            SalesEngine["Sales & Stock Transaction Engine (FIFO / Issues / Receipts)"]
+            ForecastML["Demand Forecasting & Trend Analysis (Moving Avg / Seasonality)"]
+            RiskAlert["Risk & Stockout Alert Engine (Lead Time, Critical Buffers)"]
+            SupplierMon["Supplier Performance Monitor (On-Time Delivery, Fill Rates)"]
+            TradeSaarthi["TradeSaarthi AI Supply Chain Assistant (Rule & NLP Logic)"]
+        end
+    end
+
+    subgraph Database_Tier ["Data Persistence Tier (TiDB Cloud / MySQL 8.0)"]
+        TiDB[("TiDB Cloud Serverless MySQL (TLS 1.2+ Encrypted)")]
+        UsersTable[("Users & Store Profiles")]
+        InventoryTable[("Products & Real-time Stock")]
+        TransactionsTable[("Ledger & Stock Movements")]
+        SuppliersTable[("Suppliers & Purchase History")]
+        AuditTable[("System Audit Logs")]
+    end
+
+    subgraph CICD_Tier ["CI/CD Automation & DevOps"]
+        GH["GitHub Actions CI Pipeline (.github/workflows/ci.yml)"]
+        Jobs["5 Automated Jobs: Secret Scan | Backend Tests | Frontend Lint | Docker Build | Compose E2E"]
+        DockerBuild["Docker Multi-Stage Image (node:20-alpine)"]
+    end
+
+    subgraph Legacy_Infra ["Historical Deployment Pipeline (Archived)"]
+        AWSECS["AWS ECR / ECS Fargate (ap-south-1 Mumbai via GitHub OIDC)"]
+    end
+
+    %% Data Flow Connections
+    Landing --> AuthMiddleware
+    UI --> Router
+    Demo --> UI
+    Charts --> UI
+    RenderCDN --> Client_Tier
+
+    AuthMiddleware --> Router
+    Router --> InvEngine
+    Router --> CSVEngine
+    Router --> SalesEngine
+    Router --> ForecastML
+    Router --> RiskAlert
+    Router --> SupplierMon
+    Router --> TradeSaarthi
+
+    InvEngine --> TiDB
+    CSVEngine --> TiDB
+    SalesEngine --> TiDB
+    ForecastML --> TiDB
+    RiskAlert --> TiDB
+    SupplierMon --> TiDB
+
+    TiDB --> UsersTable
+    TiDB --> InventoryTable
+    TiDB --> TransactionsTable
+    TiDB --> SuppliersTable
+    TiDB --> AuditTable
+
+    GH --> Jobs
+    Jobs --> DockerBuild
+    DockerBuild -.-> RenderCDN
+    DockerBuild -.-> AWSECS
