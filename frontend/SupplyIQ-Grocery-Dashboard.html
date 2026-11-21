@@ -2437,6 +2437,7 @@ function showImportPreview(job, csvText, preParsed){
             <div style="display:flex;gap:4px">
               <button type="button" class="btn sm ol" style="padding:2px 7px;font-size:11px" onclick="window.moveImportRow(${r.line},-1)">▲ Earlier</button>
               <button type="button" class="btn sm ol" style="padding:2px 7px;font-size:11px" onclick="window.moveImportRow(${r.line},1)">▼ Later</button>
+              <button type="button" class="btn sm ol" style="padding:2px 7px;font-size:11px;color:#c62828;border-color:#ffcdd2" onclick="window.deleteImportRow(${r.line})" title="Discard this invalid row from the file">🗑️ Remove Row</button>
             </div>
           </div>
           ${rowErrors.length ? `<div style="background:#ffebee;color:#c62828;padding:6px 10px;border-radius:6px;font-size:11.5px;font-weight:600;margin-bottom:6px">⚠️ Row issue: ${esc(rowErrors.join(' | '))}</div>` : ''}
@@ -2505,6 +2506,18 @@ function showImportPreview(job, csvText, preParsed){
     // Keep sequential line numbers matching array index (header is 1, rows start at 2)
     rows.forEach((r, i) => { r.line = i + 2; });
     toast(`Line ${line} moved ${delta < 0 ? 'earlier' : 'later'} in sequence.`);
+    await window.revalidateActiveImport();
+  };
+
+  window.deleteImportRow = async function(line) {
+    if (!window._activeImportJob || !window._activeImportJob.parsed || !window._activeImportJob.parsed.rows) return;
+    const rows = window._activeImportJob.parsed.rows;
+    const idx = rows.findIndex(r => r.line === line);
+    if (idx < 0) return;
+    rows.splice(idx, 1);
+    // Keep sequential line numbers matching array index (header is 1, rows start at 2)
+    rows.forEach((r, i) => { r.line = i + 2; });
+    toast(`Line ${line} removed from import. Revalidating…`);
     await window.revalidateActiveImport();
   };
 
